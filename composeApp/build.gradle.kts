@@ -14,16 +14,22 @@ kotlin {
     }
 
     sourceSets {
-        androidMain.dependencies {
+        commonMain.dependencies {
             implementation(projects.shared)
 
-            implementation(libs.androidx.compose.ui)
-            implementation(libs.androidx.compose.ui.tooling.preview)
-            implementation(libs.androidx.compose.material3)
-            implementation(libs.androidx.activity.compose)
-            implementation(libs.androidx.lifecycle.viewmodel.compose)
+            implementation(compose.runtime)
+            implementation(compose.foundation)
+            implementation(compose.material3)
+            implementation(compose.ui)
+            implementation(compose.components.resources)
+            implementation(compose.components.uiToolingPreview)
 
             implementation(libs.koin.compose)
+        }
+
+        androidMain.dependencies {
+            implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.lifecycle.viewmodel.compose)
         }
     }
 }
@@ -31,11 +37,10 @@ kotlin {
 android {
     namespace = "dev.akinom.isod"
     compileSdk = 36
-
     defaultConfig {
         applicationId = "dev.akinom.isod"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
     }
@@ -62,7 +67,10 @@ android {
     }
 }
 
+compose.resources {
+    packageOfResClass = "dev.akinom.isod"
+}
+
 dependencies {
-    implementation(platform(libs.androidx.compose.bom))
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
