@@ -14,10 +14,6 @@ android {
         versionName = "1.0"
     }
 
-    buildFeatures {
-        compose = true
-    }
-
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -40,5 +36,4 @@ dependencies {
     implementation(projects.composeApp)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    debugImplementation(libs.androidx.compose.ui.tooling)
 }
