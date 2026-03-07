@@ -46,6 +46,12 @@ kotlin {
 
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
+
+            api(libs.multiplatform.settings)
+            implementation(libs.multiplatform.settings.coroutines)
+
+            implementation(libs.kotlinx.crypto.sha2)
+            implementation(libs.kotlinx.crypto.hmac)
         }
 
         androidMain.dependencies {
@@ -53,6 +59,8 @@ kotlin {
             implementation(libs.sqldelight.android.driver)
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.koin.android)
+            implementation(libs.multiplatform.settings)
+            implementation(libs.androidx.webkit)
         }
 
         iosMain.dependencies {
