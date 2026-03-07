@@ -1,0 +1,282 @@
+package dev.akinom.isod.data.remote.dto
+
+import dev.akinom.isod.domain.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class PlanResponseDto(
+    val username: String,
+    val semester: String,
+    val firstname: String,
+    val lastname: String,
+    val planItems: List<PlanItemDto> = emptyList(),
+)
+
+@Serializable
+data class PlanItemDto(
+    val id: Long,
+    val courseName: String,
+    val courseNameShort: String = "",
+    val courseNumber: String,
+    val courseVersion: String = "",
+    val teachers: List<String> = emptyList(),
+    val startTime: String,
+    val endTime: String,
+    val dayOfWeek: String,
+    val cycle: String = "",
+    val cycleShort: String = "",
+    val groups: List<String> = emptyList(),
+    val building: String = "",
+    val buildingShort: String = "",
+    val room: String = "",
+    val typeOfClasses: String = "",
+) {
+    fun toDomain() = PlanItem(
+        id            = id,
+        courseName    = courseName,
+        courseNameShort = courseNameShort,
+        courseNumber  = courseNumber,
+        courseVersion = courseVersion,
+        teachers      = teachers,
+        startTime     = startTime,
+        endTime       = endTime,
+        dayOfWeek     = dayOfWeek.toIntOrNull() ?: 0,
+        cycle         = cycle,
+        cycleShort    = cycleShort,
+        groups        = groups,
+        building      = building,
+        buildingShort = buildingShort,
+        room          = room,
+        typeOfClasses = typeOfClasses,
+    )
+}
+
+@Serializable
+data class NewsHeadersResponseDto(
+    val items: List<NewsHeaderDto> = emptyList(),
+    val username: String = "",
+    val semester: String = "",
+)
+
+@Serializable
+data class NewsHeaderDto(
+    val hash: String,
+    val subject: String,
+    val modifiedDate: String = "",
+    val modifiedBy: String = "",
+    val type: Int = -1,
+    val noAttachments: Int = 0,
+) {
+    fun toDomain() = NewsHeader(
+        hash          = hash,
+        subject       = subject,
+        modifiedDate  = modifiedDate,
+        modifiedBy    = modifiedBy,
+        type          = NewsType.fromCode(type.toString()),  // ← convert to String
+        noAttachments = noAttachments,
+    )
+}
+
+@Serializable
+data class NewsFullResponseDto(
+    val items: List<NewsItemDto> = emptyList(),
+    val username: String = "",
+    val semester: String = "",
+)
+
+@Serializable
+data class NewsItemDto(
+    val hash: String,
+    val subject: String,
+    val content: String = "",
+    val modifiedDate: String = "",
+    val modifiedBy: String = "",
+    val type: Int = -1,
+    val attachments: List<NewsAttachmentDto> = emptyList(),
+    val noAttachments: Int = 0,
+) {
+    fun toDomain() = NewsItem(
+        hash         = hash,
+        subject      = subject,
+        content      = content,
+        modifiedDate = modifiedDate,
+        modifiedBy   = modifiedBy,
+        type = NewsType.fromCode(type.toString()),
+        attachments  = attachments.map { it.toDomain() },
+    )
+}
+
+@Serializable
+data class NewsAttachmentDto(
+    val filename: String,
+    val size: Long = 0,
+) {
+    fun toDomain() = NewsAttachment(filename = filename, size = size)
+}
+
+@Serializable
+data class CoursesResponseDto(
+    val items: List<CourseDto> = emptyList(),
+    val reserveListItems: List<CourseDto> = emptyList(),
+    val username: String = "",
+    val semester: String = "",
+)
+
+@Serializable
+data class CourseDto(
+    val courseNumber: String,
+    val courseName: String,
+    val courseVersion: String = "",
+    val passType: String = "",
+    val courseManager: String = "",
+    val hours: String = "",
+    @SerialName("ECTS") val ects: Int = 0,
+    val finalGradeNumeric: Double? = null,
+    val finalGradeComment: String? = null,
+    val id: String,
+    val classes: List<CourseClassDto> = emptyList(),
+) {
+    fun toDomain() = Course(
+        courseNumber      = courseNumber,
+        courseName        = courseName,
+        courseVersion     = courseVersion,
+        passType          = passType,
+        courseManager     = courseManager,
+        hours             = hours,
+        ects              = ects,
+        finalGradeNumeric = finalGradeNumeric,
+        finalGradeComment = finalGradeComment,
+        id                = id,
+        classes           = classes.map { it.toDomain() },
+    )
+}
+
+@Serializable
+data class CourseClassDto(
+    val id: String,
+    val courseNumber: String,
+    val courseName: String,
+    val type: String = "",
+    val hours: Int = 0,
+    val day: String = "",
+    val timeFrom: String = "",
+    val timeTo: String = "",
+    val cycle: String = "",
+    val groups: String = "",
+    val place: String = "",
+    val teachers: String = "",
+    val academicSemester: String = "",
+    val enrollmentStatus: String = "",
+) {
+    fun toDomain() = CourseClass(
+        id               = id,
+        courseNumber     = courseNumber,
+        courseName       = courseName,
+        type             = type,
+        hours            = hours,
+        day              = day,
+        timeFrom         = timeFrom,
+        timeTo           = timeTo,
+        cycle            = cycle,
+        groups           = groups,
+        place            = place,
+        teachers         = teachers,
+        academicSemester = academicSemester,
+        enrollmentStatus = enrollmentStatus,
+    )
+}
+
+@Serializable
+data class ClassDetailDto(
+    val id: String,
+    val header: ClassHeaderDto,
+    val announcements: List<ClassAnnouncementDto> = emptyList(),
+    val columns: List<ClassColumnDto> = emptyList(),
+    val summary: String? = null,
+    val summaryNotes: String? = null,
+    val credit: String? = null,
+    val creditModifiedBy: String? = null,
+    val semester: String = "",
+) {
+    fun toDomain() = ClassDetail(
+        id              = id,
+        header          = header.toDomain(),
+        announcements   = announcements.map { it.toDomain() },
+        columns         = columns.map { it.toDomain() },
+        summary         = summary,
+        summaryNotes    = summaryNotes,
+        credit          = credit,
+        creditModifiedBy = creditModifiedBy,
+        semester        = semester,
+    )
+}
+
+@Serializable
+data class ClassHeaderDto(
+    val courseNumber: String,
+    val courseName: String,
+    val type: String = "",
+    val hours: Int = 0,
+    val day: String = "",
+    val timeFrom: String = "",
+    val timeTo: String = "",
+    val cycle: String = "",
+    val groups: String = "",
+    val place: String = "",
+    val teachers: String = "",
+    val academicSemester: String = "",
+) {
+    fun toDomain() = ClassHeader(
+        courseNumber     = courseNumber,
+        courseName       = courseName,
+        type             = type,
+        hours            = hours,
+        day              = day,
+        timeFrom         = timeFrom,
+        timeTo           = timeTo,
+        cycle            = cycle,
+        groups           = groups,
+        place            = place,
+        teachers         = teachers,
+        academicSemester = academicSemester,
+    )
+}
+
+@Serializable
+data class ClassAnnouncementDto(
+    val title: String,
+    val content: String = "",
+    val author: String = "",
+    val dateModified: String = "",
+    val dateExpired: String? = null,
+) {
+    fun toDomain() = ClassAnnouncement(
+        title        = title,
+        content      = content,
+        author       = author,
+        dateModified = dateModified,
+        dateExpired  = dateExpired,
+    )
+}
+
+@Serializable
+data class ClassColumnDto(
+    val name: String? = null,
+    val type: String = "",
+    val value: String? = null,
+    val weight: Double = 1.0,
+    val accounted: Boolean = false,
+    val date: String? = null,
+    val personModifying: String? = null,
+) {
+    fun toDomain() = ClassColumn(
+        name            = name,
+        type            = type,
+        value           = value,
+        weight          = weight,
+        accounted       = accounted,
+        date            = date,
+        personModifying = personModifying,
+    )
+}

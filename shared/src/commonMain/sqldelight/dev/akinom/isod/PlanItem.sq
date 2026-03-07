@@ -1,0 +1,37 @@
+CREATE TABLE IF NOT EXISTS PlanItemEntity (
+    id             INTEGER NOT NULL PRIMARY KEY,
+    courseName     TEXT    NOT NULL,
+    courseNameShort TEXT   NOT NULL,
+    courseNumber   TEXT    NOT NULL,
+    courseVersion  TEXT    NOT NULL,
+    teachers       TEXT    NOT NULL,  -- JSON array stored as string
+    startTime      TEXT    NOT NULL,
+    endTime        TEXT    NOT NULL,
+    dayOfWeek      INTEGER NOT NULL,
+    cycle          TEXT    NOT NULL,
+    cycleShort     TEXT    NOT NULL,
+    groups         TEXT    NOT NULL,  -- JSON array stored as string
+    building       TEXT    NOT NULL,
+    buildingShort  TEXT    NOT NULL,
+    room           TEXT    NOT NULL,
+    typeOfClasses  TEXT    NOT NULL,
+    semester       TEXT    NOT NULL,
+    lastUpdated    INTEGER NOT NULL   -- Unix timestamp
+);
+
+selectAll:
+SELECT * FROM PlanItemEntity
+WHERE semester = :semester
+ORDER BY dayOfWeek ASC, startTime ASC;
+
+upsert:
+INSERT OR REPLACE INTO PlanItemEntity VALUES ?;
+
+deleteAll:
+DELETE FROM PlanItemEntity
+WHERE semester = :semester;
+
+lastUpdated:
+SELECT lastUpdated FROM PlanItemEntity
+WHERE semester = :semester
+LIMIT 1;

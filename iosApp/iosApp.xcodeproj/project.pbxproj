@@ -6,7 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		61A9E77E2F5CA3AF00579091 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 61A9E77D2F5CA3AF00579091 /* libsqlite3.tbd */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		61A9E77D2F5CA3AF00579091 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		FA7A984B2A9C31646A30C52D /* ISOD Mobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ISOD Mobile.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -41,6 +46,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				61A9E77E2F5CA3AF00579091 /* libsqlite3.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -52,6 +58,7 @@
 			children = (
 				A046676918AD4A94344C2999 /* Configuration */,
 				7B3CF7F6DD3C3C385A2F8561 /* iosApp */,
+				61A9E77C2F5CA3AF00579091 /* Frameworks */,
 				39C76FB0261FDE14ACE2EAE4 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -62,6 +69,14 @@
 				FA7A984B2A9C31646A30C52D /* ISOD Mobile.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		61A9E77C2F5CA3AF00579091 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				61A9E77D2F5CA3AF00579091 /* libsqlite3.tbd */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

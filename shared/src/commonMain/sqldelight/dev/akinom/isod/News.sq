@@ -1,0 +1,52 @@
+CREATE TABLE IF NOT EXISTS NewsHeaderEntity (
+    hash          TEXT    NOT NULL PRIMARY KEY,
+    subject       TEXT    NOT NULL,
+    modifiedDate  TEXT    NOT NULL,
+    modifiedBy    TEXT    NOT NULL,
+    type          TEXT    NOT NULL,
+    noAttachments INTEGER NOT NULL,
+    semester      TEXT    NOT NULL,
+    lastUpdated   INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS NewsItemEntity (
+    hash         TEXT NOT NULL PRIMARY KEY,
+    subject      TEXT NOT NULL,
+    content      TEXT NOT NULL,
+    modifiedDate TEXT NOT NULL,
+    modifiedBy   TEXT NOT NULL,
+    type         TEXT NOT NULL,
+    attachments  TEXT NOT NULL,  -- JSON array stored as string
+    semester     TEXT NOT NULL,
+    lastUpdated  INTEGER NOT NULL
+);
+
+-- NewsHeader queries
+selectAllHeaders:
+SELECT * FROM NewsHeaderEntity
+WHERE semester = :semester
+ORDER BY lastUpdated DESC;
+
+upsertHeader:
+INSERT OR REPLACE INTO NewsHeaderEntity VALUES ?;
+
+deleteAllHeaders:
+DELETE FROM NewsHeaderEntity
+WHERE semester = :semester;
+
+headersLastUpdated:
+SELECT lastUpdated FROM NewsHeaderEntity
+WHERE semester = :semester
+LIMIT 1;
+
+-- NewsItem queries
+selectItem:
+SELECT * FROM NewsItemEntity
+WHERE hash = :hash;
+
+upsertItem:
+INSERT OR REPLACE INTO NewsItemEntity VALUES ?;
+
+deleteAllItems:
+DELETE FROM NewsItemEntity
+WHERE semester = :semester;

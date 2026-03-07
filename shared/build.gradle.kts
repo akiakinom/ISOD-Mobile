@@ -72,8 +72,9 @@ kotlin {
 
 sqldelight {
     databases {
-        create("AppDatabase") {
-            packageName.set("dev.akinom.isod.db")
+        create("IsodDatabase") {
+            packageName.set("dev.akinom.isod")
+            srcDirs("src/commonMain/sqldelight")
         }
     }
 }

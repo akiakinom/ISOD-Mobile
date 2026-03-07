@@ -1,0 +1,58 @@
+CREATE TABLE IF NOT EXISTS CourseEntity (
+    id                TEXT    NOT NULL PRIMARY KEY,
+    courseNumber      TEXT    NOT NULL,
+    courseName        TEXT    NOT NULL,
+    courseVersion     TEXT    NOT NULL,
+    passType          TEXT    NOT NULL,
+    courseManager     TEXT    NOT NULL,
+    hours             TEXT    NOT NULL,
+    ects              INTEGER NOT NULL,
+    finalGradeNumeric REAL,
+    finalGradeComment TEXT,
+    classes           TEXT    NOT NULL,  -- JSON array stored as string
+    semester          TEXT    NOT NULL,
+    lastUpdated       INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS ClassDetailEntity (
+    id               TEXT    NOT NULL PRIMARY KEY,
+    headerJson       TEXT    NOT NULL,  -- JSON object
+    announcementsJson TEXT   NOT NULL,  -- JSON array
+    columnsJson      TEXT    NOT NULL,  -- JSON array
+    summary          TEXT,
+    summaryNotes     TEXT,
+    credit           TEXT,
+    creditModifiedBy TEXT,
+    semester         TEXT    NOT NULL,
+    lastUpdated      INTEGER NOT NULL
+);
+
+-- Course queries
+selectAllCourses:
+SELECT * FROM CourseEntity
+WHERE semester = :semester;
+
+upsertCourse:
+INSERT OR REPLACE INTO CourseEntity VALUES ?;
+
+deleteAllCourses:
+DELETE FROM CourseEntity
+WHERE semester = :semester;
+
+coursesLastUpdated:
+SELECT lastUpdated FROM CourseEntity
+WHERE semester = :semester
+LIMIT 1;
+
+-- ClassDetail queries
+selectClassDetail:
+SELECT * FROM ClassDetailEntity
+WHERE id = :id;
+
+upsertClassDetail:
+INSERT OR REPLACE INTO ClassDetailEntity VALUES ?;
+
+classDetailLastUpdated:
+SELECT lastUpdated FROM ClassDetailEntity
+WHERE id = :id
+LIMIT 1;
