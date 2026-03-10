@@ -28,7 +28,7 @@ data class UsosActivity(
     val lecturerIds: List<Long> = emptyList(),
     val groupNumber: Int? = null,
     val buildingName: LangDict? = null,
-    val buildingId: String? = null,
+    val buildingId: Int? = null,
     val roomNumber: String? = null,
     val roomId: Int? = null,
     val unitId: Long? = null,

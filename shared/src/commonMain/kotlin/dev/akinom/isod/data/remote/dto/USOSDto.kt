@@ -22,7 +22,7 @@ data class UsosActivityDto(
     @SerialName("lecturer_ids")           val lecturerIds: List<Long> = emptyList(),
     @SerialName("group_number")           val groupNumber: Int? = null,
     @SerialName("building_name")          val buildingName: LangDict? = null,
-    @SerialName("building_id")            val buildingId: String? = null,
+    @SerialName("building_id")            val buildingId: Int? = null,
     @SerialName("room_number")            val roomNumber: String? = null,
     @SerialName("room_id")                val roomId: Int? = null,
     @SerialName("unit_id")                val unitId: Long? = null,
