@@ -90,11 +90,11 @@ sqldelight {
     databases {
         create("IsodDatabase") {
             packageName.set("dev.akinom.isod")
-            srcDirs("src/commonMain/sqldelight")
+            version = 2
+            deriveSchemaFromMigrations.set(false)
         }
     }
 }
-
 val generateSecrets by tasks.registering {
     val outDir = layout.buildDirectory.dir("generated/secrets/commonMain/kotlin")
     outputs.dir(outDir)

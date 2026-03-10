@@ -1,0 +1,66 @@
+package dev.akinom.isod.android
+
+import android.content.Context
+import androidx.work.Constraints
+import androidx.work.CoroutineWorker
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
+import dev.akinom.isod.IsodDatabase
+import dev.akinom.isod.data.remote.IsodApiClient
+import dev.akinom.isod.notifications.NewsNotificationChecker
+import dev.akinom.isod.notifications.NotificationService
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import java.util.concurrent.TimeUnit
+
+private const val WORK_NAME = "isod_news_notification"
+private const val SEMESTER  = "2026L"
+
+class NewsNotificationWorker(
+    context: Context,
+    params: WorkerParameters,
+) : CoroutineWorker(context, params), KoinComponent {
+
+    private val db: IsodDatabase     by inject()
+    private val isodApi: IsodApiClient by inject()
+
+    override suspend fun doWork(): Result {
+        return try {
+            val checker = NewsNotificationChecker(
+                db                  = db,
+                isodApi             = isodApi,
+                notificationService = NotificationService(applicationContext),
+                semester            = SEMESTER,
+            )
+            checker.check()
+            Result.success()
+        } catch (e: Exception) {
+            println("❌ NewsNotificationWorker failed: ${e.message}")
+            Result.retry()
+        }
+    }
+
+    companion object {
+        fun schedule(context: Context) {
+            val request = PeriodicWorkRequestBuilder<NewsNotificationWorker>(
+                repeatInterval = 15,
+                repeatIntervalTimeUnit = TimeUnit.MINUTES,
+            )
+                .setConstraints(
+                    Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .build()
+                )
+                .build()
+
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                WORK_NAME,
+                ExistingPeriodicWorkPolicy.KEEP,
+                request,
+            )
+        }
+    }
+}

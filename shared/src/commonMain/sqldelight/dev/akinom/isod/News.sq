@@ -1,52 +1,50 @@
-CREATE TABLE IF NOT EXISTS NewsHeaderEntity (
-    hash          TEXT    NOT NULL PRIMARY KEY,
-    subject       TEXT    NOT NULL,
-    modifiedDate  TEXT    NOT NULL,
-    modifiedBy    TEXT    NOT NULL,
-    type          TEXT    NOT NULL,
-    noAttachments INTEGER NOT NULL,
-    semester      TEXT    NOT NULL,
-    lastUpdated   INTEGER NOT NULL
+CREATE TABLE NewsHeaderEntity (
+    hash                 TEXT NOT NULL PRIMARY KEY,
+    semester             TEXT NOT NULL,
+    subject              TEXT NOT NULL,
+    type                 TEXT NOT NULL,
+    modifiedDate         TEXT NOT NULL,
+    modifiedBy           TEXT NOT NULL,
+    noAttachments        INTEGER NOT NULL,
+    hasSentNotification  INTEGER NOT NULL DEFAULT 0,
+    lastUpdated          INTEGER NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS NewsItemEntity (
+CREATE TABLE NewsItemEntity (
     hash         TEXT NOT NULL PRIMARY KEY,
+    semester     TEXT NOT NULL,
     subject      TEXT NOT NULL,
+    type         TEXT NOT NULL,
     content      TEXT NOT NULL,
     modifiedDate TEXT NOT NULL,
     modifiedBy   TEXT NOT NULL,
-    type         TEXT NOT NULL,
-    attachments  TEXT NOT NULL,  -- JSON array stored as string
-    semester     TEXT NOT NULL,
+    attachments  TEXT NOT NULL,
     lastUpdated  INTEGER NOT NULL
 );
-
--- NewsHeader queries
-selectAllHeaders:
-SELECT * FROM NewsHeaderEntity
-WHERE semester = :semester
-ORDER BY lastUpdated DESC;
 
 upsertHeader:
 INSERT OR REPLACE INTO NewsHeaderEntity VALUES ?;
 
-deleteAllHeaders:
-DELETE FROM NewsHeaderEntity
-WHERE semester = :semester;
-
-headersLastUpdated:
-SELECT lastUpdated FROM NewsHeaderEntity
-WHERE semester = :semester
-LIMIT 1;
-
--- NewsItem queries
-selectItem:
-SELECT * FROM NewsItemEntity
-WHERE hash = :hash;
-
 upsertItem:
 INSERT OR REPLACE INTO NewsItemEntity VALUES ?;
 
-deleteAllItems:
-DELETE FROM NewsItemEntity
-WHERE semester = :semester;
+selectAllHeaders:
+SELECT * FROM NewsHeaderEntity WHERE semester = ? ORDER BY modifiedDate DESC;
+
+selectItem:
+SELECT * FROM NewsItemEntity WHERE hash = ?;
+
+deleteAllHeaders:
+DELETE FROM NewsHeaderEntity WHERE semester = ?;
+
+headersLastUpdated:
+SELECT lastUpdated FROM NewsHeaderEntity WHERE semester = ? LIMIT 1;
+
+selectUnsentNotifications:
+SELECT * FROM NewsHeaderEntity WHERE hasSentNotification = 0;
+
+markNotificationSent:
+UPDATE NewsHeaderEntity SET hasSentNotification = 1 WHERE hash = ?;
+
+markAllNotificationsSent:
+UPDATE NewsHeaderEntity SET hasSentNotification = 1;

@@ -13,6 +13,8 @@ import dev.akinom.isod.data.repository.NewsRepository
 import dev.akinom.isod.data.repository.PlanRepository
 import dev.akinom.isod.data.repository.TimetableRepository
 import dev.akinom.isod.data.repository.UsosRepository
+import dev.akinom.isod.notifications.FirstLaunchGuard
+import dev.akinom.isod.notifications.NewsNotificationChecker
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
@@ -70,6 +72,15 @@ val sharedModule = module {
     single { TimetableRepository(get(), get(), get()) }
     single { GradesRepository(get(), get(), get()) }
 
+    single {
+        NewsNotificationChecker(
+            db = get(),
+            isodApi = get(),
+            notificationService = get(),
+            semester = "2026L"
+        )
+    }
+    single { FirstLaunchGuard(get(), get()) }
 }
 
 expect val platformModule: Module

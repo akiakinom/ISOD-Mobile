@@ -48,10 +48,19 @@ class NewsRepository(
         when (val result = api.getNewsHeaders(semester)) {
             is IsodResult.Success -> {
                 val now = currentTimeMillis()
+                val existing = headerQueries.selectAllHeaders(semester)
+                    .executeAsList()
+                    .associate { it.hash to it.hasSentNotification }
                 db.transaction {
                     headerQueries.deleteAllHeaders(semester)
                     result.data.forEach { header ->
-                        headerQueries.upsertHeader(header.toEntity(semester, now))
+                        headerQueries.upsertHeader(
+                            header.toEntity(
+                                semester = semester,
+                                now = now,
+                                existingNotificationState = existing[header.hash] ?: 0L,
+                            )
+                        )
                     }
                 }
             }
@@ -102,15 +111,20 @@ private fun NewsHeaderEntity.toDomain() = NewsHeader(
     noAttachments = noAttachments.toInt(),
 )
 
-private fun NewsHeader.toEntity(semester: String, now: Long) = NewsHeaderEntity(
-    hash          = hash,
-    subject       = subject,
-    modifiedDate  = modifiedDate,
-    modifiedBy    = modifiedBy,
-    type          = type.code,
-    noAttachments = noAttachments.toLong(),
-    semester      = semester,
-    lastUpdated   = now,
+private fun NewsHeader.toEntity(
+    semester: String,
+    now: Long,
+    existingNotificationState: Long = 0L,
+) = NewsHeaderEntity(
+    hash                = hash,
+    subject             = subject,
+    modifiedDate        = modifiedDate,
+    modifiedBy          = modifiedBy,
+    type                = type.code,
+    noAttachments       = noAttachments.toLong(),
+    semester            = semester,
+    hasSentNotification = existingNotificationState,
+    lastUpdated         = now,
 )
 
 private fun NewsItemEntity.toDomain() = NewsItem(

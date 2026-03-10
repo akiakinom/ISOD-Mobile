@@ -1,14 +1,25 @@
 package dev.akinom.isod.android
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import dev.akinom.isod.App
 import dev.akinom.isod.auth.initSettingsContext
 import dev.akinom.isod.di.initKoin
 import org.koin.android.ext.koin.androidContext
 
 class MainActivity : ComponentActivity() {
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        println(if (granted) "✅ Notification permission granted" else "❌ Notification permission denied")
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -16,6 +27,12 @@ class MainActivity : ComponentActivity() {
         initKoin {
             androidContext(this@MainActivity)
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        NewsNotificationWorker.schedule(this)
 
         setContent { App() }
     }
