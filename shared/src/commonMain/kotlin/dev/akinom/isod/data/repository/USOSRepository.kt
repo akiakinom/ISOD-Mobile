@@ -4,7 +4,6 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import dev.akinom.isod.IsodDatabase
 import dev.akinom.isod.UsosActivityEntity
-import dev.akinom.isod.data.cache.CacheConfig
 import dev.akinom.isod.data.cache.currentTimeMillis
 import dev.akinom.isod.data.cache.isStale
 import dev.akinom.isod.data.remote.UsosApiClient
@@ -42,10 +41,28 @@ class UsosRepository(
     suspend fun refresh(weekStart: String) {
         when (val result = api.getTimetable(start = weekStart, days = 7)) {
             is UsosResult.Success -> {
+                val activities = result.data
+                val lecturerIds = activities.flatMap { it.lecturerIds }.distinct()
+                
+                val lecturerNames = if (lecturerIds.isNotEmpty()) {
+                    when (val namesResult = api.getLecturerNames(lecturerIds)) {
+                        is UsosResult.Success -> namesResult.data
+                        else -> emptyMap()
+                    }
+                } else {
+                    emptyMap()
+                }
+
+                val activitiesWithLecturers = activities.map { activity ->
+                    activity.copy(
+                        lecturers = activity.lecturerIds.mapNotNull { lecturerNames[it] }
+                    )
+                }
+
                 val now = currentTimeMillis()
                 db.transaction {
                     queries.deleteByWeek(weekStart)
-                    result.data.forEach { activity ->
+                    activitiesWithLecturers.forEach { activity ->
                         queries.upsert(activity.toEntity(weekStart, now))
                     }
                 }
@@ -73,6 +90,7 @@ private fun UsosActivityEntity.toDomain() = UsosActivity(
     courseId      = courseId,
     courseName    = courseNameJson?.let { json.decodeFromString<LangDict>(it) },
     classtypeName = classtypeNameJson?.let { json.decodeFromString<LangDict>(it) },
+    lecturers     = lecturersJson?.let { json.decodeFromString<List<String>>(it) } ?: emptyList(),
     buildingName  = buildingNameJson?.let { json.decodeFromString<LangDict>(it) },
     groupNumber   = groupNumber?.toInt(),
     roomNumber    = roomNumber,
@@ -92,6 +110,7 @@ private fun UsosActivity.toEntity(weekStart: String, now: Long): UsosActivityEnt
         courseNameJson    = courseName?.let { json.encodeToString(it) },
         classtypeNameJson = classtypeName?.let { json.encodeToString(it) },
         groupNumber       = groupNumber?.toLong(),
+        lecturersJson     = json.encodeToString(lecturers),
         buildingNameJson  = buildingName?.let { json.encodeToString(it) },
         roomNumber        = roomNumber,
         frequency         = frequency,

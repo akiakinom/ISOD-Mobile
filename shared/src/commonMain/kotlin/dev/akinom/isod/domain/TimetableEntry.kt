@@ -91,7 +91,7 @@ fun UsosActivity.toTimetableEntry(): TimetableEntry {
         buildingShort   = buildingName?.get()?.abbreviate() ?: "",
         room            = roomNumber ?: "",
         lecturerIds     = lecturerIds,
-        lecturerNames   = emptyList(),                  // filled in by repository after name lookup
+        lecturerNames   = lecturers,
         groups          = groupNumber?.let { listOf("Gr $it") } ?: emptyList(),
         frequency       = frequency,
     )
