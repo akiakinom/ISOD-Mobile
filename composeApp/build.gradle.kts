@@ -6,22 +6,6 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
 }
 
-val usosConsumerKey: String = providers
-    .fileContents(rootProject.layout.projectDirectory.file("local.properties"))
-    .asText.orNull
-    ?.lines()
-    ?.firstOrNull { it.startsWith("usos.consumer.key=") }
-    ?.removePrefix("usos.consumer.key=")
-    ?.trim() ?: ""
-
-val usosConsumerSecret: String = providers
-    .fileContents(rootProject.layout.projectDirectory.file("local.properties"))
-    .asText.orNull
-    ?.lines()
-    ?.firstOrNull { it.startsWith("usos.consumer.secret=") }
-    ?.removePrefix("usos.consumer.secret=")
-    ?.trim() ?: ""
-
 kotlin {
     android {
         namespace = "dev.akinom.isod"
@@ -75,34 +59,4 @@ compose.resources {
 
 dependencies {
     "androidRuntimeClasspath"(libs.androidx.compose.ui.tooling)
-}
-
-val generateSecrets by tasks.registering {
-    val outDir = layout.buildDirectory.dir("generated/secrets/commonMain/kotlin")
-    outputs.dir(outDir)
-
-    val key    = usosConsumerKey
-    val secret = usosConsumerSecret
-
-    inputs.property("key", key)
-    inputs.property("secret", secret)
-
-    doLast {
-        val k = inputs.properties["key"] as String
-        val s = inputs.properties["secret"] as String
-        val dir = outDir.get().asFile
-        dir.mkdirs()
-        dir.resolve("Secrets.kt").writeText("""
-            package dev.akinom.isod
-
-            internal object Secrets {
-                const val USOS_CONSUMER_KEY    = "$k"
-                const val USOS_CONSUMER_SECRET = "$s"
-            }
-        """.trimIndent())
-    }
-}
-
-kotlin.sourceSets.commonMain {
-    kotlin.srcDir(tasks.named("generateSecrets"))
 }

@@ -1,6 +1,7 @@
 package dev.akinom.isod.di
 
 import dev.akinom.isod.IsodDatabase
+import dev.akinom.isod.Secrets
 import dev.akinom.isod.auth.CredentialsStorage
 import dev.akinom.isod.auth.createSettings
 import dev.akinom.isod.data.cache.DatabaseDriverFactory
