@@ -72,7 +72,7 @@ data class UsosUserInfoDto(
 data class UsosGradeDto(
     @SerialName("value_symbol")        val valueSymbol: String? = null,
     @SerialName("passes")              val passes: Boolean? = null,
-    @SerialName("value_description")   val valueDescription: dev.akinom.isod.domain.LangDict? = null,
+    @SerialName("value_description")   val valueDescription: LangDict? = null,
     @SerialName("counts_into_average") val countsIntoAverage: Boolean? = null,
     @SerialName("comment")             val comment: String? = null,
     @SerialName("exam_id")             val examId: String? = null,

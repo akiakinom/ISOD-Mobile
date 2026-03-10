@@ -19,6 +19,7 @@ import dev.akinom.isod.data.repository.GradesRepository
 import dev.akinom.isod.domain.CourseGrade
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -41,9 +42,9 @@ class GradesScreenModel : ScreenModel, KoinComponent {
     init {
         screenModelScope.launch {
             _state.value = GradesState.Loading
-            runCatching { repo.getGrades(SEMESTER, USOS_TERM_ID) }
-                .onSuccess { _state.value = GradesState.Loaded(it) }
-                .onFailure { _state.value = GradesState.Error(it.message ?: "Unknown error") }
+            repo.getGrades(SEMESTER, USOS_TERM_ID)
+                .catch { _state.value = GradesState.Error(it.message ?: "Unknown error") }
+                .collect { _state.value = GradesState.Loaded(it) }
         }
     }
 }

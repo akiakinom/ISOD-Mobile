@@ -1,0 +1,29 @@
+CREATE TABLE CourseGradeEntity (
+    courseId          TEXT NOT NULL,
+    semester          TEXT NOT NULL,
+    courseNumber      TEXT NOT NULL,
+    courseName        TEXT NOT NULL,
+    ects              INTEGER NOT NULL,
+    passType          TEXT NOT NULL,
+    finalGrade        TEXT,
+    finalGradeComment TEXT,
+    passes            INTEGER,          -- 1/0/NULL
+    countsIntoAverage INTEGER,          -- 1/0/NULL
+    classGradesJson   TEXT NOT NULL,    -- JSON List<ClassGrade>
+    hasIsod           INTEGER NOT NULL,
+    hasUsos           INTEGER NOT NULL,
+    lastUpdated       INTEGER NOT NULL,
+    PRIMARY KEY (courseId, semester)
+);
+
+upsert:
+INSERT OR REPLACE INTO CourseGradeEntity VALUES ?;
+
+selectBySemester:
+SELECT * FROM CourseGradeEntity WHERE semester = ? ORDER BY courseName ASC;
+
+lastUpdated:
+SELECT lastUpdated FROM CourseGradeEntity WHERE semester = ? LIMIT 1;
+
+deleteBySemester:
+DELETE FROM CourseGradeEntity WHERE semester = ?;
