@@ -70,27 +70,22 @@ class HomeScreen : Screen {
             val isodCount = timetable.count { it.source == TimetableSource.ISOD }
             val usosCount = timetable.count { it.source == TimetableSource.USOS }
             DebugSection(
-                title  = "📅 Timetable — week of ${screenModel.weekMonday} (${timetable.size} items)",
-                status = if (timetable.isEmpty()) "⏳ loading..." else "✅ ISOD:$isodCount USOS:$usosCount",
+                title  = "📅 Timetable — week of ${screenModel.weekMonday} (${timetable.size})",
+                status = if (timetable.isEmpty()) "⏳" else "✅ ISOD:$isodCount USOS:$usosCount",
             ) {
                 timetable.forEach { entry ->
                     val source = if (entry.source == TimetableSource.USOS) "🔵" else "⚪"
-                    val time   = entry.startTime.take(16)
-                    val room   = listOfNotNull(
-                        entry.building.ifBlank { null },
-                        entry.room.ifBlank { null },
-                    ).joinToString(" ").ifBlank { "?" }
-                    DebugRow("$source  Day${entry.dayOfWeek} $time  [${entry.courseType}]  ${entry.courseNameShort}  @ $room")
+                    DebugRow("$source  Day${entry.dayOfWeek}  ${entry.formatDisplay()}")
                 }
-                if (timetable.isEmpty()) DebugRow("No entries (USOS not linked or no classes this week)")
+                if (timetable.isEmpty()) DebugRow("No entries")
             }
 
             DebugSection(
-                title  = "📰 News (${news.size} items)",
-                status = if (news.isEmpty()) "⏳ loading..." else "✅ loaded",
+                title  = "📰 News (${news.size})",
+                status = if (news.isEmpty()) "⏳" else "✅",
             ) {
                 news.take(5).forEach { item ->
-                    DebugRow("[${item.type.name}] ${item.subject.take(50)}")
+                    DebugRow("[${item.type.name}] ${item.subject.take(60)}")
                 }
                 if (news.size > 5) DebugRow("… and ${news.size - 5} more")
             }
@@ -116,17 +111,8 @@ private fun DebugSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = title,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 13.sp,
-            )
-            Text(
-                text = status,
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Text(text = title, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp)
+            Text(text = status, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
         content()

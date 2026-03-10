@@ -10,17 +10,38 @@ data class TimetableEntry(
     val source: TimetableSource,
     val courseName: String,
     val courseNameShort: String,
-    val courseType: String,        // "W", "L", "C", "WF", etc.
-    val startTime: String,         // "yyyy-mm-dd hh:mm:ss" (USOS) or "hh:mm AM/PM" (ISOD)
-    val endTime: String,
+    val courseType: String,
+    val startTime: String,         // "hh:mm" normalized
+    val endTime: String,           // "hh:mm" normalized
     val dayOfWeek: Int,            // 1=Mon … 7=Sun
-    val date: String?,             // "yyyy-mm-dd" — only available from USOS
+    val date: String?,             // "yyyy-mm-dd" — USOS only
     val building: String,
+    val buildingShort: String,
     val room: String,
-    val teachers: List<String>,
+    val lecturerIds: List<Long>,   // raw IDs — resolved to names later
+    val lecturerNames: List<String>,
     val groups: List<String>,
     val frequency: String?,
-)
+) {
+    val dedupeKey: String get() = "${dayOfWeek}_${startTime}_${courseName.normalizedForDedup()}"
+
+    fun formatDisplay(): String {
+        val lecturer = lecturerNames.firstOrNull() ?: ""
+        val building = buildingShort.ifBlank { building.abbreviate() }
+        val lecturerPart = if (lecturer.isNotBlank()) " - $lecturer" else ""
+        return "$courseName ($courseNameShort) [$courseType] $startTime-$endTime $building$lecturerPart"
+    }
+}
+
+private fun String.normalizedForDedup(): String =
+    lowercase().replace(Regex("[^a-z0-9ąćęłńóśźż]"), "").take(20)
+
+private fun String.abbreviate(): String =
+    split(" ")
+        .filter { it.length > 1 }
+        .mapNotNull { it.firstOrNull()?.uppercaseChar() }
+        .joinToString("")
+        .take(4)
 
 private val ISOD_EXCLUDED_PREFIXES = listOf("WF", "DSJO")
 
@@ -28,44 +49,62 @@ fun PlanItem.isExcluded(): Boolean =
     ISOD_EXCLUDED_PREFIXES.any { courseNameShort.startsWith(it) }
 
 fun PlanItem.toTimetableEntry() = TimetableEntry(
-    id             = "isod_$id",
-    source         = TimetableSource.ISOD,
-    courseName     = courseName,
+    id              = "isod_$id",
+    source          = TimetableSource.ISOD,
+    courseName      = courseName,
     courseNameShort = courseNameShort,
-    courseType     = typeOfClasses,
-    startTime      = startTime,
-    endTime        = endTime,
-    dayOfWeek      = dayOfWeek,
-    date           = null,
-    building       = building,
-    room           = room,
-    teachers       = teachers,
-    groups         = groups,
-    frequency      = cycle,
+    courseType      = typeOfClasses,
+    startTime       = startTime.parseTime(),
+    endTime         = endTime.parseTime(),
+    dayOfWeek       = dayOfWeek,
+    date            = null,
+    building        = building,
+    buildingShort   = buildingShort,
+    room            = room,
+    lecturerIds     = emptyList(),
+    lecturerNames   = teachers,
+    groups          = groups,
+    frequency       = cycle,
 )
 
 fun UsosActivity.toTimetableEntry(): TimetableEntry {
     val date      = startTime.take(10)
     val dayOfWeek = date.toDayOfWeek()
+    val name      = courseName?.get() ?: this.name.get()
     return TimetableEntry(
         id              = "usos_${courseId ?: type}_$startTime",
         source          = TimetableSource.USOS,
-        courseName      = courseName?.get() ?: name.get(),
-        courseNameShort = courseName?.get() ?: name.get(),
-        courseType      = classtypeName?.get("en") ?: type,
-        startTime       = startTime,
-        endTime         = endTime,
+        courseName      = name,
+        courseNameShort = generateShortName(name),
+        courseType      = classtypeName?.get("en")?.take(3)?.uppercase() ?: type.take(3).uppercase(),
+        startTime       = startTime.drop(11).take(5),   // "yyyy-mm-dd hh:mm:ss" → "hh:mm"
+        endTime         = endTime.drop(11).take(5),
         dayOfWeek       = dayOfWeek,
         date            = date,
         building        = buildingName?.get() ?: "",
+        buildingShort   = buildingName?.get()?.abbreviate() ?: "",
         room            = roomNumber ?: "",
-        teachers        = emptyList(),
+        lecturerIds     = lecturerIds,
+        lecturerNames   = emptyList(),                  // filled in by repository after name lookup
         groups          = groupNumber?.let { listOf("Gr $it") } ?: emptyList(),
         frequency       = frequency,
     )
 }
 
-private fun String.toDayOfWeek(): Int {
+private fun String.parseTime(): String {
+    return try {
+        val parts  = trim().split(":")
+        var hour   = parts[0].trim().toInt()
+        val minute = parts[1].trim()
+        val isPm   = contains("PM", ignoreCase = true)
+        val isAm   = contains("AM", ignoreCase = true)
+        if (isPm && hour != 12) hour += 12
+        if (isAm && hour == 12) hour = 0
+        "%02d:%02d".format(hour, minute.filter { it.isDigit() }.take(2).toInt())
+    } catch (e: Exception) { this }
+}
+
+fun String.toDayOfWeek(): Int {
     val parts = split("-")
     if (parts.size != 3) return 0
     var y = parts[0].toIntOrNull() ?: return 0

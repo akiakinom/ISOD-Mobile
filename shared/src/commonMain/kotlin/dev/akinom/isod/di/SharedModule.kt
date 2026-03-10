@@ -66,7 +66,7 @@ val sharedModule = module {
     }
 
     single { UsosRepository(get(), get(), get()) }
-    single { TimetableRepository(get(), get()) }
+    single { TimetableRepository(get(), get(), get()) }
 
 }
 

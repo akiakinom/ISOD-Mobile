@@ -13,10 +13,14 @@ import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
-private const val BASE_URL      = "https://apps.usos.pw.edu.pl"
-private const val TT_USER_URL   = "$BASE_URL/services/tt/user"
-private const val USER_INFO_URL = "$BASE_URL/services/users/user"
+private const val BASE_URL       = "https://apps.usos.pw.edu.pl"
+private const val TT_USER_URL    = "$BASE_URL/services/tt/user"
+private const val USER_INFO_URL  = "$BASE_URL/services/users/user"
+private const val USERS_URL      = "$BASE_URL/services/users/users"
 
 private val json = Json {
     ignoreUnknownKeys = true
@@ -37,7 +41,7 @@ class UsosApiClient(
 ) {
 
     suspend fun getTimetable(
-        start: String,   // "yyyy-mm-dd"
+        start: String,
         days: Int = 7,
     ): UsosResult<List<UsosActivity>> = fetch(
         url    = TT_USER_URL,
@@ -57,15 +61,33 @@ class UsosApiClient(
         json.decodeFromString<List<UsosActivityDto>>(body).map { it.toDomain() }
     }
 
+    suspend fun getLecturerNames(ids: List<Long>): UsosResult<Map<Long, String>> {
+        if (ids.isEmpty()) return UsosResult.Success(emptyMap())
+        return fetch(
+            url    = USERS_URL,
+            params = mapOf(
+                "user_ids" to ids.joinToString("|"),
+                "fields"   to "id|first_name|last_name",
+            ),
+        ) { body ->
+            val obj = json.parseToJsonElement(body).jsonObject
+            obj.entries.mapNotNull { (key, value) ->
+                val userId = key.toLongOrNull() ?: return@mapNotNull null
+                val person = value.jsonObject
+                val firstName = person["first_name"]?.jsonPrimitive?.content ?: ""
+                val lastName  = person["last_name"]?.jsonPrimitive?.content ?: ""
+                userId to "$firstName $lastName".trim()
+            }.toMap()
+        }
+    }
+
     suspend fun getUserInfo(): UsosResult<UsosUserInfo> = fetch(
         url    = USER_INFO_URL,
-        params = mapOf(
-            "fields" to "id|first_name|last_name|student_number|photo_urls",
-        ),
+        params = mapOf("fields" to "id|first_name|last_name|student_number|photo_urls"),
     ) { body ->
         json.decodeFromString<UsosUserInfoDto>(body).toDomain()
     }
-    
+
     private suspend fun <T> fetch(
         url: String,
         params: Map<String, String> = emptyMap(),
@@ -91,7 +113,7 @@ class UsosApiClient(
             }
 
             val body = response.bodyAsText()
-            println("📡 USOS [${url.substringAfterLast('/')}] response: ${body.take(200)}")
+            println("📡 USOS [${url.substringAfterLast('/')}]: ${body.take(200)}")
             UsosResult.Success(parse(body))
         } catch (e: Exception) {
             println("❌ USOS [${url.substringAfterLast('/')}] ${e::class.simpleName}: ${e.message}")
