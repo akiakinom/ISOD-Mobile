@@ -5,6 +5,7 @@ import dev.akinom.isod.domain.UsosActivity
 import dev.akinom.isod.domain.UsosUserInfo
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 
 typealias TimetableResponseDto = List<UsosActivityDto>
 
@@ -67,3 +68,19 @@ data class UsosUserInfoDto(
         photoUrl      = photoUrls?.get("50x50"),
     )
 }
+@Serializable
+data class UsosGradeDto(
+    @SerialName("value_symbol")        val valueSymbol: String? = null,
+    @SerialName("passes")              val passes: Boolean? = null,
+    @SerialName("value_description")   val valueDescription: dev.akinom.isod.domain.LangDict? = null,
+    @SerialName("counts_into_average") val countsIntoAverage: Boolean? = null,
+    @SerialName("comment")             val comment: String? = null,
+    @SerialName("exam_id")             val examId: String? = null,
+    @SerialName("exam_session_number") val examSessionNumber: Int? = null,
+)
+
+@Serializable
+data class UsosCourseEditionGradesDto(
+    @SerialName("course_grades")       val courseGrades: List<UsosGradeDto> = emptyList(),
+    @SerialName("course_units_grades") val courseUnitsGrades: JsonObject? = null,
+)

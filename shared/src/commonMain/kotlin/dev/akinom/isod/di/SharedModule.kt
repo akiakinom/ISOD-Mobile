@@ -8,6 +8,7 @@ import dev.akinom.isod.data.cache.DatabaseDriverFactory
 import dev.akinom.isod.data.remote.IsodApiClient
 import dev.akinom.isod.data.remote.UsosApiClient
 import dev.akinom.isod.data.repository.CourseRepository
+import dev.akinom.isod.data.repository.GradesRepository
 import dev.akinom.isod.data.repository.NewsRepository
 import dev.akinom.isod.data.repository.PlanRepository
 import dev.akinom.isod.data.repository.TimetableRepository
@@ -67,6 +68,7 @@ val sharedModule = module {
 
     single { UsosRepository(get(), get(), get()) }
     single { TimetableRepository(get(), get(), get()) }
+    single { GradesRepository(get(), get()) }
 
 }
 

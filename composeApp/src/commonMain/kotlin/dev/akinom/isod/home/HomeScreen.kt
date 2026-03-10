@@ -15,12 +15,15 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.akinom.isod.auth.currentWeekMonday
 import dev.akinom.isod.data.repository.NewsRepository
 import dev.akinom.isod.data.repository.TimetableRepository
 import dev.akinom.isod.domain.NewsHeader
 import dev.akinom.isod.domain.TimetableEntry
 import dev.akinom.isod.domain.TimetableSource
+import dev.akinom.isod.grades.GradesScreen
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -51,6 +54,7 @@ class HomeScreen : Screen {
         val screenModel = rememberScreenModel { HomeScreenModel() }
         val timetable   by screenModel.timetable.collectAsState()
         val news        by screenModel.news.collectAsState()
+        val navigator   = LocalNavigator.currentOrThrow
 
         Column(
             modifier = Modifier
@@ -73,6 +77,17 @@ class HomeScreen : Screen {
                 title  = "📅 Timetable — week of ${screenModel.weekMonday} (${timetable.size})",
                 status = if (timetable.isEmpty()) "⏳" else "✅ ISOD:$isodCount USOS:$usosCount",
             ) {
+                Button(
+                    onClick = { navigator.push(GradesScreen()) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.small,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                ) {
+                    Text("View Grades 🎓", fontSize = 12.sp)
+                }
+
+                Spacer(Modifier.height(4.dp))
+
                 timetable.forEach { entry ->
                     val source = if (entry.source == TimetableSource.USOS) "🔵" else "⚪"
                     DebugRow("$source  Day${entry.dayOfWeek}  ${entry.formatDisplay()}")
