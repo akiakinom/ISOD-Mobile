@@ -79,10 +79,17 @@ private fun weekDates(weekStart: String): Set<String> {
 private fun normalizeDate(year: Int, month: Int, day: Int): String {
     val dim = daysInMonth(year, month)
     return when {
-        day <= dim  -> "%04d-%02d-%02d".format(year, month, day)
-        month == 12 -> "%04d-%02d-%02d".format(year + 1, 1, day - dim)
-        else        -> "%04d-%02d-%02d".format(year, month + 1, day - dim)
+        day <= dim  -> formatDate(year, month, day)
+        month == 12 -> formatDate(year + 1, 1, day - dim)
+        else        -> formatDate(year, month + 1, day - dim)
     }
+}
+
+private fun formatDate(year: Int, month: Int, day: Int): String {
+    val y = year.toString().padStart(4, '0')
+    val m = month.toString().padStart(2, '0')
+    val d = day.toString().padStart(2, '0')
+    return "$y-$m-$d"
 }
 
 private fun daysInMonth(year: Int, month: Int): Int = when (month) {

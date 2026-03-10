@@ -26,10 +26,14 @@ data class TimetableEntry(
     val dedupeKey: String get() = "${dayOfWeek}_${startTime}_${courseName.normalizedForDedup()}"
 
     fun formatDisplay(): String {
-        val lecturer = lecturerNames.firstOrNull() ?: ""
+        val lecturer = lecturerNames.joinToString(", ")
         val building = buildingShort.ifBlank { building.abbreviate() }
+        val location = listOfNotNull(
+            building.ifBlank { null },
+            room.ifBlank { null },
+        ).joinToString(" ")
         val lecturerPart = if (lecturer.isNotBlank()) " - $lecturer" else ""
-        return "$courseName ($courseNameShort) [$courseType] $startTime-$endTime $building$lecturerPart"
+        return "$courseName ($courseNameShort) [$courseType] $startTime-$endTime $location$lecturerPart"
     }
 }
 
@@ -53,7 +57,7 @@ fun PlanItem.toTimetableEntry() = TimetableEntry(
     source          = TimetableSource.ISOD,
     courseName      = courseName,
     courseNameShort = courseNameShort,
-    courseType      = typeOfClasses,
+    courseType = typeOfClasses.toPolishClassType(),
     startTime       = startTime.parseTime(),
     endTime         = endTime.parseTime(),
     dayOfWeek       = dayOfWeek,
@@ -76,7 +80,9 @@ fun UsosActivity.toTimetableEntry(): TimetableEntry {
         source          = TimetableSource.USOS,
         courseName      = name,
         courseNameShort = generateShortName(name),
-        courseType      = classtypeName?.get("en")?.take(3)?.uppercase() ?: type.take(3).uppercase(),
+        courseType = classtypeName?.get("pl")?.toPolishClassType()
+            ?: classtypeName?.get("en")?.toPolishClassType()
+            ?: type.toPolishClassType(),
         startTime       = startTime.drop(11).take(5),   // "yyyy-mm-dd hh:mm:ss" → "hh:mm"
         endTime         = endTime.drop(11).take(5),
         dayOfWeek       = dayOfWeek,
@@ -100,7 +106,10 @@ private fun String.parseTime(): String {
         val isAm   = contains("AM", ignoreCase = true)
         if (isPm && hour != 12) hour += 12
         if (isAm && hour == 12) hour = 0
-        "%02d:%02d".format(hour, minute.filter { it.isDigit() }.take(2).toInt())
+        
+        val h = hour.toString().padStart(2, '0')
+        val m = minute.filter { it.isDigit() }.take(2).padStart(2, '0')
+        "$h:$m"
     } catch (e: Exception) { this }
 }
 
@@ -115,4 +124,18 @@ fun String.toDayOfWeek(): Int {
     val j = y / 100
     val h = (d + (13 * (month + 1)) / 5 + k + k / 4 + j / 4 + 5 * j) % 7
     return ((h + 5) % 7) + 1
+}
+
+fun String.toPolishClassType(): String = when (uppercase()) {
+    "W"   -> "wykład"
+    "C"   -> "ćwiczenia"
+    "L"   -> "laboratorium"
+    "S"   -> "seminarium"
+    "P"   -> "projekt"
+    "LECTURE", "LEC"        -> "wykład"
+    "TUTORIAL", "TUT"       -> "ćwiczenia"
+    "LABORATORY", "LAB"     -> "laboratorium"
+    "SEMINAR"               -> "seminarium"
+    "PROJECT", "PRO"        -> "projekt"
+    else -> this.lowercase()
 }

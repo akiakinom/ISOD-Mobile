@@ -34,5 +34,8 @@ actual fun currentWeekMonday(): String {
         NSCalendarUnitYear or NSCalendarUnitMonth or NSCalendarUnitDay,
         fromDate = monday,
     )
-    return "%04d-%02d-%02d".format(mc.year, mc.month, mc.day)
+    val y = mc.year.toString().padStart(4, '0')
+    val m = mc.month.toString().padStart(2, '0')
+    val d = mc.day.toString().padStart(2, '0')
+    return "$y-$m-$d"
 }
