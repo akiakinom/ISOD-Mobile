@@ -24,7 +24,7 @@ data class UsosActivityDto(
     @SerialName("building_name")          val buildingName: LangDict? = null,
     @SerialName("building_id")            val buildingId: String? = null,
     @SerialName("room_number")            val roomNumber: String? = null,
-    @SerialName("room_id")                val roomId: String? = null,
+    @SerialName("room_id")                val roomId: Int? = null,
     @SerialName("unit_id")                val unitId: Long? = null,
     @SerialName("classtype_id")           val classtypeId: String? = null,
     val frequency: String? = null,

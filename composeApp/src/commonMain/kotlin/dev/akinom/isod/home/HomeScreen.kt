@@ -17,11 +17,10 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
 import dev.akinom.isod.auth.currentWeekMonday
 import dev.akinom.isod.data.repository.NewsRepository
-import dev.akinom.isod.data.repository.PlanRepository
-import dev.akinom.isod.data.repository.UsosRepository
+import dev.akinom.isod.data.repository.TimetableRepository
 import dev.akinom.isod.domain.NewsHeader
-import dev.akinom.isod.domain.PlanItem
-import dev.akinom.isod.domain.UsosActivity
+import dev.akinom.isod.domain.TimetableEntry
+import dev.akinom.isod.domain.TimetableSource
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -31,29 +30,27 @@ import org.koin.core.component.inject
 private const val SEMESTER = "2026L"
 
 class HomeScreenModel : ScreenModel, KoinComponent {
-    private val planRepo: PlanRepository by inject()
-    private val newsRepo: NewsRepository by inject()
-    private val usosRepo: UsosRepository by inject()
+    private val timetableRepo: TimetableRepository by inject()
+    private val newsRepo: NewsRepository           by inject()
 
-    val plan: StateFlow<List<PlanItem>> = planRepo.getPlan(SEMESTER)
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val weekMonday = currentWeekMonday()
 
-    val usos: StateFlow<List<UsosActivity>> = usosRepo.getTimetable(currentWeekMonday())
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val timetable: StateFlow<List<TimetableEntry>> =
+        timetableRepo.getTimetable(SEMESTER, weekMonday)
+            .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val news: StateFlow<List<NewsHeader>> = newsRepo.getNewsHeaders(SEMESTER)
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val news: StateFlow<List<NewsHeader>> =
+        newsRepo.getNewsHeaders(SEMESTER)
+            .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 }
-
 
 class HomeScreen : Screen {
 
     @Composable
     override fun Content() {
         val screenModel = rememberScreenModel { HomeScreenModel() }
-        val plan        by screenModel.plan.collectAsState()
+        val timetable   by screenModel.timetable.collectAsState()
         val news        by screenModel.news.collectAsState()
-        val usos        by screenModel.usos.collectAsState()
 
         Column(
             modifier = Modifier
@@ -70,24 +67,22 @@ class HomeScreen : Screen {
                 color = MaterialTheme.colorScheme.primary,
             )
 
+            val isodCount = timetable.count { it.source == TimetableSource.ISOD }
+            val usosCount = timetable.count { it.source == TimetableSource.USOS }
             DebugSection(
-                title  = "📅 Plan (${plan.size} items)",
-                status = if (plan.isEmpty()) "⏳ loading..." else "✅ loaded",
+                title  = "📅 Timetable — week of ${screenModel.weekMonday} (${timetable.size} items)",
+                status = if (timetable.isEmpty()) "⏳ loading..." else "✅ ISOD:$isodCount USOS:$usosCount",
             ) {
-                plan.take(5).forEach { item ->
-                    DebugRow("${item.dayOfWeek} ${item.startTime}–${item.endTime}  ${item.courseNameShort}  ${item.room}")
+                timetable.forEach { entry ->
+                    val source = if (entry.source == TimetableSource.USOS) "🔵" else "⚪"
+                    val time   = entry.startTime.take(16)
+                    val room   = listOfNotNull(
+                        entry.building.ifBlank { null },
+                        entry.room.ifBlank { null },
+                    ).joinToString(" ").ifBlank { "?" }
+                    DebugRow("$source  Day${entry.dayOfWeek} $time  [${entry.courseType}]  ${entry.courseNameShort}  @ $room")
                 }
-                if (plan.size > 5) DebugRow("… and ${plan.size - 5} more")
-            }
-
-            DebugSection(
-                title  = "📅 USOS Plan (${plan.size} items)",
-                status = if (usos.isEmpty()) "⏳ loading..." else "✅ loaded",
-            ) {
-                usos.take(20).forEach { item ->
-                    DebugRow("${item.startTime}–${item.endTime}  ${item.courseName}  ${item.roomNumber}")
-                }
-                if (plan.size > 20) DebugRow("… and ${plan.size - 5} more")
+                if (timetable.isEmpty()) DebugRow("No entries (USOS not linked or no classes this week)")
             }
 
             DebugSection(
@@ -121,8 +116,17 @@ private fun DebugSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(text = title, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-            Text(text = status, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = title,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 13.sp,
+            )
+            Text(
+                text = status,
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
         content()

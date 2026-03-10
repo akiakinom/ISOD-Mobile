@@ -10,6 +10,7 @@ import dev.akinom.isod.data.remote.UsosApiClient
 import dev.akinom.isod.data.repository.CourseRepository
 import dev.akinom.isod.data.repository.NewsRepository
 import dev.akinom.isod.data.repository.PlanRepository
+import dev.akinom.isod.data.repository.TimetableRepository
 import dev.akinom.isod.data.repository.UsosRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.logging.LogLevel
@@ -65,7 +66,7 @@ val sharedModule = module {
     }
 
     single { UsosRepository(get(), get(), get()) }
-    //single { TimetableRepository(get(), get()) }
+    single { TimetableRepository(get(), get()) }
 
 }
 

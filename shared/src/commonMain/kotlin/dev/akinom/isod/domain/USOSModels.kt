@@ -30,7 +30,7 @@ data class UsosActivity(
     val buildingName: LangDict? = null,
     val buildingId: String? = null,
     val roomNumber: String? = null,
-    val roomId: String? = null,
+    val roomId: Int? = null,
     val unitId: Long? = null,
     val classtypeId: String? = null,
     val frequency: String? = null,
