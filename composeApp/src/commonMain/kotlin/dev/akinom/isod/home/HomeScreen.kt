@@ -15,10 +15,13 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
+import dev.akinom.isod.auth.currentWeekMonday
 import dev.akinom.isod.data.repository.NewsRepository
 import dev.akinom.isod.data.repository.PlanRepository
+import dev.akinom.isod.data.repository.UsosRepository
 import dev.akinom.isod.domain.NewsHeader
 import dev.akinom.isod.domain.PlanItem
+import dev.akinom.isod.domain.UsosActivity
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -30,8 +33,12 @@ private const val SEMESTER = "2026L"
 class HomeScreenModel : ScreenModel, KoinComponent {
     private val planRepo: PlanRepository by inject()
     private val newsRepo: NewsRepository by inject()
+    private val usosRepo: UsosRepository by inject()
 
     val plan: StateFlow<List<PlanItem>> = planRepo.getPlan(SEMESTER)
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val usos: StateFlow<List<UsosActivity>> = usosRepo.getTimetable(currentWeekMonday())
         .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val news: StateFlow<List<NewsHeader>> = newsRepo.getNewsHeaders(SEMESTER)
@@ -46,6 +53,7 @@ class HomeScreen : Screen {
         val screenModel = rememberScreenModel { HomeScreenModel() }
         val plan        by screenModel.plan.collectAsState()
         val news        by screenModel.news.collectAsState()
+        val usos        by screenModel.usos.collectAsState()
 
         Column(
             modifier = Modifier
@@ -70,6 +78,16 @@ class HomeScreen : Screen {
                     DebugRow("${item.dayOfWeek} ${item.startTime}–${item.endTime}  ${item.courseNameShort}  ${item.room}")
                 }
                 if (plan.size > 5) DebugRow("… and ${plan.size - 5} more")
+            }
+
+            DebugSection(
+                title  = "📅 USOS Plan (${plan.size} items)",
+                status = if (usos.isEmpty()) "⏳ loading..." else "✅ loaded",
+            ) {
+                usos.take(20).forEach { item ->
+                    DebugRow("${item.startTime}–${item.endTime}  ${item.courseName}  ${item.roomNumber}")
+                }
+                if (plan.size > 20) DebugRow("… and ${plan.size - 5} more")
             }
 
             DebugSection(

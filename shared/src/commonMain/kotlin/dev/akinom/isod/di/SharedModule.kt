@@ -5,9 +5,11 @@ import dev.akinom.isod.auth.CredentialsStorage
 import dev.akinom.isod.auth.createSettings
 import dev.akinom.isod.data.cache.DatabaseDriverFactory
 import dev.akinom.isod.data.remote.IsodApiClient
+import dev.akinom.isod.data.remote.UsosApiClient
 import dev.akinom.isod.data.repository.CourseRepository
 import dev.akinom.isod.data.repository.NewsRepository
 import dev.akinom.isod.data.repository.PlanRepository
+import dev.akinom.isod.data.repository.UsosRepository
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
@@ -51,6 +53,19 @@ val sharedModule = module {
     single { PlanRepository(get(), get(), get()) }
     single { NewsRepository(get(), get(), get()) }
     single { CourseRepository(get(), get(), get()) }
+
+    single {
+        UsosApiClient(
+            httpClient     = get(),
+            storage        = get(),
+            consumerKey    = Secrets.USOS_CONSUMER_KEY,
+            consumerSecret = Secrets.USOS_CONSUMER_SECRET,
+        )
+    }
+
+    single { UsosRepository(get(), get(), get()) }
+    //single { TimetableRepository(get(), get()) }
+
 }
 
 expect val platformModule: Module
