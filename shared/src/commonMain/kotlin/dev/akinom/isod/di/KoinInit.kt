@@ -2,10 +2,16 @@ package dev.akinom.isod.di
 
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
+import org.koin.core.module.Module
 
-fun initKoin(appDeclaration: KoinApplication.() -> Unit = {}) {
+private var isKoinInitialized = false
+
+fun initKoin(additionalModules: List<Module> = emptyList(), appDeclaration: KoinApplication.() -> Unit = {}) {
+    if (isKoinInitialized) return
+    
     startKoin {
         appDeclaration()
-        modules(sharedModule, platformModule)
+        modules(listOf(sharedModule, platformModule) + additionalModules)
     }
+    isKoinInitialized = true
 }

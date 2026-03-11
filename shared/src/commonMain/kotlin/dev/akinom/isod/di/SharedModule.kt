@@ -71,7 +71,9 @@ val sharedModule = module {
     single { UsosRepository(get(), get(), get()) }
     single { TimetableRepository(get(), get(), get()) }
     single { GradesRepository(get(), get(), get()) }
+}
 
+val notificationModule = module {
     single {
         NewsNotificationChecker(
             db = get(),

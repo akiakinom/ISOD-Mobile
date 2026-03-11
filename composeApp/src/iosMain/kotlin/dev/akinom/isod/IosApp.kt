@@ -1,9 +1,10 @@
 package dev.akinom.isod
 
 import dev.akinom.isod.di.initKoin
+import dev.akinom.isod.di.notificationModule
 
 fun initApp() {
-    initKoin()
+    initKoin(additionalModules = listOf(notificationModule))
 
     IosNotificationScheduler.register()
 

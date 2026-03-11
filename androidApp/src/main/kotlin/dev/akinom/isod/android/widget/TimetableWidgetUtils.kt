@@ -1,14 +1,13 @@
 package dev.akinom.isod.android.widget
 
 import dev.akinom.isod.domain.TimetableEntry
+import dev.akinom.isod.domain.TimetableWidgetLogic
 import java.util.Calendar
 
 object TimetableWidgetUtils {
     fun getTodayDayOfWeek(): Int {
         val cal = Calendar.getInstance()
         val dow = cal.get(Calendar.DAY_OF_WEEK)
-        // Calendar.MONDAY = 2, ..., Calendar.SATURDAY = 7, Calendar.SUNDAY = 1
-        // TimetableEntry: 1=Mon ... 7=Sun
         return when (dow) {
             Calendar.MONDAY -> 1
             Calendar.TUESDAY -> 2
@@ -29,30 +28,10 @@ object TimetableWidgetUtils {
     }
 
     fun filterToday(entries: List<TimetableEntry>): List<TimetableEntry> {
-        val today = getTodayDayOfWeek()
-        return entries.filter { it.dayOfWeek == today }
-            .sortedBy { it.startTime }
+        return TimetableWidgetLogic.filterToday(entries, getTodayDayOfWeek())
     }
 
     fun getNextClasses(entries: List<TimetableEntry>): List<TimetableEntry> {
-        val now = getCurrentTime()
-        val today = getTodayDayOfWeek()
-        
-        // Filter entries for today and later in the week
-        val sortedEntries = entries.sortedWith(compareBy({ it.dayOfWeek }, { it.startTime }))
-        
-        // Current class: startTime <= now < endTime
-        val current = sortedEntries.find { it.dayOfWeek == today && it.startTime <= now && it.endTime > now }
-        
-        // Future classes starting from now
-        val future = sortedEntries.filter { 
-            (it.dayOfWeek == today && it.startTime > now) || (it.dayOfWeek > today)
-        }
-
-        return if (current != null) {
-            listOfNotNull(current, future.firstOrNull())
-        } else {
-            future.take(2)
-        }
+        return TimetableWidgetLogic.getNextClasses(entries, getTodayDayOfWeek(), getCurrentTime())
     }
 }

@@ -7,10 +7,63 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6157FC072F61989B007F7571 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6157FC062F61989B007F7571 /* WidgetKit.framework */; };
+		6157FC092F61989B007F7571 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6157FC082F61989B007F7571 /* SwiftUI.framework */; };
+		6157FC162F61989C007F7571 /* TimetableWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 6157FC052F61989B007F7571 /* TimetableWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		6157FC2D2F61A5B0007F7571 /* libsqlite3.0.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 6157FC2C2F61A5B0007F7571 /* libsqlite3.0.tbd */; };
 		61A9E77E2F5CA3AF00579091 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 61A9E77D2F5CA3AF00579091 /* libsqlite3.tbd */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		6157FC142F61989C007F7571 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83F535A54A83F912FAD2F95A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6157FC042F61989B007F7571;
+			remoteInfo = TimetableWidgetsExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		6157FC172F61989C007F7571 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				6157FC162F61989C007F7571 /* TimetableWidgetsExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6157FC252F619B9B007F7571 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6157FC292F619CF5007F7571 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		6157FC052F61989B007F7571 /* TimetableWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TimetableWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		6157FC062F61989B007F7571 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		6157FC082F61989B007F7571 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		6157FC212F6198CF007F7571 /* TimetableWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TimetableWidgetsExtension.entitlements; sourceTree = "<group>"; };
+		6157FC2C2F61A5B0007F7571 /* libsqlite3.0.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.0.tbd; path = usr/lib/libsqlite3.0.tbd; sourceTree = SDKROOT; };
 		61A9E77D2F5CA3AF00579091 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		FA7A984B2A9C31646A30C52D /* ISOD Mobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ISOD Mobile.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,9 +76,24 @@
 			);
 			target = 6109294444C867FA45DF32C1 /* iosApp */;
 		};
+		6157FC1B2F61989C007F7571 /* Exceptions for "TimetableWidgets" folder in "TimetableWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 6157FC042F61989B007F7571 /* TimetableWidgetsExtension */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		6157FC0A2F61989B007F7571 /* TimetableWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				6157FC1B2F61989C007F7571 /* Exceptions for "TimetableWidgets" folder in "TimetableWidgetsExtension" target */,
+			);
+			path = TimetableWidgets;
+			sourceTree = "<group>";
+		};
 		7B3CF7F6DD3C3C385A2F8561 /* iosApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -42,6 +110,16 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		6157FC022F61989B007F7571 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6157FC2D2F61A5B0007F7571 /* libsqlite3.0.tbd in Frameworks */,
+				6157FC092F61989B007F7571 /* SwiftUI.framework in Frameworks */,
+				6157FC072F61989B007F7571 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C9111E58BAF5545FF6F7B5FB /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -56,8 +134,10 @@
 		289136E4DA226520D159E305 = {
 			isa = PBXGroup;
 			children = (
+				6157FC212F6198CF007F7571 /* TimetableWidgetsExtension.entitlements */,
 				A046676918AD4A94344C2999 /* Configuration */,
 				7B3CF7F6DD3C3C385A2F8561 /* iosApp */,
+				6157FC0A2F61989B007F7571 /* TimetableWidgets */,
 				61A9E77C2F5CA3AF00579091 /* Frameworks */,
 				39C76FB0261FDE14ACE2EAE4 /* Products */,
 			);
@@ -67,6 +147,7 @@
 			isa = PBXGroup;
 			children = (
 				FA7A984B2A9C31646A30C52D /* ISOD Mobile.app */,
+				6157FC052F61989B007F7571 /* TimetableWidgetsExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -74,7 +155,10 @@
 		61A9E77C2F5CA3AF00579091 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				6157FC2C2F61A5B0007F7571 /* libsqlite3.0.tbd */,
 				61A9E77D2F5CA3AF00579091 /* libsqlite3.tbd */,
+				6157FC062F61989B007F7571 /* WidgetKit.framework */,
+				6157FC082F61989B007F7571 /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -90,10 +174,13 @@
 				4C4D7C33B6A854A4DD57AB1F /* Sources */,
 				C9111E58BAF5545FF6F7B5FB /* Frameworks */,
 				904E4AA3DE6E7B565421263A /* Resources */,
+				6157FC172F61989C007F7571 /* Embed Foundation Extensions */,
+				6157FC292F619CF5007F7571 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				6157FC152F61989C007F7571 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				7B3CF7F6DD3C3C385A2F8561 /* iosApp */,
@@ -105,6 +192,29 @@
 			productReference = FA7A984B2A9C31646A30C52D /* ISOD Mobile.app */;
 			productType = "com.apple.product-type.application";
 		};
+		6157FC042F61989B007F7571 /* TimetableWidgetsExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6157FC1A2F61989C007F7571 /* Build configuration list for PBXNativeTarget "TimetableWidgetsExtension" */;
+			buildPhases = (
+				6157FC012F61989B007F7571 /* Sources */,
+				6157FC022F61989B007F7571 /* Frameworks */,
+				6157FC032F61989B007F7571 /* Resources */,
+				6157FC252F619B9B007F7571 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				6157FC0A2F61989B007F7571 /* TimetableWidgets */,
+			);
+			name = TimetableWidgetsExtension;
+			packageProductDependencies = (
+			);
+			productName = TimetableWidgetsExtension;
+			productReference = 6157FC052F61989B007F7571 /* TimetableWidgetsExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -112,11 +222,14 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1620;
+				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
 					6109294444C867FA45DF32C1 = {
 						CreatedOnToolsVersion = 16.2;
+					};
+					6157FC042F61989B007F7571 = {
+						CreatedOnToolsVersion = 26.3;
 					};
 				};
 			};
@@ -135,11 +248,19 @@
 			projectRoot = "";
 			targets = (
 				6109294444C867FA45DF32C1 /* iosApp */,
+				6157FC042F61989B007F7571 /* TimetableWidgetsExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		6157FC032F61989B007F7571 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		904E4AA3DE6E7B565421263A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -179,7 +300,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6157FC012F61989B007F7571 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		6157FC152F61989C007F7571 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6157FC042F61989B007F7571 /* TimetableWidgetsExtension */;
+			targetProxy = 6157FC142F61989C007F7571 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		12B9A308604E01AD0B5FF335 /* Debug */ = {
@@ -311,11 +447,13 @@
 				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				DEVELOPMENT_TEAM = "${TEAM_ID}";
+				DEVELOPMENT_TEAM = 5RBH7L5G2Y;
 				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = "/$(CONFIGURATION)/$(SDK_NAME)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -339,11 +477,13 @@
 				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				DEVELOPMENT_TEAM = "${TEAM_ID}";
+				DEVELOPMENT_TEAM = 5RBH7L5G2Y;
 				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = "/$(CONFIGURATION)/$(SDK_NAME)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -361,6 +501,74 @@
 			};
 			name = Release;
 		};
+		6157FC182F61989C007F7571 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = TimetableWidgetsExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5RBH7L5G2Y;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TimetableWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TimetableWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.akinom.isod.ISODMobile.TimetableWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		6157FC192F61989C007F7571 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = TimetableWidgetsExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5RBH7L5G2Y;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TimetableWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TimetableWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.akinom.isod.ISODMobile.TimetableWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -369,6 +577,15 @@
 			buildConfigurations = (
 				12B9A308604E01AD0B5FF335 /* Debug */,
 				1D3337908E2A579DDA800585 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6157FC1A2F61989C007F7571 /* Build configuration list for PBXNativeTarget "TimetableWidgetsExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6157FC182F61989C007F7571 /* Debug */,
+				6157FC192F61989C007F7571 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

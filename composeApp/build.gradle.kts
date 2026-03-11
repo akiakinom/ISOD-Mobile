@@ -30,12 +30,13 @@ kotlin {
         it.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+            export(projects.shared)
         }
     }
 
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.shared)
+            api(projects.shared)
 
             implementation(libs.runtime)
             implementation(libs.foundation)

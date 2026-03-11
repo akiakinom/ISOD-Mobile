@@ -5,5 +5,6 @@ import com.russhwolf.settings.Settings
 import platform.Foundation.NSUserDefaults
 
 actual fun createSettings(): Settings {
-    return NSUserDefaultsSettings(NSUserDefaults.standardUserDefaults)
+    val defaults = NSUserDefaults(suiteName = "group.dev.akinom.isod")
+    return NSUserDefaultsSettings(defaults)
 }
