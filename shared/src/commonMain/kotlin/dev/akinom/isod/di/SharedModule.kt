@@ -47,11 +47,9 @@ val sharedModule = module {
     single<CoroutineScope> { CoroutineScope(Dispatchers.Default + SupervisorJob()) }
 
     single {
-        val storage = get<CredentialsStorage>()
         IsodApiClient(
             httpClient = get(),
-            username   = storage.getIsodUsername() ?: "",
-            apiKey     = storage.getIsodApiKey()   ?: "",
+            storage    = get(),
         )
     }
 

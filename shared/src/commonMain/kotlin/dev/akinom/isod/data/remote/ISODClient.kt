@@ -1,12 +1,12 @@
 package dev.akinom.isod.data.remote
 
+import dev.akinom.isod.auth.CredentialsStorage
 import dev.akinom.isod.data.remote.dto.*
 import dev.akinom.isod.domain.*
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
 
 private const val BASE_URL = "https://isod.ee.pw.edu.pl/isod-portal/wapi"
 
@@ -22,8 +22,7 @@ sealed class IsodResult<out T> {
 
 class IsodApiClient(
     private val httpClient: HttpClient,
-    private val username: String,
-    private val apiKey: String,
+    private val storage: CredentialsStorage,
 ) {
 
     suspend fun getPlan(semester: String? = null): IsodResult<List<PlanItem>> =
@@ -81,6 +80,13 @@ class IsodApiClient(
         extraParams: Map<String, String> = emptyMap(),
         parse: (String) -> T,
     ): IsodResult<T> = try {
+        val username = storage.getIsodUsername() ?: ""
+        val apiKey = storage.getIsodApiKey() ?: ""
+        
+        if (username.isBlank() || apiKey.isBlank()) {
+            return IsodResult.Error("Missing ISOD credentials")
+        }
+
         val response = httpClient.get(BASE_URL) {
             parameter("q", query)
             parameter("username", username)
