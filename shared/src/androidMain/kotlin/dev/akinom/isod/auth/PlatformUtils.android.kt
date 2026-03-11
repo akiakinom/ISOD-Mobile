@@ -18,3 +18,15 @@ actual fun currentWeekMonday(): String {
     val d = cal.get(Calendar.DAY_OF_MONTH)
     return "%04d-%02d-%02d".format(y, m, d)
 }
+
+actual fun currentSemester(): String {
+    val cal = Calendar.getInstance()
+    val year = cal.get(Calendar.YEAR)
+    val month = cal.get(Calendar.MONTH) + 1 // Calendar.JANUARY is 0
+
+    return when (month) {
+        1 -> "${year - 1}Z"
+        in 2..9 -> "${year}L"
+        else -> "${year}Z"
+    }
+}

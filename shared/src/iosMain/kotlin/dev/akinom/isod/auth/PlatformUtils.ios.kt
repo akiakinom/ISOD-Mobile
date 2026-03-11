@@ -39,3 +39,17 @@ actual fun currentWeekMonday(): String {
     val d = mc.day.toString().padStart(2, '0')
     return "$y-$m-$d"
 }
+
+actual fun currentSemester(): String {
+    val cal = NSCalendar(NSCalendarIdentifierISO8601)
+    val now = NSDate()
+    val components = cal.components(NSCalendarUnitYear or NSCalendarUnitMonth, fromDate = now)
+    val year = components.year.toInt()
+    val month = components.month.toInt()
+
+    return when (month) {
+        1 -> "${year - 1}Z"
+        in 2..9 -> "${year}L"
+        else -> "${year}Z"
+    }
+}

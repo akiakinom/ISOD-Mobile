@@ -9,6 +9,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import dev.akinom.isod.IsodDatabase
+import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.data.remote.IsodApiClient
 import dev.akinom.isod.notifications.NewsNotificationChecker
 import dev.akinom.isod.notifications.NotificationService
@@ -17,7 +18,6 @@ import org.koin.core.component.inject
 import java.util.concurrent.TimeUnit
 
 private const val WORK_NAME = "isod_news_notification"
-private const val SEMESTER  = "2026L"
 
 class NewsNotificationWorker(
     context: Context,
@@ -33,7 +33,7 @@ class NewsNotificationWorker(
                 db                  = db,
                 isodApi             = isodApi,
                 notificationService = NotificationService(applicationContext),
-                semester            = SEMESTER,
+                semester            = currentSemester(),
             )
             checker.check()
             Result.success()

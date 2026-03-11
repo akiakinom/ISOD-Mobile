@@ -17,6 +17,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.auth.currentWeekMonday
 import dev.akinom.isod.data.repository.NewsRepository
 import dev.akinom.isod.data.repository.TimetableRepository
@@ -30,28 +31,26 @@ import kotlinx.coroutines.flow.stateIn
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-private const val SEMESTER = "2026L"
-
-class HomeScreenModel : ScreenModel, KoinComponent {
+class HomeScreenModel(val semester: String) : ScreenModel, KoinComponent {
     private val timetableRepo: TimetableRepository by inject()
     private val newsRepo: NewsRepository           by inject()
 
     val weekMonday = currentWeekMonday()
 
     val timetable: StateFlow<List<TimetableEntry>> =
-        timetableRepo.getTimetable(SEMESTER, weekMonday)
+        timetableRepo.getTimetable(semester, weekMonday)
             .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val news: StateFlow<List<NewsHeader>> =
-        newsRepo.getNewsHeaders(SEMESTER)
+        newsRepo.getNewsHeaders(semester)
             .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 }
 
-class HomeScreen : Screen {
+class HomeScreen(val semester: String = currentSemester()) : Screen {
 
     @Composable
     override fun Content() {
-        val screenModel = rememberScreenModel { HomeScreenModel() }
+        val screenModel = rememberScreenModel { HomeScreenModel(semester) }
         val timetable   by screenModel.timetable.collectAsState()
         val news        by screenModel.news.collectAsState()
         val navigator   = LocalNavigator.currentOrThrow
@@ -65,7 +64,7 @@ class HomeScreen : Screen {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
-                text = "🛠 Debug — $SEMESTER",
+                text = "🛠 Debug — $semester",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
@@ -78,7 +77,7 @@ class HomeScreen : Screen {
                 status = if (timetable.isEmpty()) "⏳" else "✅ ISOD:$isodCount USOS:$usosCount",
             ) {
                 Button(
-                    onClick = { navigator.push(GradesScreen()) },
+                    onClick = { navigator.push(GradesScreen(semester = semester, usosTermId = semester)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.small,
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)

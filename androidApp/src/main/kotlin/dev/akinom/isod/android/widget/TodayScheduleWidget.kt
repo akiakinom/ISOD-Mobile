@@ -17,6 +17,7 @@ import androidx.glance.layout.*
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.auth.currentWeekMonday
 import dev.akinom.isod.data.repository.TimetableRepository
 import dev.akinom.isod.domain.TimetableEntry
@@ -29,7 +30,8 @@ class TodayScheduleWidget : GlanceAppWidget(), KoinComponent {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
             val monday = currentWeekMonday()
-            val timetable by timetableRepo.getTimetable("2026L", monday).collectAsState(emptyList())
+            val semester = currentSemester()
+            val timetable by timetableRepo.getTimetable(semester, monday).collectAsState(emptyList())
             val todayEntries = TimetableWidgetUtils.filterToday(timetable)
 
             Column(

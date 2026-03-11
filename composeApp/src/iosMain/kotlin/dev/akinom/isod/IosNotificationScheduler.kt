@@ -1,6 +1,7 @@
 package dev.akinom.isod
 
 import dev.akinom.isod.IsodDatabase
+import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.data.remote.IsodApiClient
 import dev.akinom.isod.notifications.NewsNotificationChecker
 import dev.akinom.isod.notifications.NotificationService
@@ -17,7 +18,6 @@ import platform.Foundation.NSDate
 import platform.Foundation.dateWithTimeIntervalSinceNow
 
 private const val BG_TASK_ID = "dev.akinom.isod.news_check"
-private const val SEMESTER   = "2026L"
 
 object IosNotificationScheduler : KoinComponent {
 
@@ -54,7 +54,7 @@ object IosNotificationScheduler : KoinComponent {
                     db                  = db,
                     isodApi             = isodApi,
                     notificationService = NotificationService(),
-                    semester            = SEMESTER,
+                    semester            = currentSemester(),
                 )
                 checker.check()
                 task.setTaskCompletedWithSuccess(true)

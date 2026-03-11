@@ -4,6 +4,7 @@ import dev.akinom.isod.IsodDatabase
 import dev.akinom.isod.Secrets
 import dev.akinom.isod.auth.CredentialsStorage
 import dev.akinom.isod.auth.createSettings
+import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.data.cache.DatabaseDriverFactory
 import dev.akinom.isod.data.remote.IsodApiClient
 import dev.akinom.isod.data.remote.UsosApiClient
@@ -77,7 +78,7 @@ val notificationModule = module {
             db = get(),
             isodApi = get(),
             notificationService = get(),
-            semester = "2026L"
+            semester = currentSemester()
         )
     }
     single { FirstLaunchGuard(get(), get()) }

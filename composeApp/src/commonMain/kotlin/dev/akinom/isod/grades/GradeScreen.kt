@@ -15,6 +15,7 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
+import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.data.repository.GradesRepository
 import dev.akinom.isod.domain.CourseGrade
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,16 +25,16 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-private const val SEMESTER     = "2026L"
-private const val USOS_TERM_ID = "2026L"
-
 sealed class GradesState {
     object Loading : GradesState()
     data class Loaded(val grades: List<CourseGrade>) : GradesState()
     data class Error(val message: String) : GradesState()
 }
 
-class GradesScreenModel : ScreenModel, KoinComponent {
+class GradesScreenModel(
+    private val semester: String,
+    private val usosTermId: String
+) : ScreenModel, KoinComponent {
     private val repo: GradesRepository by inject()
 
     private val _state = MutableStateFlow<GradesState>(GradesState.Loading)
@@ -42,7 +43,7 @@ class GradesScreenModel : ScreenModel, KoinComponent {
     init {
         screenModelScope.launch {
             _state.value = GradesState.Loading
-            repo.getGrades(SEMESTER, USOS_TERM_ID)
+            repo.getGrades(semester, usosTermId)
                 .catch { _state.value = GradesState.Error(it.message ?: "Unknown error") }
                 .collect { _state.value = GradesState.Loaded(it) }
         }
@@ -51,11 +52,14 @@ class GradesScreenModel : ScreenModel, KoinComponent {
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
-class GradesScreen : Screen {
+class GradesScreen(
+    private val semester: String = currentSemester(),
+    private val usosTermId: String = currentSemester()
+) : Screen {
 
     @Composable
     override fun Content() {
-        val screenModel = rememberScreenModel { GradesScreenModel() }
+        val screenModel = rememberScreenModel { GradesScreenModel(semester, usosTermId) }
         val state by screenModel.state.collectAsState()
 
         Column(
@@ -67,7 +71,7 @@ class GradesScreen : Screen {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                text = "🎓 Grades — $SEMESTER",
+                text = "🎓 Grades — $semester",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,

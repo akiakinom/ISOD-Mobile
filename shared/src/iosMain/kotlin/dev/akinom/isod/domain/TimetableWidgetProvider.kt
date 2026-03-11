@@ -1,5 +1,6 @@
 package dev.akinom.isod.domain
 
+import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.auth.currentWeekMonday
 import dev.akinom.isod.data.repository.TimetableRepository
 import dev.akinom.isod.di.initKoin
@@ -51,7 +52,8 @@ class TimetableWidgetProvider : KoinComponent {
         scope.launch {
             try {
                 val monday = currentWeekMonday()
-                val timetable = repository.getTimetable("2026L", monday).first()
+                val semester = currentSemester()
+                val timetable = repository.getTimetable(semester, monday).first()
                 val today = getTodayDayOfWeek()
                 completion(TimetableWidgetLogic.filterToday(timetable, today))
             } catch (e: Exception) {
@@ -64,7 +66,8 @@ class TimetableWidgetProvider : KoinComponent {
         scope.launch {
             try {
                 val monday = currentWeekMonday()
-                val timetable = repository.getTimetable("2026L", monday).first()
+                val semester = currentSemester()
+                val timetable = repository.getTimetable(semester, monday).first()
                 val today = getTodayDayOfWeek()
                 val now = getCurrentTime()
                 completion(TimetableWidgetLogic.getNextClasses(timetable, today, now))
