@@ -21,6 +21,7 @@ multiplatformSettings = "1.3.0"
 kotlinxCrypto = "0.8.0"
 webkit = "1.15.0"
 workRuntimeKtx = "2.11.1"
+glance = "1.1.1"
 
 [libraries]
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
@@ -73,6 +74,11 @@ multiplatform-settings-coroutines = { group = "com.russhwolf", name = "multiplat
 # Crypto
 kotlinx-crypto-sha2 = { group = "org.kotlincrypto.hash", name = "sha2", version.ref = "kotlinxCrypto" }
 kotlinx-crypto-hmac = { group = "org.kotlincrypto.macs", name = "hmac-sha1", version.ref = "kotlinxCrypto" }
+
+# Glance
+androidx-glance = { group = "androidx.glance", name = "glance", version.ref = "glance" }
+androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
+androidx-glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glance" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

@@ -7,9 +7,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import dev.akinom.isod.App
-import dev.akinom.isod.auth.initSettingsContext
-import dev.akinom.isod.di.initKoin
-import org.koin.android.ext.koin.androidContext
 
 class MainActivity : ComponentActivity() {
 
@@ -22,11 +19,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        initSettingsContext(this)
-        initKoin {
-            androidContext(this@MainActivity)
-        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
