@@ -37,8 +37,8 @@ object TimetableWidgetUtils {
         return TimetableWidgetLogic.getDashboardSchedule(entries, getTodayDayOfWeek(), getCurrentTime(), currentWeek)
     }
 
-    fun getNextClasses(entries: List<TimetableEntry>): List<TimetableEntry> {
-        return TimetableWidgetLogic.getNextClasses(entries, getTodayDayOfWeek(), getCurrentTime())
+    fun getNextClasses(entries: List<TimetableEntry>, currentWeek: Int?): List<TimetableEntry> {
+        return TimetableWidgetLogic.getNextClasses(entries, getTodayDayOfWeek(), getCurrentTime(), currentWeek)
     }
 
     fun widgetTypeToColor(type: String): ColorProvider {

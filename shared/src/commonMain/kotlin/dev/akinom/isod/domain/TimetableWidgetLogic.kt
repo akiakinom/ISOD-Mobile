@@ -18,28 +18,34 @@ object TimetableWidgetLogic {
     fun getNextClasses(
         entries: List<TimetableEntry>,
         todayDayOfWeek: Int,
-        currentTime: String // "HH:mm"
+        currentTime: String, // "HH:mm"
+        currentWeek: Int? = null
     ): List<TimetableEntry> {
         val sortedEntries = entries.sortedWith(compareBy({ it.dayOfWeek }, { it.startTime }))
         val currentMinutes = timeToMinutes(currentTime)
 
         val current = sortedEntries.find {
-            it.dayOfWeek == todayDayOfWeek && it.startTime <= currentTime && it.endTime > currentTime
+            it.dayOfWeek == todayDayOfWeek && it.startTime <= currentTime && it.endTime > currentTime && it.isActive(currentWeek)
         }
 
         val isEndingSoon = current?.let {
             val endMinutes = timeToMinutes(it.endTime)
-            endMinutes - currentMinutes <= 45
+            endMinutes - currentMinutes <= 30
         } ?: false
 
-        val future = sortedEntries.filter {
-            (it.dayOfWeek == todayDayOfWeek && it.startTime > currentTime) || (it.dayOfWeek > todayDayOfWeek)
+        val futureThisWeek = sortedEntries.filter {
+            ((it.dayOfWeek == todayDayOfWeek && it.startTime > currentTime) || (it.dayOfWeek > todayDayOfWeek)) && it.isActive(currentWeek)
         }
+        
+        val nextWeek = currentWeek?.plus(1)
+        val futureNextWeek = sortedEntries.filter { it.isActive(nextWeek) }
+        
+        val allFuture = futureThisWeek + futureNextWeek
 
         return if (current != null && !isEndingSoon) {
-            listOfNotNull(current, future.firstOrNull())
+            listOfNotNull(current) + allFuture.take(1)
         } else {
-            future.take(2)
+            allFuture.take(2)
         }
     }
 
@@ -47,7 +53,7 @@ object TimetableWidgetLogic {
         entries: List<TimetableEntry>,
         todayDayOfWeek: Int,
         currentTime: String,
-        currentWeek: Int?
+        currentWeek: Int? = null
     ): Pair<Boolean, List<TimetableEntry>> {
         val todayClasses = entries.filter { it.dayOfWeek == todayDayOfWeek && it.isActive(currentWeek) }
             .sortedBy { it.startTime }
@@ -60,7 +66,7 @@ object TimetableWidgetLogic {
 
         return if (isAfterLessons) {
             val tomorrow = (todayDayOfWeek % 7) + 1
-            val tomorrowWeek = if (todayDayOfWeek == 7) currentWeek?.plus(1) else currentWeek
+            val tomorrowWeek = if (todayDayOfWeek == 7) (currentWeek?.plus(1) ?: 1) else currentWeek
             true to entries.filter { it.dayOfWeek == tomorrow && it.isActive(tomorrowWeek) }.sortedBy { it.startTime }
         } else {
             false to todayClasses

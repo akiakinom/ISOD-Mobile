@@ -41,7 +41,6 @@ import dev.akinom.isod.domain.NewsHeader
 import dev.akinom.isod.domain.TimetableEntry
 import dev.akinom.isod.domain.TimetableWidgetLogic
 import dev.akinom.isod.news.NewsDetailScreen
-import dev.akinom.isod.news.capitalize
 import dev.akinom.isod.news.getDisplaySubject
 import dev.akinom.isod.news.getTagColors
 import dev.akinom.isod.news.parseDateToSortable
@@ -104,7 +103,7 @@ class HomeScreen(
         }
 
         val nextClasses = remember(timetable, today, now, screenModel.currentWeek) {
-            TimetableWidgetLogic.getNextClasses(timetable.filter { it.isActive(screenModel.currentWeek) }, today, now)
+            TimetableWidgetLogic.getNextClasses(timetable, today, now, screenModel.currentWeek)
         }
 
         PullToRefreshBox(
@@ -312,30 +311,28 @@ private fun NextClassCard(entry: TimetableEntry, today: Int, currentTime: String
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                entry.startTime,
+                                text = entry.startTime,
                                 style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = accentColor
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                entry.endTime,
+                                text = entry.endTime,
                                 style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = accentColor
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                 } else {
                     Surface(
-                        color = accentColor.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(8.dp)
+                        color = accentColor,
+                        shape = MaterialTheme.shapes.medium,
                     ) {
                         Text(
                             text = timeLabel,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = accentColor
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 }
@@ -500,20 +497,21 @@ private fun CompactNewsItem(item: NewsHeader, onClick: () -> Unit) {
 }
 
 @Composable
-private fun EmptyDashboardState(message: String, icon: ImageVector? = null) {
+fun EmptyDashboardState(message: String, icon: ImageVector) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp, horizontal = 16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        if (icon != null) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp).padding(bottom = 12.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-            )
-        }
+        Icon(
+            icon,
+            contentDescription = null,
+            modifier = Modifier.size(48.dp),
+            tint = MaterialTheme.colorScheme.outlineVariant
+        )
+        Spacer(Modifier.height(12.dp))
         Text(
             text = message,
             style = MaterialTheme.typography.bodyMedium,

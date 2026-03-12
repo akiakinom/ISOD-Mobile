@@ -34,6 +34,7 @@ import dev.akinom.isod.android.R
 import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.auth.currentWeekMonday
 import dev.akinom.isod.data.repository.TimetableRepository
+import dev.akinom.isod.domain.AcademicCalendar
 import dev.akinom.isod.domain.TimetableEntry
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -55,8 +56,9 @@ class NextClassWidget : GlanceAppWidget(), KoinComponent {
                 val monday = currentWeekMonday()
                 val semester = currentSemester()
                 val timetable by timetableRepo.getTimetable(semester, monday).collectAsState(emptyList())
+                val currentWeek = AcademicCalendar.getCurrentWeek(semester)
                 val today = TimetableWidgetUtils.getTodayDayOfWeek()
-                val nextClasses = TimetableWidgetUtils.getNextClasses(timetable)
+                val nextClasses = TimetableWidgetUtils.getNextClasses(timetable, currentWeek)
                 val nextClass = nextClasses.firstOrNull()
                 val size = LocalSize.current
                 val context = LocalContext.current
