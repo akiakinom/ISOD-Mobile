@@ -16,7 +16,9 @@ object AcademicCalendar {
     )
 
     private val daySubstitutions = listOf(
-        LocalDate(2026, 3, 13) to 4 // 30.03.2025 uses Friday's schedule
+        LocalDate(2026, 4, 27) to 5,
+        LocalDate(2026, 5, 12) to 5,
+        LocalDate(2026, 6, 3) to 5
     )
 
     fun getConfiguration(semesterId: String): SemesterConfig? {

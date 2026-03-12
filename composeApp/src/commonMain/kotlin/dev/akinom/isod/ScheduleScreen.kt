@@ -115,25 +115,20 @@ class ScheduleScreen(
                         7 -> stringResource(Res.string.full_day_sun)
                         else -> ""
                     }
-                    
-                    Surface(
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp).navigationBarsPadding(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(16.dp).navigationBarsPadding(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(Icons.Default.Warning, null, modifier = Modifier.size(20.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = "Warning: On this day $substitutedDayName's plan is used",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        Icon(Icons.Default.Info, null, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(Res.string.day_substitution_label, substitutedDayName),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
                     }
+
                 }
             }
         ) { paddingValues ->
