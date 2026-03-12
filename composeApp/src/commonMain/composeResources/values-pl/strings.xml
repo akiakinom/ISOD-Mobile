@@ -26,6 +26,7 @@
     <string name="no_classes_today">Brak zajęć dzisiaj. Odpoczywaj!</string>
     <string name="all_caught_up">Wszystko przeczytane!</string>
     <string name="upcoming">NADCHODZĄCE</string>
+    <string name="now">TERAZ</string>
     <string name="tomorrow_at">Jutro o %1$s</string>
     <string name="on_day_at">%1$s o %2$s</string>
 

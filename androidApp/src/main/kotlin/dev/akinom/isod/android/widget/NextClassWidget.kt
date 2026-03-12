@@ -25,7 +25,9 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.action.clickable
+import androidx.glance.appwidget.LinearProgressIndicator
 import androidx.glance.appwidget.action.actionStartActivity
+import androidx.glance.unit.ColorProvider
 import dev.akinom.isod.MainTab
 import dev.akinom.isod.android.MainActivity
 import dev.akinom.isod.android.R
@@ -59,17 +61,17 @@ class NextClassWidget : GlanceAppWidget(), KoinComponent {
                 val size = LocalSize.current
                 val context = LocalContext.current
 
+                val cornerRadiusModifier = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    GlanceModifier.cornerRadius(android.R.dimen.system_app_widget_background_radius)
+                } else {
+                    GlanceModifier.cornerRadius(16.dp)
+                }
+
                 Box(
                     modifier = GlanceModifier
                         .fillMaxSize()
                         .background(GlanceTheme.colors.surface)
-                        .then(
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                GlanceModifier.cornerRadius(android.R.dimen.system_app_widget_background_radius)
-                            } else {
-                                GlanceModifier.cornerRadius(16.dp)
-                            }
-                        )
+                        .then(cornerRadiusModifier)
                         .clickable(action)
                 ) {
                     if (nextClass == null) {
@@ -94,8 +96,11 @@ class NextClassWidget : GlanceAppWidget(), KoinComponent {
 @Composable
 private fun NextClassHero(entry: TimetableEntry, today: Int, size: DpSize, action: androidx.glance.action.Action) {
     val context = LocalContext.current
-    val accentColor = TimetableWidgetUtils.widgetTypeToColor(entry.courseType)
+    val accentColor: ColorProvider = TimetableWidgetUtils.widgetTypeToColor(entry.courseType)
     val useFullName = size.width > 250.dp
+    
+    val currentTime = TimetableWidgetUtils.getCurrentTime()
+    val isNow = entry.dayOfWeek == today && currentTime >= entry.startTime && currentTime < entry.endTime
     
     val timeLabel = run {
         val days = listOf(
@@ -114,17 +119,17 @@ private fun NextClassHero(entry: TimetableEntry, today: Int, size: DpSize, actio
         }
     }
 
+    val innerCornerRadiusModifier = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        GlanceModifier.cornerRadius(android.R.dimen.system_app_widget_inner_radius)
+    } else {
+        GlanceModifier.cornerRadius(24.dp)
+    }
+
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
             .background(accentColor)
-            .then(
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    GlanceModifier.cornerRadius(android.R.dimen.system_app_widget_inner_radius)
-                } else {
-                    GlanceModifier.cornerRadius(24.dp)
-                }
-            )
+            .then(innerCornerRadiusModifier)
             .padding(16.dp)
             .clickable(action)
     ) {
@@ -137,7 +142,7 @@ private fun NextClassHero(entry: TimetableEntry, today: Int, size: DpSize, actio
             ) {}
             Spacer(modifier = GlanceModifier.width(8.dp))
             Text(
-                text = context.getString(R.string.upcoming),
+                text = context.getString(if (isNow) R.string.now else R.string.upcoming),
                 style = TextStyle(
                     color = GlanceTheme.colors.onPrimary,
                     fontWeight = FontWeight.Bold,
@@ -170,20 +175,47 @@ private fun NextClassHero(entry: TimetableEntry, today: Int, size: DpSize, actio
 
         Spacer(modifier = GlanceModifier.defaultWeight())
         
-        Row(
-            modifier = GlanceModifier
-                .background(GlanceTheme.colors.onPrimary)
-                .cornerRadius(8.dp)
-                .padding(horizontal = 10.dp, vertical = 4.dp)
-        ) {
-            Text(
-                text = timeLabel,
-                style = TextStyle(
-                    color = accentColor,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
+        if (isNow) {
+            val progress = try {
+                val start = entry.startTime.split(":").let { it[0].toInt() * 60 + it[1].toInt() }
+                val end = entry.endTime.split(":").let { it[0].toInt() * 60 + it[1].toInt() }
+                val current = currentTime.split(":").let { it[0].toInt() * 60 + it[1].toInt() }
+                ((current - start).toFloat() / (end - start).toFloat()).coerceIn(0f, 1f)
+            } catch (e: Exception) {
+                0f
+            }
+            
+            Column(modifier = GlanceModifier.fillMaxWidth()) {
+                LinearProgressIndicator(
+                    progress = progress,
+                    modifier = GlanceModifier.fillMaxWidth().height(4.dp).cornerRadius(2.dp),
+                    color = GlanceTheme.colors.onPrimary,
+                    backgroundColor = ColorProvider(GlanceTheme.colors.onPrimary.getColor(context).copy(alpha = 0.3f))
                 )
-            )
+                Spacer(modifier = GlanceModifier.height(4.dp))
+                Row(modifier = GlanceModifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = entry.endTime,
+                        style = TextStyle(color = GlanceTheme.colors.onPrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    )
+                }
+            }
+        } else {
+            Row(
+                modifier = GlanceModifier
+                    .background(GlanceTheme.colors.onPrimary)
+                    .cornerRadius(8.dp)
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = timeLabel,
+                    style = TextStyle(
+                        color = accentColor,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                )
+            }
         }
     }
 }

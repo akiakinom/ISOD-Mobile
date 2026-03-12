@@ -2,6 +2,7 @@
     <string name="app_name">ISOD Mobile</string>
     <string name="take_rest">Take some rest!</string>
     <string name="upcoming">UPCOMING</string>
+    <string name="now">NOW</string>
     <string name="tomorrow_at">Tomorrow at %s</string>
     <string name="on_day_at">on %1$s at %2$s</string>
     <string name="day_mon">Monday</string>

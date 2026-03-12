@@ -53,7 +53,7 @@ class NewsDetailScreen(private val hash: String) : Screen {
                     title = { },
                     navigationIcon = {
                         IconButton(
-                            onClick = { navigator.pop() },
+                            onClick = { navigator.replaceAll(MainScreen(MainTab.News)) },
                             modifier = Modifier
                                 .padding(start = 8.dp)
                                 .clip(CircleShape)
@@ -91,7 +91,7 @@ class NewsDetailScreen(private val hash: String) : Screen {
                             .fillMaxWidth()
                             .background(typeColor.copy(alpha = 0.05f))
                             .padding(horizontal = 24.dp)
-                            .padding(top = 92.dp, bottom = 32.dp)
+                            .padding(top = 108.dp, bottom = 32.dp)
                     ) {
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -247,15 +247,12 @@ class NewsDetailScreen(private val hash: String) : Screen {
                 .replace(Regex("&lt;"), "<")
                 .replace(Regex("&gt;"), ">")
                 .replace(Regex("<[^>]*>"), "")
-                .trim()
         }
-
         Text(
-            text = cleanText,
+            text = cleanText.trim(),
             modifier = modifier,
             style = MaterialTheme.typography.bodyLarge,
-            lineHeight = 28.sp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
+            lineHeight = 26.sp
         )
     }
 }

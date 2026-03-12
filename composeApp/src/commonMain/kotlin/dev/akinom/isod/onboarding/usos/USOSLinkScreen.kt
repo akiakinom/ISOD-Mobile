@@ -19,7 +19,7 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import dev.akinom.isod.HomeScreen
+import dev.akinom.isod.MainScreen
 import dev.akinom.isod.Res
 import dev.akinom.isod.*
 import org.jetbrains.compose.resources.stringResource
@@ -37,7 +37,7 @@ class USOSLinkScreen : Screen {
 
         LaunchedEffect(state) {
             if (state is USOSLinkState.Success) {
-                navigator.replaceAll(HomeScreen())
+                navigator.replaceAll(MainScreen())
             }
         }
 
@@ -151,7 +151,7 @@ class USOSLinkScreen : Screen {
                             }
 
                             TextButton(
-                                onClick = { navigator.replaceAll(HomeScreen()) },
+                                onClick = { navigator.replaceAll(MainScreen()) },
                                 enabled = s !is USOSLinkState.LoadingToken
                                         && s !is USOSLinkState.LoadingAccess,
                                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),

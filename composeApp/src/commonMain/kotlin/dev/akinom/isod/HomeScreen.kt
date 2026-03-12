@@ -157,7 +157,7 @@ class HomeScreen(
                 // Next Class Card
                 val nextClass = nextClasses.firstOrNull()
                 if (nextClass != null) {
-                    NextClassCard(nextClass, today) {
+                    NextClassCard(nextClass, today, now) {
                         onMoveToTab(MainTab.Schedule)
                     }
                 }
@@ -179,14 +179,14 @@ class HomeScreen(
                     }
                 }
 
-                // Recent Announcements
+                // Latest Announcements
                 DashboardSection(
                     title = stringResource(Res.string.announcements),
-                    icon = Icons.Default.Campaign,
+                    icon = Icons.Default.Notifications,
                     onSeeAll = { onMoveToTab(MainTab.News) }
                 ) {
                     if (news.isEmpty()) {
-                        EmptyDashboardState(stringResource(Res.string.all_caught_up))
+                        EmptyDashboardState(stringResource(Res.string.no_news_yet))
                     } else {
                         val sortedNews = remember(news) {
                             news.sortedByDescending { it.parseDateToSortable() }
@@ -206,8 +206,9 @@ class HomeScreen(
 }
 
 @Composable
-private fun NextClassCard(entry: TimetableEntry, today: Int, onClick: () -> Unit) {
+private fun NextClassCard(entry: TimetableEntry, today: Int, currentTime: String, onClick: () -> Unit) {
     val accentColor = typeToColor(entry.courseType)
+    val isNow = entry.dayOfWeek == today && currentTime >= entry.startTime && currentTime < entry.endTime
     
     val timeLabel = when {
         entry.dayOfWeek == today -> entry.startTime
@@ -231,7 +232,7 @@ private fun NextClassCard(entry: TimetableEntry, today: Int, onClick: () -> Unit
         shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(containerColor = accentColor.copy(alpha = 0.1f))
     ) {
-        Box(modifier = Modifier.background(
+        Box(modifier = Modifier.fillMaxWidth().background(
             Brush.linearGradient(
                 listOf(accentColor.copy(alpha = 0.15f), accentColor.copy(alpha = 0.05f))
             )
@@ -245,7 +246,7 @@ private fun NextClassCard(entry: TimetableEntry, today: Int, onClick: () -> Unit
                     ) {}
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        stringResource(Res.string.upcoming),
+                        stringResource(if (isNow) Res.string.now else Res.string.upcoming),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = accentColor
@@ -277,17 +278,57 @@ private fun NextClassCard(entry: TimetableEntry, today: Int, onClick: () -> Unit
 
                 Spacer(Modifier.height(16.dp))
                 
-                Surface(
-                    color = accentColor.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = timeLabel,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = accentColor
-                    )
+                if (isNow) {
+                    val progress = remember(entry, currentTime) {
+                        try {
+                            val start = entry.startTime.split(":").let { it[0].toInt() * 60 + it[1].toInt() }
+                            val end = entry.endTime.split(":").let { it[0].toInt() * 60 + it[1].toInt() }
+                            val current = currentTime.split(":").let { it[0].toInt() * 60 + it[1].toInt() }
+                            ((current - start).toFloat() / (end - start).toFloat()).coerceIn(0f, 1f)
+                        } catch (e: Exception) {
+                            0f
+                        }
+                    }
+                    
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        LinearProgressIndicator(
+                            progress = { progress },
+                            modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape),
+                            color = accentColor,
+                            trackColor = accentColor.copy(alpha = 0.1f),
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                entry.startTime,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = accentColor
+                            )
+                            Text(
+                                entry.endTime,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = accentColor
+                            )
+                        }
+                    }
+                } else {
+                    Surface(
+                        color = accentColor.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = timeLabel,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = accentColor
+                        )
+                    }
                 }
             }
         }
@@ -310,7 +351,12 @@ private fun DashboardSection(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(icon, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(8.dp))
-                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
             }
             TextButton(
                 onClick = onSeeAll,
@@ -359,7 +405,12 @@ private fun CompactTimetableItem(entry: TimetableEntry, onClick: () -> Unit) {
         Spacer(Modifier.width(12.dp))
 
         Column {
-            Text(entry.courseNameShort, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+            Text(
+                text = entry.courseNameShort,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = entry.shortType,
@@ -388,7 +439,7 @@ private fun CompactNewsItem(item: NewsHeader, onClick: () -> Unit) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .clickable { onClick() }
-            .padding(vertical = 10.dp)
+            .padding(10.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Surface(

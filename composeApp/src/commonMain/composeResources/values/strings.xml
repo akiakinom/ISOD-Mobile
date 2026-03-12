@@ -26,6 +26,7 @@
     <string name="no_classes_today">No classes today. Enjoy your break!</string>
     <string name="all_caught_up">All caught up!</string>
     <string name="upcoming">UPCOMING</string>
+    <string name="now">NOW</string>
     <string name="tomorrow_at">Tomorrow at %1$s</string>
     <string name="on_day_at">on %1$s at %2$s</string>
 
