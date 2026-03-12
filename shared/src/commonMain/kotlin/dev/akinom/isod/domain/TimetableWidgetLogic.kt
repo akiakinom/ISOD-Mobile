@@ -42,4 +42,28 @@ object TimetableWidgetLogic {
             future.take(2)
         }
     }
+
+    fun getDashboardSchedule(
+        entries: List<TimetableEntry>,
+        todayDayOfWeek: Int,
+        currentTime: String,
+        currentWeek: Int?
+    ): Pair<Boolean, List<TimetableEntry>> {
+        val todayClasses = entries.filter { it.dayOfWeek == todayDayOfWeek && it.isActive(currentWeek) }
+            .sortedBy { it.startTime }
+
+        val isAfterLessons = if (todayClasses.isEmpty()) {
+            currentTime > "18:00"
+        } else {
+            currentTime > todayClasses.last().endTime
+        }
+
+        return if (isAfterLessons) {
+            val tomorrow = (todayDayOfWeek % 7) + 1
+            val tomorrowWeek = if (todayDayOfWeek == 7) currentWeek?.plus(1) else currentWeek
+            true to entries.filter { it.dayOfWeek == tomorrow && it.isActive(tomorrowWeek) }.sortedBy { it.startTime }
+        } else {
+            false to todayClasses
+        }
+    }
 }

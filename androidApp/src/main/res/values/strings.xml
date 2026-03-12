@@ -15,4 +15,9 @@
 
     <string name="notif_channel_news_name">ISOD News</string>
     <string name="notif_channel_news_desc">Notifications for new ISOD announcements and news</string>
+
+    <string name="todays_timeline">Today\'s Timeline</string>
+    <string name="tomorrows_timeline">Tomorrow\'s Timeline</string>
+    <string name="no_classes_today">No classes today</string>
+    <string name="no_classes_tomorrow">No classes tomorrow</string>
 </resources>

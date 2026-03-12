@@ -15,4 +15,8 @@
 
     <string name="notif_channel_news_name">Wiadomości ISOD</string>
     <string name="notif_channel_news_desc">Powiadomienia o nowych ogłoszeniach i wiadomościach ISOD</string>
+    <string name="todays_timeline">Dzisiejszy plan</string>
+    <string name="tomorrows_timeline">Jutrzejszy plan</string>
+    <string name="no_classes_today">Brak zajęć dzisiaj</string>
+    <string name="no_classes_tomorrow">Brak zajęć jutro. Odpoczywaj!</string>
 </resources>

@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,6 +36,7 @@ import dev.akinom.isod.auth.currentTimeHHmm
 import dev.akinom.isod.auth.currentWeekMonday
 import dev.akinom.isod.data.repository.NewsRepository
 import dev.akinom.isod.data.repository.TimetableRepository
+import dev.akinom.isod.domain.AcademicCalendar
 import dev.akinom.isod.domain.NewsHeader
 import dev.akinom.isod.domain.TimetableEntry
 import dev.akinom.isod.domain.TimetableWidgetLogic
@@ -61,6 +63,7 @@ class HomeScreenModel(val semester: String) : ScreenModel, KoinComponent {
     private val newsRepo: NewsRepository           by inject()
 
     val weekMonday = currentWeekMonday()
+    val currentWeek = AcademicCalendar.getCurrentWeek(semester)
 
     val timetable: StateFlow<List<TimetableEntry>> =
         timetableRepo.getTimetable(semester, weekMonday)
@@ -96,12 +99,12 @@ class HomeScreen(
         val today = currentDayOfWeek()
         val now = currentTimeHHmm()
         
-        val todaysClasses = remember(timetable, today) {
-            timetable.filter { it.dayOfWeek == today }.sortedBy { it.startTime }
+        val (isAfterLessons, dashboardClasses) = remember(timetable, today, now, screenModel.currentWeek) {
+            TimetableWidgetLogic.getDashboardSchedule(timetable, today, now, screenModel.currentWeek)
         }
 
-        val nextClasses = remember(timetable, today, now) {
-            TimetableWidgetLogic.getNextClasses(timetable, today, now)
+        val nextClasses = remember(timetable, today, now, screenModel.currentWeek) {
+            TimetableWidgetLogic.getNextClasses(timetable.filter { it.isActive(screenModel.currentWeek) }, today, now)
         }
 
         PullToRefreshBox(
@@ -162,16 +165,19 @@ class HomeScreen(
                     }
                 }
 
-                // Today's Timeline Summary
+                // Today's/Tomorrow's Timeline Summary
                 DashboardSection(
-                    title = stringResource(Res.string.todays_timeline),
+                    title = stringResource(if (isAfterLessons) Res.string.tomorrows_timeline else Res.string.todays_timeline),
                     icon = Icons.Default.CalendarToday,
                     onSeeAll = { onMoveToTab(MainTab.Schedule) }
                 ) {
-                    if (todaysClasses.isEmpty()) {
-                        EmptyDashboardState(stringResource(Res.string.no_classes_today))
+                    if (dashboardClasses.isEmpty()) {
+                        EmptyDashboardState(
+                            message = stringResource(if (isAfterLessons) Res.string.no_classes_tomorrow else Res.string.no_classes_today),
+                            icon = Icons.Default.NightsStay
+                        )
                     } else {
-                        todaysClasses.take(3).forEach { entry ->
+                        dashboardClasses.take(3).forEach { entry ->
                             CompactTimetableItem(entry) {
                                 onMoveToTab(MainTab.Schedule)
                             }
@@ -186,7 +192,10 @@ class HomeScreen(
                     onSeeAll = { onMoveToTab(MainTab.News) }
                 ) {
                     if (news.isEmpty()) {
-                        EmptyDashboardState(stringResource(Res.string.no_news_yet))
+                        EmptyDashboardState(
+                            message = stringResource(Res.string.no_news_yet),
+                            icon = Icons.Default.Inbox
+                        )
                     } else {
                         val sortedNews = remember(news) {
                             news.sortedByDescending { it.parseDateToSortable() }
@@ -491,8 +500,25 @@ private fun CompactNewsItem(item: NewsHeader, onClick: () -> Unit) {
 }
 
 @Composable
-private fun EmptyDashboardState(message: String) {
-    Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-        Text(message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+private fun EmptyDashboardState(message: String, icon: ImageVector? = null) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp, horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp).padding(bottom = 12.dp),
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+            )
+        }
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
     }
 }

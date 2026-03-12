@@ -9,9 +9,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.appwidget.GlanceAppWidget
@@ -28,12 +31,14 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.action.actionStartActivity
+import androidx.glance.unit.ColorProvider
 import dev.akinom.isod.MainTab
 import dev.akinom.isod.android.MainActivity
 import dev.akinom.isod.android.R
 import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.auth.currentWeekMonday
 import dev.akinom.isod.data.repository.TimetableRepository
+import dev.akinom.isod.domain.AcademicCalendar
 import dev.akinom.isod.domain.TimetableEntry
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -55,7 +60,8 @@ class TodayScheduleWidget : GlanceAppWidget(), KoinComponent {
                 val monday = currentWeekMonday()
                 val semester = currentSemester()
                 val timetable by timetableRepo.getTimetable(semester, monday).collectAsState(emptyList())
-                val todayEntries = TimetableWidgetUtils.filterToday(timetable)
+                val currentWeek = AcademicCalendar.getCurrentWeek(semester)
+                val (isAfterLessons, dashboardEntries) = TimetableWidgetUtils.getDashboardSchedule(timetable, currentWeek)
                 val size = LocalSize.current
                 val context = LocalContext.current
 
@@ -77,21 +83,28 @@ class TodayScheduleWidget : GlanceAppWidget(), KoinComponent {
                             .fillMaxSize()
                             .padding(8.dp)
                     ) {
-                        if (todayEntries.isEmpty()) {
-                            Box(
-                                modifier = GlanceModifier.fillMaxSize(), 
-                                contentAlignment = Alignment.Center
+                        if (dashboardEntries.isEmpty()) {
+                            Column(
+                                modifier = GlanceModifier.fillMaxSize().defaultWeight(), 
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
+                                Image(
+                                    provider = ImageProvider(R.drawable.baseline_nights_stay_24),
+                                    contentDescription = null,
+                                    modifier = GlanceModifier.size(64.dp).padding(bottom = 12.dp),
+                                    colorFilter = ColorFilter.tint(GlanceTheme.colors.primary)
+                                )
                                 Text(
-                                    text = context.getString(R.string.take_rest),
-                                    style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 12.sp)
+                                    text = context.getString(if (isAfterLessons) R.string.no_classes_tomorrow else R.string.no_classes_today),
+                                    style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 14.sp)
                                 )
                             }
                         } else {
                             LazyColumn(
                                 modifier = GlanceModifier.fillMaxSize()
                             ) {
-                                items(todayEntries) { entry ->
+                                items(dashboardEntries) { entry ->
                                     TimetableItemWidget(entry, size, action)
                                 }
                             }

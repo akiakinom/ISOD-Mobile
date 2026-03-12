@@ -33,6 +33,10 @@ object TimetableWidgetUtils {
         return TimetableWidgetLogic.filterToday(entries, getTodayDayOfWeek())
     }
 
+    fun getDashboardSchedule(entries: List<TimetableEntry>, currentWeek: Int?): Pair<Boolean, List<TimetableEntry>> {
+        return TimetableWidgetLogic.getDashboardSchedule(entries, getTodayDayOfWeek(), getCurrentTime(), currentWeek)
+    }
+
     fun getNextClasses(entries: List<TimetableEntry>): List<TimetableEntry> {
         return TimetableWidgetLogic.getNextClasses(entries, getTodayDayOfWeek(), getCurrentTime())
     }

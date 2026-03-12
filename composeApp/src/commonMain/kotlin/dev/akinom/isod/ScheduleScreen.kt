@@ -1,7 +1,10 @@
 package dev.akinom.isod
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,14 +12,21 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.NightsStay
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,18 +34,24 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import dev.akinom.isod.auth.currentDayOfWeek
 import dev.akinom.isod.auth.currentSemester
+import dev.akinom.isod.data.repository.TimetableRepository
 import dev.akinom.isod.domain.TimetableEntry
 import dev.akinom.isod.news.typeToColor
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class ScheduleScreen(val semester: String = currentSemester()) : Screen {
+class ScheduleScreen(val semester: String = currentSemester()) : Screen, KoinComponent {
+    private val timetableRepo: TimetableRepository by inject()
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val screenModel = rememberScreenModel { HomeScreenModel(semester) }
         val timetable by screenModel.timetable.collectAsState()
+        val currentWeek = screenModel.currentWeek
         
         val days = listOf(
             stringResource(Res.string.day_mon),
@@ -51,10 +67,23 @@ class ScheduleScreen(val semester: String = currentSemester()) : Screen {
         val pagerState = rememberPagerState(initialPage = initialDay, pageCount = { days.size })
         val scope = rememberCoroutineScope()
 
+        var selectedEntryForOverride by remember { mutableStateOf<TimetableEntry?>(null) }
+
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text(stringResource(Res.string.weekly_schedule), fontWeight = FontWeight.Bold) }
+                    title = {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(stringResource(Res.string.weekly_schedule), fontWeight = FontWeight.Bold)
+                            if (currentWeek != null) {
+                                Text(
+                                    stringResource(Res.string.week_number, currentWeek),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
                 )
             }
         ) { paddingValues ->
@@ -126,14 +155,25 @@ class ScheduleScreen(val semester: String = currentSemester()) : Screen {
                             val groupedEntries = groupOverlapping(filteredEntries)
                             items(groupedEntries) { group ->
                                 if (group.size == 1) {
-                                    ScheduleItem(group[0], isSplit = false)
+                                    ScheduleItem(
+                                        entry = group[0],
+                                        isSplit = false,
+                                        currentWeek = currentWeek,
+                                        onLongClick = { selectedEntryForOverride = it }
+                                    )
                                 } else {
                                     Row(
                                         modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
                                         group.forEach { entry ->
-                                            ScheduleItem(entry, modifier = Modifier.weight(1f).fillMaxHeight(), isSplit = true)
+                                            ScheduleItem(
+                                                entry = entry,
+                                                modifier = Modifier.weight(1f).fillMaxHeight(),
+                                                isSplit = true,
+                                                currentWeek = currentWeek,
+                                                onLongClick = { selectedEntryForOverride = it }
+                                            )
                                         }
                                     }
                                 }
@@ -142,17 +182,113 @@ class ScheduleScreen(val semester: String = currentSemester()) : Screen {
                     }
                 }
             }
+
+            if (selectedEntryForOverride != null) {
+                val entry = selectedEntryForOverride!!
+                AlertDialog(
+                    onDismissRequest = { selectedEntryForOverride = null },
+                    title = { Text(stringResource(Res.string.override_cycle_title)) },
+                    text = {
+                        Column {
+                            Text(
+                                text = entry.courseName,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            
+                            val options = listOf(
+                                CycleOption("SEM", Res.string.cycle_sem, Icons.Default.DateRange),
+                                CycleOption("1PS", Res.string.cycle_1ps, Icons.Default.ArrowUpward),
+                                CycleOption("2PS", Res.string.cycle_2ps, Icons.Default.ArrowDownward),
+                                CycleOption("PA", Res.string.cycle_pa, Icons.Default.Repeat),
+                                CycleOption("NP", Res.string.cycle_np, Icons.Default.RepeatOne),
+                                CycleOption("NONE", Res.string.cycle_none, Icons.Default.VisibilityOff)
+                            )
+
+                            options.forEach { option ->
+                                val isSelected = (entry.userCycleOverride ?: entry.cycle) == option.code
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            timetableRepo.setCycleOverride(entry.id, option.code)
+                                            selectedEntryForOverride = null
+                                        }
+                                        .padding(vertical = 12.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = option.icon,
+                                        contentDescription = null,
+                                        tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(Modifier.width(16.dp))
+                                    Text(
+                                        text = stringResource(option.label),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    RadioButton(
+                                        selected = isSelected,
+                                        onClick = null
+                                    )
+                                }
+                            }
+                            
+                            HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            )
+
+                            TextButton(
+                                onClick = {
+                                    timetableRepo.setCycleOverride(entry.id, null)
+                                    selectedEntryForOverride = null
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.Refresh, null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text(stringResource(Res.string.reset_to_default))
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { selectedEntryForOverride = null }) {
+                            Text(stringResource(Res.string.cancel))
+                        }
+                    }
+                )
+            }
         }
     }
 }
 
+private data class CycleOption(val code: String, val label: StringResource, val icon: ImageVector)
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ScheduleItem(entry: TimetableEntry, modifier: Modifier = Modifier, isSplit: Boolean = false) {
+private fun ScheduleItem(
+    entry: TimetableEntry,
+    modifier: Modifier = Modifier,
+    isSplit: Boolean = false,
+    currentWeek: Int? = null,
+    onLongClick: (TimetableEntry) -> Unit = {}
+) {
+    val isActive = entry.isActive(currentWeek)
     val accentColor = typeToColor(entry.courseType)
     val typeDisplay = entry.shortType
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .alpha(if (isActive) 1f else 0.4f)
+            .saturation(if (isActive) 1f else 0f),
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -161,6 +297,10 @@ private fun ScheduleItem(entry: TimetableEntry, modifier: Modifier = Modifier, i
             modifier = Modifier
                 .height(IntrinsicSize.Min)
                 .fillMaxWidth()
+                .combinedClickable(
+                    onClick = {},
+                    onLongClick = { onLongClick(entry) }
+                )
         ) {
             // Time Sidebar
             Box(
@@ -182,18 +322,28 @@ private fun ScheduleItem(entry: TimetableEntry, modifier: Modifier = Modifier, i
                         fontWeight = FontWeight.Bold
                     )
                     
-                    Surface(
-                        color = accentColor.copy(alpha = 0.1f),
-                        contentColor = accentColor,
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
-                        Text(
-                            text = typeDisplay,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 10.sp
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (entry.userCycleOverride != null) {
+                            Icon(
+                                Icons.Default.Edit,
+                                null,
+                                modifier = Modifier.size(12.dp).padding(end = 4.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Surface(
+                            color = accentColor.copy(alpha = 0.1f),
+                            contentColor = accentColor,
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text(
+                                text = typeDisplay,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 10.sp
+                            )
+                        }
                     }
                 }
 
@@ -262,6 +412,20 @@ private fun ScheduleItem(entry: TimetableEntry, modifier: Modifier = Modifier, i
         }
     }
 }
+
+fun Modifier.saturation(value: Float): Modifier = if (value != 1f) {
+    this.drawWithCache {
+        val matrix = ColorMatrix().apply { setToSaturation(value) }
+        val paint = Paint().apply { colorFilter = ColorFilter.colorMatrix(matrix) }
+        onDrawWithContent {
+            drawIntoCanvas { canvas ->
+                canvas.saveLayer(Rect(Offset.Zero, size), paint)
+                drawContent()
+                canvas.restore()
+            }
+        }
+    }
+} else this
 
 private fun String.toMinutes(): Int {
     val parts = split(":")

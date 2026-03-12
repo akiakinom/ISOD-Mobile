@@ -64,6 +64,7 @@ kotlin {
 
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.datetime)
 
             api(libs.multiplatform.settings)
             implementation(libs.multiplatform.settings.coroutines)

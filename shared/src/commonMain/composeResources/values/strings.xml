@@ -6,4 +6,40 @@
     <string name="class_seminar">Seminar</string>
     <string name="notif_channel_news_name">ISOD News</string>
     <string name="notif_channel_news_desc">Notifications for new ISOD announcements and news</string>
+
+    <string name="day_mon">Mon</string>
+    <string name="day_tue">Tue</string>
+    <string name="day_wed">Wed</string>
+    <string name="day_thu">Thu</string>
+    <string name="day_fri">Fri</string>
+    <string name="weekly_schedule">Weekly Schedule</string>
+    <string name="no_classes_scheduled">No classes scheduled</string>
+    <string name="take_rest">Time to take a rest!</string>
+    <string name="week_number">Week %d</string>
+    <string name="inactive_this_week">Inactive this week</string>
+    <string name="override_cycle_title">Override Cycle</string>
+    <string name="reset_to_default">Reset to default</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="hello">Hello!</string>
+    <string name="settings">Settings</string>
+    <string name="now">NOW</string>
+    <string name="upcoming">UPCOMING</string>
+    <string name="tomorrow_at">Tomorrow at %s</string>
+    <string name="on_day_at">%s at %s</string>
+    <string name="todays_timeline">Today\'s Timeline</string>
+    <string name="tomorrows_timeline">Tomorrow\'s Timeline</string>
+    <string name="announcements">Announcements</string>
+    <string name="see_all">See all</string>
+    <string name="no_classes_today">No classes today</string>
+    <string name="no_classes_tomorrow">No classes tomorrow</string>
+    <string name="no_news_yet">No news yet</string>
+
+    <string name="full_day_mon">Monday</string>
+    <string name="full_day_tue">Tuesday</string>
+    <string name="full_day_wed">Wednesday</string>
+    <string name="full_day_thu">Thursday</string>
+    <string name="full_day_fri">Friday</string>
+    <string name="full_day_sat">Saturday</string>
+    <string name="full_day_sun">Sunday</string>
 </resources>

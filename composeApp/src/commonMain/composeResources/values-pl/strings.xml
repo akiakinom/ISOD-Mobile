@@ -20,17 +20,19 @@
     <string name="hello">Cześć!</string>
     <string name="ready_for_classes">Gotowy na zajęcia?</string>
     <string name="settings">Ustawienia</string>
-    <string name="todays_timeline">Dzisiejszy harmonogram</string>
+    <string name="todays_timeline">Dzisiejszy plan</string>
+    <string name="tomorrows_timeline">Jutrzejszy plan</string>
     <string name="announcements">Ogłoszenia</string>
     <string name="see_all">Zobacz wszystko</string>
     <string name="no_classes_today">Brak zajęć dzisiaj. Odpoczywaj!</string>
+    <string name="no_classes_tomorrow">Brak zajęć jutro. Odpoczywaj!</string>
     <string name="all_caught_up">Wszystko przeczytane!</string>
     <string name="upcoming">NADCHODZĄCE</string>
     <string name="now">TERAZ</string>
     <string name="tomorrow_at">Jutro o %1$s</string>
     <string name="on_day_at">%1$s o %2$s</string>
 
-    <string name="tab_home">Główna</string>
+    <string name="tab_home">Panel</string>
     <string name="tab_schedule">Plan</string>
     <string name="tab_grades">Oceny</string>
     <string name="tab_news">Aktualności</string>
@@ -99,4 +101,17 @@
     <string name="news_type_project_status">Status projektu</string>
     <string name="news_type_project_group_change">Zmiana grupy</string>
     <string name="news_type_class_enrollment">Zapisy</string>
+
+    <string name="week_number">Tydzień %1$d</string>
+    <string name="override_cycle_title">Nadpisz cykl</string>
+    <string name="reset_to_default">Przywróć domyślne</string>
+    <string name="cancel">Anuluj</string>
+    <string name="inactive_this_week">Nieaktywne w tym tygodniu</string>
+
+    <string name="cycle_sem">Cały semestr</string>
+    <string name="cycle_1ps">Pierwsza połowa</string>
+    <string name="cycle_2ps">Druga połowa</string>
+    <string name="cycle_pa">Tygodnie parzyste</string>
+    <string name="cycle_np">Tygodnie nieparzyste</string>
+    <string name="cycle_none">Zawsze nieaktywne</string>
 </resources>

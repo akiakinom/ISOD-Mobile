@@ -1,5 +1,7 @@
 package dev.akinom.isod.data.repository
 
+import com.russhwolf.settings.Settings
+import com.russhwolf.settings.set
 import dev.akinom.isod.data.remote.UsosApiClient
 import dev.akinom.isod.data.remote.UsosResult
 import dev.akinom.isod.domain.TimetableEntry
@@ -8,17 +10,25 @@ import dev.akinom.isod.domain.isExcluded
 import dev.akinom.isod.domain.toTimetableEntry
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 class TimetableRepository(
     private val planRepo: PlanRepository,
     private val usosRepo: UsosRepository,
     private val usosApi: UsosApiClient,
+    private val settings: Settings
 ) {
+    private val _overrides = MutableStateFlow<Map<String, String>>(loadOverrides())
+    val overrides = _overrides.asStateFlow()
+
     fun getTimetable(semester: String, weekStart: String): Flow<List<TimetableEntry>> =
         combine(
             planRepo.getPlan(semester),
             usosRepo.getTimetable(weekStart),
-        ) { planItems, usosActivities ->
+            overrides
+        ) { planItems, usosActivities, currentOverrides ->
 
             val weekDates = weekDates(weekStart)
 
@@ -58,13 +68,41 @@ class TimetableRepository(
             }
 
             entries.map { entry ->
-                if (entry.source == TimetableSource.USOS && entry.lecturerIds.isNotEmpty()) {
+                val updatedEntry = if (entry.source == TimetableSource.USOS && entry.lecturerIds.isNotEmpty()) {
                     entry.copy(lecturerNames = entry.lecturerIds.mapNotNull { lecturerNames[it] })
                 } else {
                     entry
                 }
+                updatedEntry.copy(userCycleOverride = currentOverrides[entry.id])
             }
         }
+
+    fun setCycleOverride(entryId: String, cycle: String?) {
+        _overrides.update { current ->
+            val newMap = current.toMutableMap()
+            if (cycle == null) {
+                newMap.remove(entryId)
+            } else {
+                newMap[entryId] = cycle
+            }
+            saveOverrides(newMap)
+            newMap
+        }
+    }
+
+    private fun loadOverrides(): Map<String, String> {
+        val saved = settings.getString("timetable_overrides", "")
+        if (saved.isBlank()) return emptyMap()
+        return saved.split(";").associate {
+            val parts = it.split("=")
+            parts[0] to parts.getOrElse(1) { "" }
+        }
+    }
+
+    private fun saveOverrides(map: Map<String, String>) {
+        val serialized = map.entries.joinToString(";") { "${it.key}=${it.value}" }
+        settings["timetable_overrides"] = serialized
+    }
 }
 
 private fun weekDates(weekStart: String): Set<String> {

@@ -48,18 +48,30 @@ class TimetableWidgetProvider : KoinComponent {
         return "$h:$m"
     }
 
-    fun getTodaySchedule(completion: (List<TimetableEntry>) -> Unit) {
+    fun getDashboardSchedule(completion: (Boolean, List<TimetableEntry>) -> Unit) {
         scope.launch {
             try {
                 val monday = currentWeekMonday()
                 val semester = currentSemester()
                 val timetable = repository.getTimetable(semester, monday).first()
                 val today = getTodayDayOfWeek()
-                completion(TimetableWidgetLogic.filterToday(timetable, today))
+                val now = getCurrentTime()
+                
+                // For simplicity in KMM bridge, we don't pass currentWeek if not easily available, 
+                // but AcademicCalendar.getCurrentWeek(semester) can be used.
+                val currentWeek = AcademicCalendar.getCurrentWeek(semester)
+                
+                val result = TimetableWidgetLogic.getDashboardSchedule(timetable, today, now, currentWeek)
+                completion(result.first, result.second)
             } catch (e: Exception) {
-                completion(emptyList())
+                completion(false, emptyList())
             }
         }
+    }
+
+    // Keep old one for compatibility if needed, but redirected
+    fun getTodaySchedule(completion: (List<TimetableEntry>) -> Unit) {
+        getDashboardSchedule { _, items -> completion(items) }
     }
 
     fun getNextClasses(completion: (List<TimetableEntry>) -> Unit) {

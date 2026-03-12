@@ -18,6 +18,8 @@ data class TimetableEntry(
     val lecturerNames: List<String>,
     val source: TimetableSource = TimetableSource.ISOD,
     val lecturerIds: List<Long> = emptyList(),
+    val cycle: String = "SEM",
+    val userCycleOverride: String? = null
 ) {
     val shortType: String get() = when(courseType.uppercase()) {
         "W" -> "WYK"
@@ -29,6 +31,21 @@ data class TimetableEntry(
     }
 
     val dedupeKey: String get() = "${courseName}_${dayOfWeek}_${startTime}"
+
+    fun isActive(currentWeek: Int?): Boolean {
+        val activeCycle = userCycleOverride ?: cycle
+        if (activeCycle.uppercase() == "NONE") return false
+        if (currentWeek == null) return true
+
+        return when (activeCycle.uppercase()) {
+            "SEM" -> true
+            "1PS" -> currentWeek <= 7
+            "2PS" -> currentWeek >= 7 // For middle its undefined, assume both
+            "PA" -> currentWeek % 2 == 0
+            "NP" -> currentWeek % 2 != 0
+            else -> true
+        }
+    }
 }
 
 enum class TimetableSource {
@@ -54,7 +71,8 @@ fun PlanItem.toTimetableEntry() = TimetableEntry(
     buildingShort = buildingShort,
     room = room,
     lecturerNames = teachers,
-    source = TimetableSource.ISOD
+    source = TimetableSource.ISOD,
+    cycle = if (cycleShort.isBlank()) "SEM" else cycleShort
 )
 
 fun UsosActivity.toTimetableEntry(): TimetableEntry {
@@ -88,7 +106,8 @@ fun UsosActivity.toTimetableEntry(): TimetableEntry {
         room = roomNumber ?: "",
         lecturerNames = lecturers,
         source = TimetableSource.USOS,
-        lecturerIds = lecturerIds
+        lecturerIds = lecturerIds,
+        cycle = frequency ?: "SEM"
     )
 }
 
