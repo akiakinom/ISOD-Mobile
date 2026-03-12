@@ -44,6 +44,7 @@ kotlin {
             implementation(libs.ui)
             implementation(libs.components.resources)
             implementation(libs.jetbrains.components.ui.tooling.preview)
+            implementation(libs.compose.icons)
 
             implementation(libs.koin.compose)
 

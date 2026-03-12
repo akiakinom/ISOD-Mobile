@@ -25,7 +25,7 @@ data class UsosAccessToken(
 sealed class UsosAuthResult {
     data class RequestTokenSuccess(val requestToken: UsosRequestToken) : UsosAuthResult()
     data class AccessTokenSuccess(val accessToken: UsosAccessToken)    : UsosAuthResult()
-    data class Error(val message: String)                              : UsosAuthResult()
+    data class Error(val message: String, val isNetworkError: Boolean = false) : UsosAuthResult()
 }
 
 class UsosAuthRepository(
@@ -53,8 +53,8 @@ class UsosAuthRepository(
             println("📡 USOS request token response fetched.")
 
             val params = parseOAuthResponse(body)
-            val token       = params["oauth_token"]        ?: return UsosAuthResult.Error("Missing oauth_token in response")
-            val tokenSecret = params["oauth_token_secret"] ?: return UsosAuthResult.Error("Missing oauth_token_secret in response")
+            val token       = params["oauth_token"]        ?: return UsosAuthResult.Error("Missing oauth_token")
+            val tokenSecret = params["oauth_token_secret"] ?: return UsosAuthResult.Error("Missing oauth_token_secret")
 
             UsosAuthResult.RequestTokenSuccess(
                 UsosRequestToken(
@@ -64,8 +64,7 @@ class UsosAuthRepository(
                 )
             )
         } catch (e: Exception) {
-            println("❌ USOS error: ${e::class.simpleName}: ${e.message}")
-            UsosAuthResult.Error("Could not connect to USOS: ${e.message}")
+            UsosAuthResult.Error("Network error", isNetworkError = true)
         }
     }
 
@@ -94,13 +93,12 @@ class UsosAuthRepository(
             println("📡 USOS access token response fetched.")
 
             val params = parseOAuthResponse(body)
-            val token       = params["oauth_token"]        ?: return UsosAuthResult.Error("Missing oauth_token in response")
-            val tokenSecret = params["oauth_token_secret"] ?: return UsosAuthResult.Error("Missing oauth_token_secret in response")
+            val token       = params["oauth_token"]        ?: return UsosAuthResult.Error("Missing oauth_token")
+            val tokenSecret = params["oauth_token_secret"] ?: return UsosAuthResult.Error("Missing oauth_token_secret")
 
             UsosAuthResult.AccessTokenSuccess(UsosAccessToken(token, tokenSecret))
         } catch (e: Exception) {
-            println("❌ USOS error: ${e::class.simpleName}: ${e.message}")
-            UsosAuthResult.Error("Could not get access token: ${e.message}")
+            UsosAuthResult.Error("Network error", isNetworkError = true)
         }
     }
 

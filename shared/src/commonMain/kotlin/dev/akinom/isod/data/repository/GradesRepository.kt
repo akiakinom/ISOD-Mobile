@@ -2,14 +2,12 @@ package dev.akinom.isod.data.repository
 
 import dev.akinom.isod.CourseGradeEntity
 import dev.akinom.isod.IsodDatabase
-import dev.akinom.isod.data.cache.CacheConfig
 import dev.akinom.isod.data.cache.currentTimeMillis
 import dev.akinom.isod.data.cache.isStale
 import dev.akinom.isod.data.remote.IsodApiClient
 import dev.akinom.isod.data.remote.IsodResult
 import dev.akinom.isod.data.remote.UsosApiClient
 import dev.akinom.isod.data.remote.UsosResult
-import dev.akinom.isod.data.remote.dto.UsosGradeDto
 import dev.akinom.isod.domain.ClassGrade
 import dev.akinom.isod.domain.CourseGrade
 import kotlinx.coroutines.flow.Flow
@@ -19,7 +17,7 @@ import kotlinx.serialization.json.Json
 
 private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
 
-private const val GRADES_TTL_MS = 5 * 60 * 1000L  // 5 minutes
+private const val GRADES_TTL_MS = 15 * 60 * 1000L  // 15 minutes
 
 class GradesRepository(
     private val db: IsodDatabase,
@@ -29,7 +27,6 @@ class GradesRepository(
     private val queries get() = db.courseGradeQueries
 
     fun getGrades(semester: String, usosTermId: String): Flow<List<CourseGrade>> = flow {
-
         val cached = queryCached(semester)
         if (cached.isNotEmpty()) {
             emit(cached)
@@ -44,6 +41,27 @@ class GradesRepository(
         } else if (cached.isEmpty()) {
             emit(emptyList())
         }
+    }
+
+    suspend fun refreshCourseDetails(course: CourseGrade, semester: String): CourseGrade {
+        val updatedClasses = course.classGrades.map { cls ->
+            val detail = when (val r = isodApi.getClassDetail(cls.classId)) {
+                is IsodResult.Success -> r.data
+                else -> null
+            }
+            cls.copy(
+                credit = detail?.credit ?: cls.credit,
+                columns = detail?.columns ?: cls.columns,
+                summary = detail?.summary ?: cls.summary
+            )
+        }
+        val updatedCourse = course.copy(classGrades = updatedClasses)
+        queries.updateClassGrades(
+            classGradesJson = json.encodeToString(updatedClasses),
+            courseId = course.courseId,
+            semester = semester
+        )
+        return updatedCourse
     }
 
     private fun queryCached(semester: String): List<CourseGrade> =
@@ -61,18 +79,13 @@ class GradesRepository(
         }
 
         return courses.map { course ->
-            // Build per-class partial grades
             val classGrades = course.classes.map { cls ->
-                val detail = when (val r = isodApi.getClassDetail(cls.id)) {
-                    is IsodResult.Success -> r.data
-                    else -> null
-                }
                 ClassGrade(
                     classId   = cls.id,
                     classType = cls.type,
-                    credit    = detail?.credit,
-                    columns   = detail?.columns ?: emptyList(),
-                    summary   = detail?.summary,
+                    credit    = null,
+                    columns   = emptyList(),
+                    summary   = null,
                 )
             }
 
@@ -99,8 +112,17 @@ class GradesRepository(
     private fun persist(semester: String, grades: List<CourseGrade>) {
         val now = currentTimeMillis()
         db.transaction {
+            // We want to preserve existing class details if we have them
+            val existing = queryCached(semester).associateBy { it.courseId }
+            
             queries.deleteBySemester(semester)
             grades.forEach { g ->
+                val classGradesToSave = if (g.classGrades.all { it.columns.isEmpty() }) {
+                    existing[g.courseId]?.classGrades ?: g.classGrades
+                } else {
+                    g.classGrades
+                }
+
                 queries.upsert(
                     CourseGradeEntity(
                         courseId          = g.courseId,
@@ -113,7 +135,7 @@ class GradesRepository(
                         finalGradeComment = g.finalGradeComment,
                         passes            = g.passes?.let { if (it) 1L else 0L },
                         countsIntoAverage = g.countsIntoAverage?.let { if (it) 1L else 0L },
-                        classGradesJson   = json.encodeToString(g.classGrades),
+                        classGradesJson   = json.encodeToString(classGradesToSave),
                         hasIsod           = if (g.hasIsod) 1L else 0L,
                         hasUsos           = if (g.hasUsos) 1L else 0L,
                         lastUpdated       = now,

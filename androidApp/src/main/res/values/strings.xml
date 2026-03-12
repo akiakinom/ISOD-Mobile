@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">ISOD Mobile</string>
+    <string name="take_rest">Take some rest!</string>
+    <string name="upcoming">UPCOMING</string>
+    <string name="tomorrow_at">Tomorrow at %s</string>
+    <string name="on_day_at">on %1$s at %2$s</string>
+    <string name="day_mon">Monday</string>
+    <string name="day_tue">Tuesday</string>
+    <string name="day_wed">Wednesday</string>
+    <string name="day_thu">Thursday</string>
+    <string name="day_fri">Friday</string>
+    <string name="day_sat">Saturday</string>
+    <string name="day_sun">Sunday</string>
+
+    <string name="notif_channel_news_name">ISOD News</string>
+    <string name="notif_channel_news_desc">Notifications for new ISOD announcements and news</string>
+</resources>

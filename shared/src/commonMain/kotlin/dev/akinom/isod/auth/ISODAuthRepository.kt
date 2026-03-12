@@ -19,7 +19,7 @@ data class IsodUserInfo(
 
 sealed class IsodAuthResult {
     data class Success(val user: IsodUserInfo) : IsodAuthResult()
-    data class Error(val message: String)      : IsodAuthResult()
+    data class Error(val message: String, val isNetworkError: Boolean = false) : IsodAuthResult()
 }
 
 class IsodAuthRepository {
@@ -51,21 +51,14 @@ class IsodAuthRepository {
                     IsodAuthResult.Success(user)
                 }
                 HttpStatusCode.BadRequest -> {
-                    IsodAuthResult.Error("Invalid username or API key.")
+                    IsodAuthResult.Error("Invalid credentials", isNetworkError = false)
                 }
                 else -> {
-                    IsodAuthResult.Error("Unexpected error: ${response.status.value}")
+                    IsodAuthResult.Error("Server error: ${response.status.value}", isNetworkError = false)
                 }
             }
         } catch (e: Exception) {
-            println("❌ ISOD error: ${e::class.simpleName}: ${e.message}")
-            IsodAuthResult.Error(
-                if (e.message?.contains("Unable to resolve") == true ||
-                    e.message?.contains("UnknownHostException") == true)
-                    "No internet connection."
-                else
-                    "Could not reach ISOD. Try again later."
-            )
+            IsodAuthResult.Error("Network error", isNetworkError = true)
         }
     }
 }

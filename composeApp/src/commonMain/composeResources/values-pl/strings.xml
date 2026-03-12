@@ -1,0 +1,101 @@
+<resources>
+    <string name="app_name">ISOD Mobile</string>
+    <string name="isod_connect_subtitle">Połącz ze swoim kontem wydziałowym</string>
+    <string name="credentials_title">Dane logowania</string>
+    <string name="username_label">Nazwa użytkownika</string>
+    <string name="api_key_label">Klucz API</string>
+    <string name="hide">Ukryj</string>
+    <string name="show">Pokaż</string>
+    <string name="isod_api_key_hint">Znajdź swój klucz API w portalu ISOD na dole strony swojego konta.</string>
+    <string name="continue_btn">Kontynuuj</string>
+
+    <string name="usos_title">USOS</string>
+    <string name="usos_link_subtitle">Połącz ze swoim kontem uniwersyteckim</string>
+    <string name="why_link_usos">Po co łączyć z USOS?</string>
+    <string name="usos_link_reason">Aby uzyskać dostęp do wf-ów, języków i innych danych z USOS, musisz autoryzować tę aplikację w systemie uniwersyteckim.</string>
+    <string name="authorize_usos_btn">Autoryzuj z USOS</string>
+    <string name="skip_for_now">Pomiń na razie</string>
+    <string name="usos_login_hint">Zostaniesz przekierowany do strony logowania USOS.\nAplikacja nie przechowuje Twoich haseł.</string>
+
+    <string name="hello">Cześć!</string>
+    <string name="ready_for_classes">Gotowy na zajęcia?</string>
+    <string name="settings">Ustawienia</string>
+    <string name="todays_timeline">Dzisiejszy harmonogram</string>
+    <string name="announcements">Ogłoszenia</string>
+    <string name="see_all">Zobacz wszystko</string>
+    <string name="no_classes_today">Brak zajęć dzisiaj. Odpoczywaj!</string>
+    <string name="all_caught_up">Wszystko przeczytane!</string>
+    <string name="upcoming">NADCHODZĄCE</string>
+    <string name="tomorrow_at">Jutro o %1$s</string>
+    <string name="on_day_at">%1$s o %2$s</string>
+
+    <string name="tab_home">Główna</string>
+    <string name="tab_schedule">Plan</string>
+    <string name="tab_grades">Oceny</string>
+    <string name="tab_news">Aktualności</string>
+
+    <string name="weekly_schedule">Plan tygodniowy</string>
+    <string name="no_classes_scheduled">Brak zaplanowanych zajęć</string>
+    <string name="take_rest">Czas na odpoczynek!</string>
+
+    <string name="day_mon">Pon</string>
+    <string name="day_tue">Wt</string>
+    <string name="day_wed">Śr</string>
+    <string name="day_thu">Czw</string>
+    <string name="day_fri">Pt</string>
+    <string name="day_sat">Sob</string>
+    <string name="day_sun">Ndz</string>
+
+    <string name="full_day_mon">Poniedziałek</string>
+    <string name="full_day_tue">Wtorek</string>
+    <string name="full_day_wed">Środa</string>
+    <string name="full_day_thu">Czwartek</string>
+    <string name="full_day_fri">Piątek</string>
+    <string name="full_day_sat">Sobota</string>
+    <string name="full_day_sun">Niedziela</string>
+
+    <string name="grades_title">Oceny</string>
+    <string name="back">Wstecz</string>
+    <string name="no_detailed_grades">Brak szczegółowych ocen dla tego przedmiotu.</string>
+    <string name="grade_value_label">Wartość</string>
+    <string name="no_partial_grades">Brak wpisanych ocen cząstkowych.</string>
+    <string name="no_grades_for_semester">Brak ocen dla semestru %1$s</string>
+
+    <string name="class_lecture">Wykład</string>
+    <string name="class_laboratory">Laboratorium</string>
+    <string name="class_exercises">Ćwiczenia</string>
+    <string name="class_project">Projekt</string>
+    <string name="class_seminar">Seminarium</string>
+
+    <string name="settings_title">Ustawienia</string>
+    <string name="section_account">Konto</string>
+    <string name="isod_user">Użytkownik ISOD</string>
+    <string name="not_linked">Niepołączone</string>
+    <string name="usos_account">Konto USOS</string>
+    <string name="linked">Połączone</string>
+    <string name="unlink">Odłącz</string>
+    <string name="link">Połącz</string>
+    <string name="section_about">O aplikacji</string>
+    <string name="log_out">Wyloguj się</string>
+    <string name="version_format">Wersja %1$s</string>
+    <string name="beta_suffix"> (BETA)</string>
+    <string name="author">autor: Monika Musielik</string>
+    <string name="app_description">ISOD Mobile to aplikacja do obsługi planu zajęć oraz ocen, stworzona przez studentów.</string>
+    <string name="tech_stack_energy_drinks">Energy Drinks</string>
+    <string name="tech_stack_open_source">Open Source</string>
+
+    <string name="news_feed_title">Aktualności</string>
+    <string name="filter_all">Wszystkie</string>
+    <string name="selected">Wybrane</string>
+    <string name="no_news_yet">Brak ogłoszeń</string>
+    <string name="no_matching_news">Brak pasujących ogłoszeń</string>
+    <string name="attachments">Załączniki</string>
+    <string name="new_grade">Nowa ocena: %1$s</string>
+
+    <string name="news_type_announcement">Ogłoszenie</string>
+    <string name="news_type_quiz">Quiz</string>
+    <string name="news_type_important">Ważne</string>
+    <string name="news_type_project_status">Status projektu</string>
+    <string name="news_type_project_group_change">Zmiana grupy</string>
+    <string name="news_type_class_enrollment">Zapisy</string>
+</resources>

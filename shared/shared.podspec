@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
     spec.name                     = 'shared'
-    spec.version                  = '1.0'
+    spec.version                  = '0.2.0'
     spec.homepage                 = 'https://github.com/akiakinom/isod'
     spec.source                   = { :http=> ''}
     spec.authors                  = ''
@@ -42,4 +42,5 @@ Pod::Spec.new do |spec|
             SCRIPT
         }
     ]
+    spec.resources = ['build/compose/cocoapods/compose-resources']
 end

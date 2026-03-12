@@ -1,0 +1,105 @@
+<resources>
+    <string name="app_name">ISOD Mobile</string>
+    <string name="isod_connect_subtitle">Connect to your faculty account</string>
+    <string name="credentials_title">Credentials</string>
+    <string name="username_label">Username</string>
+    <string name="api_key_label">API Key</string>
+    <string name="hide">Hide</string>
+    <string name="show">Show</string>
+    <string name="isod_api_key_hint">Find your API key in the ISOD portal at the bottom of your account page.</string>
+    <string name="continue_btn">Continue</string>
+
+    <string name="usos_title">USOS</string>
+    <string name="usos_link_subtitle">Link your university account</string>
+    <string name="why_link_usos">Why link USOS?</string>
+    <string name="usos_link_reason">To access sports, languages and other USOS data, you need to authorize this app with the university system.</string>
+    <string name="authorize_usos_btn">Authorize with USOS</string>
+    <string name="skip_for_now">Skip for now</string>
+    <string name="usos_login_hint">You\'ll be redirected to the USOS login page.\nNo passwords are stored by this app.</string>
+
+    <string name="hello">Hello!</string>
+    <string name="ready_for_classes">Ready for your classes?</string>
+    <string name="settings">Settings</string>
+    <string name="todays_timeline">Today\'s Timeline</string>
+    <string name="announcements">Announcements</string>
+    <string name="see_all">See all</string>
+    <string name="no_classes_today">No classes today. Enjoy your break!</string>
+    <string name="all_caught_up">All caught up!</string>
+    <string name="upcoming">UPCOMING</string>
+    <string name="tomorrow_at">Tomorrow at %1$s</string>
+    <string name="on_day_at">on %1$s at %2$s</string>
+
+    <string name="tab_home">Home</string>
+    <string name="tab_schedule">Schedule</string>
+    <string name="tab_grades">Grades</string>
+    <string name="tab_news">News</string>
+
+    <string name="weekly_schedule">Weekly Schedule</string>
+    <string name="no_classes_scheduled">No classes scheduled</string>
+    <string name="take_rest">Take some rest!</string>
+
+    <string name="day_mon">Mon</string>
+    <string name="day_tue">Tue</string>
+    <string name="day_wed">Wed</string>
+    <string name="day_thu">Thu</string>
+    <string name="day_fri">Fri</string>
+    <string name="day_sat">Sat</string>
+    <string name="day_sun">Sun</string>
+
+    <string name="full_day_mon">Monday</string>
+    <string name="full_day_tue">Tuesday</string>
+    <string name="full_day_wed">Wednesday</string>
+    <string name="full_day_thu">Thursday</string>
+    <string name="full_day_fri">Friday</string>
+    <string name="full_day_sat">Saturday</string>
+    <string name="full_day_sun">Sunday</string>
+
+    <string name="grades_title">Grades</string>
+    <string name="back">Back</string>
+    <string name="no_detailed_grades">No detailed grades available for this course.</string>
+    <string name="grade_value_label">Value</string>
+    <string name="no_partial_grades">No partial grades recorded yet.</string>
+    <string name="no_grades_for_semester">No grades recorded for %1$s</string>
+
+    <string name="class_lecture">Lecture</string>
+    <string name="class_laboratory">Laboratory</string>
+    <string name="class_exercises">Exercises</string>
+    <string name="class_project">Project</string>
+    <string name="class_seminar">Seminar</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="section_account">Account</string>
+    <string name="isod_user">ISOD User</string>
+    <string name="not_linked">Not linked</string>
+    <string name="usos_account">USOS Account</string>
+    <string name="linked">Linked</string>
+    <string name="unlink">Unlink</string>
+    <string name="link">Link</string>
+    <string name="section_about">About App</string>
+    <string name="log_out">Log Out</string>
+    <string name="version_format">Version %1$s</string>
+    <string name="beta_suffix"> (BETA)</string>
+    <string name="author">by Monika Musielik</string>
+    <string name="app_description">ISOD Mobile is a mobile app for managing your schedule and grades, created by students.</string>
+    <string name="tech_stack_energy_drinks">Energy Drinks</string>
+    <string name="tech_stack_open_source">Open Source</string>
+
+    <string name="news_feed_title">News Feed</string>
+    <string name="filter_all">All</string>
+    <string name="selected">Selected</string>
+    <string name="no_news_yet">No announcements yet</string>
+    <string name="no_matching_news">No matching announcements</string>
+    <string name="attachments">Attachments</string>
+    <string name="new_grade">New grade: %1$s</string>
+
+    <string name="news_type_announcement">Announcement</string>
+    <string name="news_type_quiz">Quiz</string>
+    <string name="news_type_important">Important</string>
+    <string name="news_type_project_status">Project status</string>
+    <string name="news_type_project_group_change">Group change</string>
+    <string name="news_type_class_enrollment">Enrollment</string>
+
+    <string name="error_invalid_credentials">Invalid username or API key.</string>
+    <string name="error_network">No internet connection.</string>
+    <string name="error_server">Could not reach ISOD. Try again later.</string>
+</resources>

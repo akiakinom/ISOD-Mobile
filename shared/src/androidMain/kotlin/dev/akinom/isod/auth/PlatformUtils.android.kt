@@ -1,5 +1,10 @@
 package dev.akinom.isod.auth
 import java.util.Calendar
+import java.text.SimpleDateFormat
+import java.util.Locale
+import android.content.Context
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 actual fun currentTimeSeconds(): Long = System.currentTimeMillis() / 1000
 
@@ -8,7 +13,6 @@ actual fun ByteArray.toHexString(): String =
 
 actual fun currentWeekMonday(): String {
     val cal = Calendar.getInstance().apply {
-        // Move to Monday (Calendar.MONDAY = 2)
         val dow = get(Calendar.DAY_OF_WEEK)
         val diff = (dow - Calendar.MONDAY + 7) % 7
         add(Calendar.DAY_OF_MONTH, -diff)
@@ -22,7 +26,7 @@ actual fun currentWeekMonday(): String {
 actual fun currentSemester(): String {
     val cal = Calendar.getInstance()
     val year = cal.get(Calendar.YEAR)
-    val month = cal.get(Calendar.MONTH) + 1 // Calendar.JANUARY is 0
+    val month = cal.get(Calendar.MONTH) + 1
 
     return when (month) {
         1 -> "${year - 1}Z"
@@ -30,3 +34,36 @@ actual fun currentSemester(): String {
         else -> "${year}Z"
     }
 }
+
+actual fun currentDayOfWeek(): Int {
+    val cal = Calendar.getInstance()
+    val dow = cal.get(Calendar.DAY_OF_WEEK)
+    return when (dow) {
+        Calendar.MONDAY -> 1
+        Calendar.TUESDAY -> 2
+        Calendar.WEDNESDAY -> 3
+        Calendar.THURSDAY -> 4
+        Calendar.FRIDAY -> 5
+        Calendar.SATURDAY -> 6
+        Calendar.SUNDAY -> 7
+        else -> 1
+    }
+}
+
+actual fun currentTimeHHmm(): String {
+    return SimpleDateFormat("HH:mm", Locale.getDefault()).format(Calendar.getInstance().time)
+}
+
+object AppVersionProvider : KoinComponent {
+    val context: Context by inject()
+    fun getVersion(): String {
+        return try {
+            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            pInfo.versionName ?: "1.0.0"
+        } catch (e: Exception) {
+            "1.0.0"
+        }
+    }
+}
+
+actual fun getAppVersion(): String = AppVersionProvider.getVersion()

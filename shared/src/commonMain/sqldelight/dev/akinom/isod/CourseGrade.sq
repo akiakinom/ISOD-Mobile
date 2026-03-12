@@ -22,8 +22,14 @@ INSERT OR REPLACE INTO CourseGradeEntity VALUES ?;
 selectBySemester:
 SELECT * FROM CourseGradeEntity WHERE semester = ? ORDER BY courseName ASC;
 
+selectByCourseId:
+SELECT * FROM CourseGradeEntity WHERE courseId = ? AND semester = ?;
+
 lastUpdated:
 SELECT lastUpdated FROM CourseGradeEntity WHERE semester = ? LIMIT 1;
 
 deleteBySemester:
 DELETE FROM CourseGradeEntity WHERE semester = ?;
+
+updateClassGrades:
+UPDATE CourseGradeEntity SET classGradesJson = ? WHERE courseId = ? AND semester = ?;

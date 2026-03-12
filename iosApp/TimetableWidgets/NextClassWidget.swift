@@ -34,12 +34,12 @@ struct NextClassWidgetEntryView : View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Next Classes")
+            Text("next_classes")
                 .font(.headline)
             
             if entry.items.isEmpty {
                 Spacer()
-                Text("No upcoming classes")
+                Text("no_upcoming_classes")
                     .frame(maxWidth: .infinity, alignment: .center)
                 Spacer()
             } else {
@@ -66,10 +66,15 @@ struct NextClassItem: View {
         
         VStack(alignment: .leading) {
             HStack {
-                Text(isCurrent ? "NOW: \(item.endTime)" : "\(item.startTime) - \(item.endTime)")
-                    .font(.system(size: 12, weight: .medium))
+                if isCurrent {
+                    Text(String(format: NSLocalizedString("now_format", comment: ""), item.endTime))
+                        .font(.system(size: 12, weight: .medium))
+                } else {
+                    Text("\(item.startTime) - \(item.endTime)")
+                        .font(.system(size: 12, weight: .medium))
+                }
                 Spacer()
-                Text("Day \(item.dayOfWeek)")
+                Text(String(format: NSLocalizedString("day_format", comment: ""), item.dayOfWeek))
                     .font(.system(size: 10))
             }
             Text(item.courseNameShort)
@@ -94,8 +99,8 @@ struct NextClassWidget: Widget {
                     .background()
             }
         }
-        .configurationDisplayName("Next Classes")
-        .description("Shows your current and upcoming classes.")
+        .configurationDisplayName(LocalizedStringKey("next_classes"))
+        .description(LocalizedStringKey("widget_next_classes_description"))
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }

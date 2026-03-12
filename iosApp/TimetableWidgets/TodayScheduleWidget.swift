@@ -33,12 +33,12 @@ struct TodayScheduleWidgetEntryView : View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Today's Schedule")
+            Text("today_schedule")
                 .font(.headline)
             
             if entry.items.isEmpty {
                 Spacer()
-                Text("No classes today")
+                Text("no_classes_today")
                     .frame(maxWidth: .infinity, alignment: .center)
                 Spacer()
             } else {
@@ -79,8 +79,8 @@ struct TodayScheduleWidget: Widget {
                     .background()
             }
         }
-        .configurationDisplayName("Today's Schedule")
-        .description("Shows your classes for today.")
+        .configurationDisplayName(LocalizedStringKey("today_schedule"))
+        .description(LocalizedStringKey("widget_today_schedule_description"))
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }

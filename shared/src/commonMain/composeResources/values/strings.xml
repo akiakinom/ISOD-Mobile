@@ -1,0 +1,9 @@
+<resources>
+    <string name="class_lecture">Lecture</string>
+    <string name="class_laboratory">Laboratory</string>
+    <string name="class_exercises">Exercises</string>
+    <string name="class_project">Project</string>
+    <string name="class_seminar">Seminar</string>
+    <string name="notif_channel_news_name">ISOD News</string>
+    <string name="notif_channel_news_desc">Notifications for new ISOD announcements and news</string>
+</resources>

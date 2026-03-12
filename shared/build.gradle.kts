@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.sqldelight)
+    alias(libs.plugins.jetbrainsCompose)
+    alias(libs.plugins.composeCompiler)
 }
 
 val usosConsumerKey: String = providers
@@ -40,7 +42,7 @@ kotlin {
     cocoapods {
         summary = "ISOD Mobile Shared Module"
         homepage = "https://github.com/akiakinom/isod"
-        version = "1.0"
+        version = "0.2.0"
         ios.deploymentTarget = "16.0"
         framework {
             baseName = "shared"
@@ -68,6 +70,9 @@ kotlin {
 
             implementation(libs.kotlinx.crypto.sha2)
             implementation(libs.kotlinx.crypto.hmac)
+
+            implementation(libs.components.resources)
+            implementation(libs.runtime)
         }
 
         androidMain.dependencies {
@@ -84,6 +89,10 @@ kotlin {
             implementation(libs.sqldelight.native.driver)
         }
     }
+}
+
+compose.resources {
+    packageOfResClass = "dev.akinom.isod.shared"
 }
 
 sqldelight {

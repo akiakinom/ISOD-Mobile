@@ -11,7 +11,7 @@ fun initKoin(additionalModules: List<Module> = emptyList(), appDeclaration: Koin
     
     startKoin {
         appDeclaration()
-        modules(listOf(sharedModule, platformModule) + additionalModules)
+        modules(listOf(sharedModule, notificationModule, platformModule) + additionalModules)
     }
     isKoinInitialized = true
 }

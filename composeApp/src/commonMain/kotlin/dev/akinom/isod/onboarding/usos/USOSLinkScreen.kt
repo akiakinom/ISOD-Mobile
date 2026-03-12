@@ -4,16 +4,13 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -22,21 +19,24 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import dev.akinom.isod.home.HomeScreen
+import dev.akinom.isod.HomeScreen
+import dev.akinom.isod.Res
+import dev.akinom.isod.*
+import org.jetbrains.compose.resources.stringResource
 
-class UsosLinkScreen : Screen {
+class USOSLinkScreen : Screen {
 
     @Composable
     override fun Content() {
         val navigator   = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { UsosLinkScreenModel() }
+        val screenModel = rememberScreenModel { USOSLinkScreenModel() }
         val state       by screenModel.state.collectAsState()
         var visible     by remember { mutableStateOf(false) }
 
         LaunchedEffect(Unit) { visible = true }
 
         LaunchedEffect(state) {
-            if (state is UsosLinkState.Success) {
+            if (state is USOSLinkState.Success) {
                 navigator.replaceAll(HomeScreen())
             }
         }
@@ -49,7 +49,7 @@ class UsosLinkScreen : Screen {
         ) {
 
             when (val s = state) {
-                is UsosLinkState.Authorizing -> {
+                is USOSLinkState.Authorizing -> {
                     UsosWebView(
                         url = s.authorizeUrl,
                         onCallbackReceived = { verifier ->
@@ -66,100 +66,112 @@ class UsosLinkScreen : Screen {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 28.dp),
+                                .padding(horizontal = 32.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            Spacer(Modifier.height(8.dp))
+                            Icon(
+                                imageVector = Icons.Default.AccountBalance,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+
+                            Spacer(Modifier.height(16.dp))
+
                             Text(
-                                text = "USOS",
-                                fontSize = 48.sp,
+                                text = stringResource(Res.string.usos_title),
+                                style = MaterialTheme.typography.displaySmall,
                                 fontWeight = FontWeight.Black,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = MaterialTheme.colorScheme.onBackground,
                             )
                             Text(
-                                text = "Link your account",
-                                fontSize = 14.sp,
+                                text = stringResource(Res.string.usos_link_subtitle),
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
 
-                            Spacer(Modifier.height(24.dp))
+                            Spacer(Modifier.height(40.dp))
 
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .border(
-                                        width = 1.dp,
-                                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                                        shape = RoundedCornerShape(10.dp),
-                                    )
-                                    .background(MaterialTheme.colorScheme.surface)
-                                    .padding(24.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp),
+                            ElevatedCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = MaterialTheme.shapes.large,
+                                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
                             ) {
-                                Text(
-                                    text = "To access sports, languages and other USOS data, you need to authorize this app with USOS.",
-                                    fontSize = 13.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-
-                                AnimatedVisibility(visible = s is UsosLinkState.Error) {
+                                Column(
+                                    modifier = Modifier.padding(24.dp),
+                                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                                ) {
                                     Text(
-                                        text = "⚠ ${(s as? UsosLinkState.Error)?.message ?: ""}",
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.error,
+                                        text = stringResource(Res.string.why_link_usos),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
                                     )
+
+                                    Text(
+                                        text = stringResource(Res.string.usos_link_reason),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        lineHeight = 20.sp
+                                    )
+
+                                    AnimatedVisibility(visible = s is USOSLinkState.Error) {
+                                        Text(
+                                            text = "⚠ ${(s as? USOSLinkState.Error)?.message ?: ""}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.error,
+                                        )
+                                    }
                                 }
                             }
 
-                            Spacer(Modifier.height(24.dp))
+                            Spacer(Modifier.height(32.dp))
 
                             Button(
                                 onClick = { screenModel.startAuth() },
-                                enabled = s !is UsosLinkState.LoadingToken
-                                        && s !is UsosLinkState.LoadingAccess,
+                                enabled = s !is USOSLinkState.LoadingToken
+                                        && s !is USOSLinkState.LoadingAccess,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(52.dp),
-                                shape = RoundedCornerShape(6.dp),
+                                    .height(56.dp),
+                                shape = MaterialTheme.shapes.large,
                             ) {
-                                if (s is UsosLinkState.LoadingToken || s is UsosLinkState.LoadingAccess) {
+                                if (s is USOSLinkState.LoadingToken || s is USOSLinkState.LoadingAccess) {
                                     CircularProgressIndicator(
-                                        modifier = Modifier.size(20.dp),
+                                        modifier = Modifier.size(24.dp),
                                         color = MaterialTheme.colorScheme.onPrimary,
-                                        strokeWidth = 2.dp,
+                                        strokeWidth = 3.dp,
                                     )
                                 } else {
                                     Text(
-                                        text = "Authorize with USOS →",
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 15.sp,
+                                        text = stringResource(Res.string.authorize_usos_btn),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
                                     )
                                 }
                             }
 
                             TextButton(
                                 onClick = { navigator.replaceAll(HomeScreen()) },
-                                enabled = s !is UsosLinkState.LoadingToken
-                                        && s !is UsosLinkState.LoadingAccess,
-                                modifier = Modifier.fillMaxWidth(),
+                                enabled = s !is USOSLinkState.LoadingToken
+                                        && s !is USOSLinkState.LoadingAccess,
+                                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                             ) {
                                 Text(
-                                    text = "Skip for now",
-                                    fontSize = 13.sp,
+                                    text = stringResource(Res.string.skip_for_now),
+                                    style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
 
+                            Spacer(Modifier.height(16.dp))
+
                             Text(
-                                text = "You'll be redirected to the USOS login page.\nNo passwords are stored by this app.",
-                                fontSize = 12.sp,
+                                text = stringResource(Res.string.usos_login_hint),
+                                style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                 textAlign = TextAlign.Center,
                                 lineHeight = 18.sp,
                             )
-
-                            Spacer(Modifier.height(8.dp))
                         }
                     }
                 }

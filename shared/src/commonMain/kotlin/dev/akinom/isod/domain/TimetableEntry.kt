@@ -1,124 +1,103 @@
 package dev.akinom.isod.domain
 
-import kotlinx.serialization.Serializable
+import dev.akinom.isod.shared.Res
+import dev.akinom.isod.shared.*
+import org.jetbrains.compose.resources.getString
 
-enum class TimetableSource { ISOD, USOS }
-
-@Serializable
 data class TimetableEntry(
     val id: String,
-    val source: TimetableSource,
     val courseName: String,
     val courseNameShort: String,
-    val courseType: String,
-    val startTime: String,         // "hh:mm" normalized
-    val endTime: String,           // "hh:mm" normalized
-    val dayOfWeek: Int,            // 1=Mon … 7=Sun
-    val date: String?,             // "yyyy-mm-dd" — USOS only
+    val courseType: String, // "W", "L", "C", "P", "S"
+    val dayOfWeek: Int, // 1-7 (Mon-Sun)
+    val startTime: String, // "HH:mm"
+    val endTime: String, // "HH:mm"
     val building: String,
     val buildingShort: String,
     val room: String,
-    val lecturerIds: List<Long>,   // raw IDs — resolved to names later
     val lecturerNames: List<String>,
-    val groups: List<String>,
-    val frequency: String?,
+    val source: TimetableSource = TimetableSource.ISOD,
+    val lecturerIds: List<Long> = emptyList(),
 ) {
-    val dedupeKey: String get() = "${dayOfWeek}_${startTime}_${courseName.normalizedForDedup()}"
-
-    fun formatDisplay(): String {
-        val lecturer = lecturerNames.joinToString(", ")
-        val building = buildingShort.ifBlank { building.abbreviate() }
-        val location = listOfNotNull(
-            building.ifBlank { null },
-            room.ifBlank { null },
-        ).joinToString(" ")
-        val lecturerPart = if (lecturer.isNotBlank()) " - $lecturer" else ""
-        return "$courseName ($courseNameShort) [$courseType] $startTime-$endTime $location$lecturerPart"
+    val shortType: String get() = when(courseType.uppercase()) {
+        "W" -> "WYK"
+        "L" -> "LAB"
+        "C", "Ć" -> "ĆWI"
+        "P" -> "PRO"
+        "S" -> "SEM"
+        else -> courseType.take(3).uppercase()
     }
+
+    val dedupeKey: String get() = "${courseName}_${dayOfWeek}_${startTime}"
 }
 
-private fun String.normalizedForDedup(): String =
-    lowercase().replace(Regex("[^a-z0-9ąćęłńóśźż]"), "").take(20)
-
-private fun String.abbreviate(): String =
-    split(" ")
-        .filter { it.length > 1 }
-        .mapNotNull { it.firstOrNull()?.uppercaseChar() }
-        .joinToString("")
-        .take(4)
-
-private val ISOD_EXCLUDED_PREFIXES = listOf("WF", "DSJO")
-
-fun PlanItem.isExcluded(): Boolean =
-    ISOD_EXCLUDED_PREFIXES.any { courseNameShort.startsWith(it) }
+enum class TimetableSource {
+    ISOD, USOS
+}
 
 fun PlanItem.toTimetableEntry() = TimetableEntry(
-    id              = "isod_$id",
-    source          = TimetableSource.ISOD,
-    courseName      = courseName,
+    id = "${courseName}_${dayOfWeek}_${startTime}",
+    courseName = courseName,
     courseNameShort = courseNameShort,
-    courseType = typeOfClasses.toPolishClassType(),
-    startTime       = startTime.parseTime(),
-    endTime         = endTime.parseTime(),
-    dayOfWeek       = dayOfWeek,
-    date            = null,
-    building        = building,
-    buildingShort   = buildingShort,
-    room            = room,
-    lecturerIds     = emptyList(),
-    lecturerNames   = teachers,
-    groups          = groups,
-    frequency       = cycle,
+    courseType = when {
+        typeOfClasses.contains("W", ignoreCase = true) -> "W"
+        typeOfClasses.contains("L", ignoreCase = true) -> "L"
+        typeOfClasses.contains("C", ignoreCase = true) -> "C"
+        typeOfClasses.contains("P", ignoreCase = true) -> "P"
+        typeOfClasses.contains("S", ignoreCase = true) -> "S"
+        else -> typeOfClasses.take(1).uppercase()
+    },
+    dayOfWeek = dayOfWeek,
+    startTime = startTime.to24h(),
+    endTime = endTime.to24h(),
+    building = building,
+    buildingShort = buildingShort,
+    room = room,
+    lecturerNames = teachers,
+    source = TimetableSource.ISOD
 )
 
 fun UsosActivity.toTimetableEntry(): TimetableEntry {
-    val date      = startTime.take(10)
-    val dayOfWeek = date.toDayOfWeek()
-    val name      = courseName?.get() ?: this.name.get()
+    val name = courseName?.get("pl") ?: name.get("pl")
+    val dow = getDayOfWeekFromDate(startTime)
     return TimetableEntry(
-        id              = "usos_${courseId ?: type}_$startTime",
-        source          = TimetableSource.USOS,
-        courseName      = name,
+        id = "${name}_${dow}_${startTime}",
+        courseName = name,
         courseNameShort = generateShortName(name),
-        courseType = classtypeName?.get("pl")?.toPolishClassType()
-            ?: classtypeName?.get("en")?.toPolishClassType()
-            ?: type.toPolishClassType(),
-        startTime       = startTime.drop(11).take(5),   // "yyyy-mm-dd hh:mm:ss" → "hh:mm"
-        endTime         = endTime.drop(11).take(5),
-        dayOfWeek       = dayOfWeek,
-        date            = date,
-        building        = buildingName?.get() ?: "",
-        buildingShort   = buildingName?.get()?.abbreviate() ?: "",
-        room            = roomNumber ?: "",
-        lecturerIds     = lecturerIds,
-        lecturerNames   = lecturers,
-        groups          = groupNumber?.let { listOf("Gr $it") } ?: emptyList(),
-        frequency       = frequency,
+        courseType = when(type.lowercase()) {
+            "classgroup", "classgroup2" -> {
+                val pl = classtypeName?.get("pl")?.lowercase() ?: ""
+                when {
+                    pl.contains("wykład") -> "W"
+                    pl.contains("laboratorium") -> "L"
+                    pl.contains("ćwiczenia") -> "C"
+                    pl.contains("projekt") -> "P"
+                    pl.contains("seminarium") -> "S"
+                    else -> "W"
+                }
+            }
+            "meeting" -> "S"
+            "exam" -> "E"
+            else -> "W"
+        },
+        dayOfWeek = dow,
+        startTime = startTime.substring(11, 16),
+        endTime = endTime.substring(11, 16),
+        building = buildingName?.get("pl") ?: "",
+        buildingShort = buildingId ?: "",
+        room = roomNumber ?: "",
+        lecturerNames = lecturers,
+        source = TimetableSource.USOS,
+        lecturerIds = lecturerIds
     )
 }
 
-private fun String.parseTime(): String {
-    return try {
-        val parts  = trim().split(":")
-        var hour   = parts[0].trim().toInt()
-        val minute = parts[1].trim()
-        val isPm   = contains("PM", ignoreCase = true)
-        val isAm   = contains("AM", ignoreCase = true)
-        if (isPm && hour != 12) hour += 12
-        if (isAm && hour == 12) hour = 0
-        
-        val h = hour.toString().padStart(2, '0')
-        val m = minute.filter { it.isDigit() }.take(2).padStart(2, '0')
-        "$h:$m"
-    } catch (e: Exception) { this }
-}
-
-fun String.toDayOfWeek(): Int {
-    val parts = split("-")
-    if (parts.size != 3) return 0
-    var y = parts[0].toIntOrNull() ?: return 0
-    val m = parts[1].toIntOrNull() ?: return 0
-    val d = parts[2].toIntOrNull() ?: return 0
+private fun getDayOfWeekFromDate(dateStr: String): Int {
+    val parts = dateStr.take(10).split("-")
+    if (parts.size != 3) return 1
+    var y = parts[0].toIntOrNull() ?: return 1
+    val m = parts[1].toIntOrNull() ?: return 1
+    val d = parts[2].toIntOrNull() ?: return 1
     val month = if (m < 3) { y--; m + 12 } else m
     val k = y % 100
     val j = y / 100
@@ -126,16 +105,35 @@ fun String.toDayOfWeek(): Int {
     return ((h + 5) % 7) + 1
 }
 
-fun String.toPolishClassType(): String = when (uppercase()) {
-    "W"   -> "wykład"
-    "C"   -> "ćwiczenia"
-    "L"   -> "laboratorium"
-    "S"   -> "seminarium"
-    "P"   -> "projekt"
-    "LECTURE", "LEC"        -> "wykład"
-    "TUTORIAL", "TUT"       -> "ćwiczenia"
-    "LABORATORY", "LAB"     -> "laboratorium"
-    "SEMINAR"               -> "seminarium"
-    "PROJECT", "PRO"        -> "projekt"
-    else -> this.lowercase()
+fun PlanItem.isExcluded(): Boolean {
+    val shortName = courseNameShort.uppercase()
+    return shortName.startsWith("DSJO") || shortName.startsWith("WF")
+}
+
+private fun String.to24h(): String {
+    if (!contains("AM", true) && !contains("PM", true)) return this.take(5)
+    val isPm   = contains("PM", ignoreCase = true)
+    val isAm   = contains("AM", ignoreCase = true)
+    val clean  = replace("AM", "", true).replace("PM", "", true).trim()
+    val parts  = clean.split(":")
+    if (parts.size < 2) return clean
+    
+    var hour = parts[0].toInt()
+    val min  = parts[1]
+    
+    if (isPm && hour < 12) hour += 12
+    if (isAm && hour == 12) hour = 0
+    
+    return "${hour.toString().padStart(2, '0')}:$min"
+}
+
+suspend fun TimetableEntry.getFullTypeName(): String {
+    return when(courseType.uppercase()) {
+        "W"   -> getString(Res.string.class_lecture)
+        "L"   -> getString(Res.string.class_laboratory)
+        "C", "Ć" -> getString(Res.string.class_exercises)
+        "P"   -> getString(Res.string.class_project)
+        "S"   -> getString(Res.string.class_seminar)
+        else -> courseType
+    }
 }

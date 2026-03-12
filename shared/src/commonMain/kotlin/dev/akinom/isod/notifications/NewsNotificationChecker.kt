@@ -74,9 +74,11 @@ class NewsNotificationChecker(
 }
 
 private fun NewsType.toNotificationTitle(): String = when (this) {
-    NewsType.QUIZ         -> "📝 Egzamin"
-    NewsType.ANNOUNCEMENT -> "📢 Ogłoszenie"
-    NewsType.PROJECT_STATUS        -> "🎓 Ocena"
-    NewsType.PROJECT_GROUP_CHANGE     -> "📎 Materiały"
+    NewsType.QUIZ         -> "📝 Quiz"
+    NewsType.ANNOUNCEMENT -> "📢 Announcement"
+    NewsType.IMPORTANT    -> "⚠️ Important"
+    NewsType.PROJECT_STATUS -> "🎓 Grade"
+    NewsType.PROJECT_GROUP_CHANGE -> "📎 Material"
+    NewsType.CLASS_ENROLLMENT -> "✅ Enrollment"
     else                  -> "📬 ISOD"
 }

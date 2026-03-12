@@ -1,180 +1,146 @@
 package dev.akinom.isod.onboarding.isod
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import dev.akinom.isod.onboarding.usos.UsosLinkScreen
+import dev.akinom.isod.MainScreen
+import dev.akinom.isod.Res
+import dev.akinom.isod.*
+import org.jetbrains.compose.resources.stringResource
 
-class IsodLinkScreen : Screen {
+class ISODLinkScreen : Screen {
 
     @Composable
     override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { IsodLinkScreenModel() }
+        val screenModel = rememberScreenModel { ISODLinkScreenModel() }
         val state by screenModel.state.collectAsState()
+        val navigator = LocalNavigator.currentOrThrow
 
         var username by remember { mutableStateOf("") }
         var apiKey by remember { mutableStateOf("") }
         var apiKeyVisible by remember { mutableStateOf(false) }
-        var visible by remember { mutableStateOf(false) }
-
-        LaunchedEffect(Unit) { visible = true }
 
         LaunchedEffect(state) {
-            if (state is IsodLinkState.Success) {
-                navigator.push(UsosLinkScreen())
+            if (state is ISODLinkState.Success) {
+                navigator.replaceAll(MainScreen())
             }
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
-            contentAlignment = Alignment.Center,
-        ) {
-            AnimatedVisibility(
-                visible = visible,
-                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 4 }),
+        Scaffold { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(24.dp)
+                    .background(MaterialTheme.colorScheme.background),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 28.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                Text(
+                    text = "ISOD",
+                    style = MaterialTheme.typography.displayMedium,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = stringResource(Res.string.isod_connect_subtitle),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(Modifier.height(48.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.extraLarge,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
                 ) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = "ISOD Mobile",
-                        fontSize = 48.sp,
-                        fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                    Text(
-                        text = "Link your account",
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-
-                    Spacer(Modifier.height(24.dp))
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .border(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                                shape = RoundedCornerShape(10.dp),
-                            )
-                            .background(MaterialTheme.colorScheme.surface)
-                            .padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
+                    Column(modifier = Modifier.padding(24.dp)) {
                         Text(
-                            text = "Enter your ISOD credentials to access your faculty data.",
-                            fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            stringResource(Res.string.credentials_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
                         )
+                        Spacer(Modifier.height(16.dp))
 
                         OutlinedTextField(
                             value = username,
-                            onValueChange = { username = it; screenModel.resetError() },
-                            label = { Text("Username") },
-                            singleLine = true,
+                            onValueChange = { username = it },
+                            label = { Text(stringResource(Res.string.username_label)) },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(6.dp),
-                            enabled = state !is IsodLinkState.Loading,
-                            keyboardOptions = KeyboardOptions(
-                                capitalization = KeyboardCapitalization.None,
-                                autoCorrectEnabled = false
-                            ),
+                            singleLine = true,
+                            shape = MaterialTheme.shapes.large
                         )
+
+                        Spacer(Modifier.height(12.dp))
 
                         OutlinedTextField(
                             value = apiKey,
-                            onValueChange = { apiKey = it; screenModel.resetError() },
-                            label = { Text("API Key") },
-                            singleLine = true,
+                            onValueChange = { apiKey = it },
+                            label = { Text(stringResource(Res.string.api_key_label)) },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(6.dp),
-                            visualTransformation = if (apiKeyVisible)
-                                VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Password,
-                                autoCorrectEnabled = false
-                            ),
+                            singleLine = true,
+                            visualTransformation = if (apiKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
-                                TextButton(onClick = { apiKeyVisible = !apiKeyVisible }) {
-                                    Text(
-                                        text = if (apiKeyVisible) "Hide" else "Show",
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.primary,
+                                IconButton(onClick = { apiKeyVisible = !apiKeyVisible }) {
+                                    Icon(
+                                        imageVector = if (apiKeyVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = if (apiKeyVisible) stringResource(Res.string.hide) else stringResource(Res.string.show)
                                     )
                                 }
                             },
-                            enabled = state !is IsodLinkState.Loading,
-                        )
-
-                        AnimatedVisibility(visible = state is IsodLinkState.Error) {
-                            Text(
-                                text = "⚠ ${(state as? IsodLinkState.Error)?.message ?: ""}",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.error,
-                                lineHeight = 16.sp,
-                            )
-                        }
-
-                        Text(
-                            text = "Find your API key in the ISOD portal at the bottom of your account page.",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            lineHeight = 16.sp,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                            shape = MaterialTheme.shapes.large
                         )
                     }
+                }
 
-                    Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(16.dp))
 
-                    Button(
-                        onClick = { screenModel.linkAccount(username, apiKey) },
-                        enabled = username.isNotBlank() && apiKey.isNotBlank()
-                                && state !is IsodLinkState.Loading,
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                        shape = RoundedCornerShape(6.dp),
-                    ) {
-                        if (state is IsodLinkState.Loading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                strokeWidth = 2.dp,
-                            )
-                        } else {
-                            Text(
-                                text = "Link ISOD Account →",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 15.sp,
-                            )
-                        }
+                Text(
+                    text = stringResource(Res.string.isod_api_key_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+
+                Spacer(Modifier.height(32.dp))
+
+                if (state is ISODLinkState.Error) {
+                    Text(
+                        text = (state as ISODLinkState.Error).message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
+
+                Button(
+                    onClick = { screenModel.link(username, apiKey) },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    enabled = username.isNotBlank() && apiKey.isNotBlank() && state !is ISODLinkState.Loading,
+                    shape = MaterialTheme.shapes.large
+                ) {
+                    if (state is ISODLinkState.Loading) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
+                    } else {
+                        Text(stringResource(Res.string.continue_btn), fontWeight = FontWeight.Bold)
                     }
                 }
             }
