@@ -29,6 +29,7 @@ import androidx.glance.layout.*
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import androidx.glance.text.TextAlign
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.unit.ColorProvider
@@ -97,7 +98,11 @@ class TodayScheduleWidget : GlanceAppWidget(), KoinComponent {
                                 )
                                 Text(
                                     text = context.getString(if (isAfterLessons) R.string.no_classes_tomorrow else R.string.no_classes_today),
-                                    style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 14.sp)
+                                    style = TextStyle(
+                                        color = GlanceTheme.colors.onSurfaceVariant,
+                                        fontSize = 14.sp,
+                                        textAlign = TextAlign.Center
+                                    )
                                 )
                             }
                         } else {
