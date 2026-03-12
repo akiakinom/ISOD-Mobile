@@ -1,10 +1,10 @@
 package dev.akinom.isod.domain
 
-import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
 
 data class SemesterConfig(
     val id: String, // e.g., "2023Z", "2024L"
@@ -30,6 +30,6 @@ object AcademicCalendar {
         
         if (today < config.start || week > 15) return null
         
-        return week
+        return week.toInt()
     }
 }
