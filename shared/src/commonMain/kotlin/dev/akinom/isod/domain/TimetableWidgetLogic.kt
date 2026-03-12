@@ -1,5 +1,7 @@
 package dev.akinom.isod.domain
 
+import kotlinx.datetime.LocalDate
+
 object TimetableWidgetLogic {
     fun filterToday(entries: List<TimetableEntry>, todayDayOfWeek: Int): List<TimetableEntry> {
         return entries.filter { it.dayOfWeek == todayDayOfWeek }
@@ -19,13 +21,16 @@ object TimetableWidgetLogic {
         entries: List<TimetableEntry>,
         todayDayOfWeek: Int,
         currentTime: String, // "HH:mm"
-        currentWeek: Int? = null
+        currentWeek: Int? = null,
+        todayDate: LocalDate? = null
     ): List<TimetableEntry> {
+        val effectiveDayOfWeek = todayDate?.let { AcademicCalendar.getEffectiveDayOfWeek(it) } ?: todayDayOfWeek
+        
         val sortedEntries = entries.sortedWith(compareBy({ it.dayOfWeek }, { it.startTime }))
         val currentMinutes = timeToMinutes(currentTime)
 
         val current = sortedEntries.find {
-            it.dayOfWeek == todayDayOfWeek && it.startTime <= currentTime && it.endTime > currentTime && it.isActive(currentWeek)
+            it.dayOfWeek == effectiveDayOfWeek && it.startTime <= currentTime && it.endTime > currentTime && it.isActive(currentWeek)
         }
 
         val isEndingSoon = current?.let {
@@ -34,7 +39,7 @@ object TimetableWidgetLogic {
         } ?: false
 
         val futureThisWeek = sortedEntries.filter {
-            ((it.dayOfWeek == todayDayOfWeek && it.startTime > currentTime) || (it.dayOfWeek > todayDayOfWeek)) && it.isActive(currentWeek)
+            ((it.dayOfWeek == effectiveDayOfWeek && it.startTime > currentTime) || (it.dayOfWeek > effectiveDayOfWeek)) && it.isActive(currentWeek)
         }
         
         val nextWeek = currentWeek?.plus(1)
@@ -53,9 +58,12 @@ object TimetableWidgetLogic {
         entries: List<TimetableEntry>,
         todayDayOfWeek: Int,
         currentTime: String,
-        currentWeek: Int? = null
+        currentWeek: Int? = null,
+        todayDate: LocalDate? = null
     ): Pair<Boolean, List<TimetableEntry>> {
-        val todayClasses = entries.filter { it.dayOfWeek == todayDayOfWeek && it.isActive(currentWeek) }
+        val effectiveTodayDayOfWeek = todayDate?.let { AcademicCalendar.getEffectiveDayOfWeek(it) } ?: todayDayOfWeek
+        
+        val todayClasses = entries.filter { it.dayOfWeek == effectiveTodayDayOfWeek && it.isActive(currentWeek) }
             .sortedBy { it.startTime }
 
         val isAfterLessons = if (todayClasses.isEmpty()) {
@@ -65,9 +73,11 @@ object TimetableWidgetLogic {
         }
 
         return if (isAfterLessons) {
-            val tomorrow = (todayDayOfWeek % 7) + 1
+            val tomorrowDate = todayDate?.let { LocalDate.fromEpochDays(it.toEpochDays() + 1) }
+            val effectiveTomorrowDayOfWeek = tomorrowDate?.let { AcademicCalendar.getEffectiveDayOfWeek(it) } ?: ((todayDayOfWeek % 7) + 1)
+            
             val tomorrowWeek = if (todayDayOfWeek == 7) (currentWeek?.plus(1) ?: 1) else currentWeek
-            true to entries.filter { it.dayOfWeek == tomorrow && it.isActive(tomorrowWeek) }.sortedBy { it.startTime }
+            true to entries.filter { it.dayOfWeek == effectiveTomorrowDayOfWeek && it.isActive(tomorrowWeek) }.sortedBy { it.startTime }
         } else {
             false to todayClasses
         }

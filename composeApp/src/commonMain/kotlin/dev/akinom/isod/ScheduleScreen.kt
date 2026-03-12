@@ -35,9 +35,11 @@ import cafe.adriel.voyager.core.screen.Screen
 import dev.akinom.isod.auth.currentDayOfWeek
 import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.data.repository.TimetableRepository
+import dev.akinom.isod.domain.AcademicCalendar
 import dev.akinom.isod.domain.TimetableEntry
 import dev.akinom.isod.news.typeToColor
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.component.KoinComponent
@@ -72,6 +74,11 @@ class ScheduleScreen(
 
         var selectedEntryForOverride by remember { mutableStateOf<TimetableEntry?>(null) }
 
+        val weekMonday = remember(screenModel.weekMonday) {
+            val parts = screenModel.weekMonday.split("-")
+            LocalDate(parts[0].toInt(), parts[1].toInt(), parts[2].toInt())
+        }
+
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
@@ -88,6 +95,46 @@ class ScheduleScreen(
                         }
                     }
                 )
+            },
+            bottomBar = {
+                val currentDayDate = remember(pagerState.currentPage, weekMonday) {
+                    LocalDate.fromEpochDays(weekMonday.toEpochDays() + pagerState.currentPage)
+                }
+                val substitution = remember(currentDayDate) {
+                    AcademicCalendar.getDaySubstitution(currentDayDate)
+                }
+
+                if (substitution != null) {
+                    val substitutedDayName = when (substitution) {
+                        1 -> stringResource(Res.string.full_day_mon)
+                        2 -> stringResource(Res.string.full_day_tue)
+                        3 -> stringResource(Res.string.full_day_wed)
+                        4 -> stringResource(Res.string.full_day_thu)
+                        5 -> stringResource(Res.string.full_day_fri)
+                        6 -> stringResource(Res.string.full_day_sat)
+                        7 -> stringResource(Res.string.full_day_sun)
+                        else -> ""
+                    }
+                    
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp).navigationBarsPadding(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(Icons.Default.Warning, null, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = "Warning: On this day $substitutedDayName's plan is used",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
             }
         ) { paddingValues ->
             Column(
@@ -134,7 +181,15 @@ class ScheduleScreen(
                     verticalAlignment = Alignment.Top
                 ) { page ->
                     val dayOfWeek = page + 1
-                    val filteredEntries = timetable.filter { it.dayOfWeek == dayOfWeek }
+                    
+                    val currentDayDate = remember(page, weekMonday) {
+                        LocalDate.fromEpochDays(weekMonday.toEpochDays() + page)
+                    }
+                    val effectiveDayOfWeek = remember(currentDayDate) {
+                        AcademicCalendar.getEffectiveDayOfWeek(currentDayDate)
+                    }
+                    
+                    val filteredEntries = timetable.filter { it.dayOfWeek == effectiveDayOfWeek }
 
                     if (filteredEntries.isEmpty()) {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

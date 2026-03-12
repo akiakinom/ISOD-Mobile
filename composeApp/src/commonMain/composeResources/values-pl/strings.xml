@@ -114,4 +114,6 @@
     <string name="cycle_pa">Tygodnie parzyste</string>
     <string name="cycle_np">Tygodnie nieparzyste</string>
     <string name="cycle_none">Zawsze nieaktywne</string>
+
+    <string name="day_substitution_label">Obowiązuje plan z: %1$s</string>
 </resources>

@@ -53,6 +53,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -99,11 +100,23 @@ class HomeScreen(
         val now = currentTimeHHmm()
         
         val (isAfterLessons, dashboardClasses) = remember(timetable, today, now, screenModel.currentWeek) {
-            TimetableWidgetLogic.getDashboardSchedule(timetable, today, now, screenModel.currentWeek)
+            TimetableWidgetLogic.getDashboardSchedule(
+                entries = timetable,
+                todayDayOfWeek = today,
+                currentTime = now,
+                currentWeek = screenModel.currentWeek,
+                todayDate = AcademicCalendar.getToday()
+            )
         }
 
         val nextClasses = remember(timetable, today, now, screenModel.currentWeek) {
-            TimetableWidgetLogic.getNextClasses(timetable, today, now, screenModel.currentWeek)
+            TimetableWidgetLogic.getNextClasses(
+                entries = timetable,
+                todayDayOfWeek = today,
+                currentTime = now,
+                currentWeek = screenModel.currentWeek,
+                todayDate = AcademicCalendar.getToday()
+            )
         }
 
         PullToRefreshBox(
@@ -134,6 +147,7 @@ class HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
+                        @Suppress("DEPRECATION")
                         Text(
                             stringResource(Res.string.hello),
                             style = MaterialTheme.typography.displaySmall,
@@ -148,6 +162,7 @@ class HomeScreen(
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                     ) {
+                        @Suppress("DEPRECATION")
                         Icon(
                             Icons.Default.Settings,
                             contentDescription = stringResource(Res.string.settings),
@@ -256,6 +271,7 @@ private fun NextClassCard(entry: TimetableEntry, today: Int, currentTime: String
                         modifier = Modifier.size(8.dp)
                     ) {}
                     Spacer(Modifier.width(8.dp))
+                    @Suppress("DEPRECATION")
                     Text(
                         stringResource(if (isNow) Res.string.now else Res.string.upcoming),
                         style = MaterialTheme.typography.labelLarge,
@@ -330,6 +346,7 @@ private fun NextClassCard(entry: TimetableEntry, today: Int, currentTime: String
                         color = accentColor,
                         shape = MaterialTheme.shapes.medium,
                     ) {
+                        @Suppress("DEPRECATION")
                         Text(
                             text = timeLabel,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -371,6 +388,7 @@ private fun DashboardSection(
                 onClick = onSeeAll,
                 contentPadding = PaddingValues(horizontal = 8.dp)
             ) {
+                @Suppress("DEPRECATION")
                 Text(stringResource(Res.string.see_all), style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.width(4.dp))
                 Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(14.dp))
@@ -403,6 +421,7 @@ private fun CompactTimetableItem(entry: TimetableEntry, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(55.dp)) {
+            @Suppress("DEPRECATION")
             Text(entry.startTime, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = accentColor)
             Text(entry.endTime, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
         }
@@ -471,6 +490,7 @@ private fun CompactNewsItem(item: NewsHeader, onClick: () -> Unit) {
                     contentColor = tagContent,
                     shape = RoundedCornerShape(4.dp)
                 ) {
+                    @Suppress("DEPRECATION")
                     Text(
                         text = parsed.tag,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),

@@ -2,9 +2,11 @@ package dev.akinom.isod.android.widget
 
 import androidx.compose.ui.graphics.Color
 import androidx.glance.unit.ColorProvider
+import dev.akinom.isod.domain.AcademicCalendar
 import dev.akinom.isod.domain.TimetableEntry
 import dev.akinom.isod.domain.TimetableWidgetLogic
 import java.util.Calendar
+import kotlinx.datetime.LocalDate
 
 object TimetableWidgetUtils {
     fun getTodayDayOfWeek(): Int {
@@ -34,11 +36,23 @@ object TimetableWidgetUtils {
     }
 
     fun getDashboardSchedule(entries: List<TimetableEntry>, currentWeek: Int?): Pair<Boolean, List<TimetableEntry>> {
-        return TimetableWidgetLogic.getDashboardSchedule(entries, getTodayDayOfWeek(), getCurrentTime(), currentWeek)
+        return TimetableWidgetLogic.getDashboardSchedule(
+            entries = entries,
+            todayDayOfWeek = getTodayDayOfWeek(),
+            currentTime = getCurrentTime(),
+            currentWeek = currentWeek,
+            todayDate = AcademicCalendar.getToday()
+        )
     }
 
     fun getNextClasses(entries: List<TimetableEntry>, currentWeek: Int?): List<TimetableEntry> {
-        return TimetableWidgetLogic.getNextClasses(entries, getTodayDayOfWeek(), getCurrentTime(), currentWeek)
+        return TimetableWidgetLogic.getNextClasses(
+            entries = entries,
+            todayDayOfWeek = getTodayDayOfWeek(),
+            currentTime = getCurrentTime(),
+            currentWeek = currentWeek,
+            todayDate = AcademicCalendar.getToday()
+        )
     }
 
     fun widgetTypeToColor(type: String): ColorProvider {

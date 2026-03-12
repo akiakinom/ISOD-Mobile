@@ -118,4 +118,6 @@
     <string name="cycle_pa">Even Weeks</string>
     <string name="cycle_np">Odd Weeks</string>
     <string name="cycle_none">Always Inactive</string>
+
+    <string name="day_substitution_label">Using %1$s\'s schedule today</string>
 </resources>
