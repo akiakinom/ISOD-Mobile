@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,12 +46,6 @@ class NextClassWidget : GlanceAppWidget(), KoinComponent {
     override val sizeMode: SizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val intent = Intent(context, MainActivity::class.java).apply {
-            putExtra("tab", MainTab.Schedule.name)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-        val action = actionStartActivity(intent)
-
         provideContent {
             GlanceTheme {
                 val monday = currentWeekMonday()
@@ -62,6 +57,15 @@ class NextClassWidget : GlanceAppWidget(), KoinComponent {
                 val nextClass = nextClasses.firstOrNull()
                 val size = LocalSize.current
                 val context = LocalContext.current
+
+                val action = remember(nextClass) {
+                    val intent = Intent(context, MainActivity::class.java).apply {
+                        putExtra("tab", MainTab.Schedule.name)
+                        nextClass?.let { putExtra("dayOfWeek", it.dayOfWeek) }
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    }
+                    actionStartActivity(intent)
+                }
 
                 val cornerRadiusModifier = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     GlanceModifier.cornerRadius(android.R.dimen.system_app_widget_background_radius)

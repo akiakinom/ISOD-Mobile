@@ -12,7 +12,7 @@ import dev.akinom.isod.ui.theme.AppTheme
 import org.koin.mp.KoinPlatform.getKoin
 
 @Composable
-fun App(initialTab: MainTab? = null) {
+fun App(initialTab: MainTab? = null, initialDayOfWeek: Int? = null) {
     val firstLaunchGuard = remember { getKoin().get<FirstLaunchGuard>() }
     LaunchedEffect(Unit) {
         firstLaunchGuard.runIfNeeded()
@@ -22,7 +22,7 @@ fun App(initialTab: MainTab? = null) {
 
     val startScreen = remember {
         when {
-            storage.hasIsodCredentials() -> MainScreen(initialTab)
+            storage.hasIsodCredentials() -> MainScreen(initialTab, initialDayOfWeek)
             else                         -> ISODLinkScreen()
         }
     }

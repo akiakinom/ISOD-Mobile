@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,12 +51,6 @@ class TodayScheduleWidget : GlanceAppWidget(), KoinComponent {
     override val sizeMode: SizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val intent = Intent(context, MainActivity::class.java).apply {
-            putExtra("tab", MainTab.Schedule.name)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-        val action = actionStartActivity(intent)
-
         provideContent {
             GlanceTheme {
                 val monday = currentWeekMonday()
@@ -65,6 +60,21 @@ class TodayScheduleWidget : GlanceAppWidget(), KoinComponent {
                 val (isAfterLessons, dashboardEntries) = TimetableWidgetUtils.getDashboardSchedule(timetable, currentWeek)
                 val size = LocalSize.current
                 val context = LocalContext.current
+
+                val targetDay = if (isAfterLessons) {
+                    (TimetableWidgetUtils.getTodayDayOfWeek() % 7) + 1
+                } else {
+                    TimetableWidgetUtils.getTodayDayOfWeek()
+                }
+
+                val action = remember(targetDay) {
+                    val intent = Intent(context, MainActivity::class.java).apply {
+                        putExtra("tab", MainTab.Schedule.name)
+                        putExtra("dayOfWeek", targetDay)
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    }
+                    actionStartActivity(intent)
+                }
 
                 Box(
                     modifier = GlanceModifier

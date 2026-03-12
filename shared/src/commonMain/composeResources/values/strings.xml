@@ -42,4 +42,8 @@
     <string name="full_day_fri">Friday</string>
     <string name="full_day_sat">Saturday</string>
     <string name="full_day_sun">Sunday</string>
+
+    <string name="ends_at">Ends at %s</string>
+    <string name="starts_at">Starts at %s</string>
+    <string name="new_grade">New grade: %s</string>
 </resources>

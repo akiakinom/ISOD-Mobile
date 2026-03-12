@@ -21,6 +21,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private var initialTab by mutableStateOf<MainTab?>(null)
+    private var initialDayOfWeek by mutableStateOf<Int?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,7 +34,7 @@ class MainActivity : ComponentActivity() {
 
         NewsNotificationWorker.schedule(this)
 
-        setContent { App(initialTab = initialTab) }
+        setContent { App(initialTab = initialTab, initialDayOfWeek = initialDayOfWeek) }
     }
 
     override fun onNewIntent(intent: android.content.Intent) {
@@ -46,6 +47,12 @@ class MainActivity : ComponentActivity() {
         val tabName = intent.getStringExtra("tab")
         if (tabName != null) {
             initialTab = MainTab.entries.find { it.name == tabName }
+        }
+        val dayOfWeek = intent.getIntExtra("dayOfWeek", -1)
+        if (dayOfWeek != -1) {
+            initialDayOfWeek = dayOfWeek
+        } else {
+            initialDayOfWeek = null
         }
     }
 }

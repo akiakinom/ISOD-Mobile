@@ -81,7 +81,7 @@ class HomeScreenModel(val semester: String) : ScreenModel, KoinComponent {
 
 class HomeScreen(
     val semester: String = currentSemester(),
-    val onMoveToTab: (MainTab) -> Unit = {}
+    val onMoveToTab: (MainTab, Int?) -> Unit = { _, _ -> }
 ) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -160,7 +160,7 @@ class HomeScreen(
                 val nextClass = nextClasses.firstOrNull()
                 if (nextClass != null) {
                     NextClassCard(nextClass, today, now) {
-                        onMoveToTab(MainTab.Schedule)
+                        onMoveToTab(MainTab.Schedule, nextClass.dayOfWeek)
                     }
                 }
 
@@ -168,7 +168,10 @@ class HomeScreen(
                 DashboardSection(
                     title = stringResource(if (isAfterLessons) Res.string.tomorrows_timeline else Res.string.todays_timeline),
                     icon = Icons.Default.CalendarToday,
-                    onSeeAll = { onMoveToTab(MainTab.Schedule) }
+                    onSeeAll = { 
+                        val targetDay = if (isAfterLessons) (today % 7) + 1 else today
+                        onMoveToTab(MainTab.Schedule, targetDay)
+                    }
                 ) {
                     if (dashboardClasses.isEmpty()) {
                         EmptyDashboardState(
@@ -178,7 +181,7 @@ class HomeScreen(
                     } else {
                         dashboardClasses.take(3).forEach { entry ->
                             CompactTimetableItem(entry) {
-                                onMoveToTab(MainTab.Schedule)
+                                onMoveToTab(MainTab.Schedule, entry.dayOfWeek)
                             }
                         }
                     }
@@ -188,7 +191,7 @@ class HomeScreen(
                 DashboardSection(
                     title = stringResource(Res.string.announcements),
                     icon = Icons.Default.Notifications,
-                    onSeeAll = { onMoveToTab(MainTab.News) }
+                    onSeeAll = { onMoveToTab(MainTab.News, null) }
                 ) {
                     if (news.isEmpty()) {
                         EmptyDashboardState(
@@ -454,7 +457,7 @@ private fun CompactNewsItem(item: NewsHeader, onClick: () -> Unit) {
                 shape = RoundedCornerShape(4.dp)
             ) {
                 Text(
-                    text = if (typeRes != null) stringResource(typeRes) else item.type.name.replace("_", " ").lowercase().capitalize(),
+                    text = if (typeRes != null) stringResource(typeRes) else item.type.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold

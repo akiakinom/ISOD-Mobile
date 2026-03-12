@@ -26,10 +26,14 @@ enum class MainTab(val titleRes: StringResource, val icon: ImageVector) {
     News(Res.string.tab_news, Icons.Default.Newspaper)
 }
 
-data class MainScreen(val initialTab: MainTab? = null) : Screen {
+data class MainScreen(
+    val initialTab: MainTab? = null,
+    val initialDayOfWeek: Int? = null
+) : Screen {
     @Composable
     override fun Content() {
         var selectedTab by remember { mutableStateOf(initialTab ?: MainTab.Dashboard) }
+        var scheduleDayOverride by remember { mutableStateOf(initialDayOfWeek) }
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -39,7 +43,12 @@ data class MainScreen(val initialTab: MainTab? = null) : Screen {
                         TabItem(
                             tab = tab,
                             isSelected = selectedTab == tab,
-                            onClick = { selectedTab = tab }
+                            onClick = { 
+                                if (tab == MainTab.Schedule) {
+                                    scheduleDayOverride = null // Reset override when manually clicking tab
+                                }
+                                selectedTab = tab 
+                            }
                         )
                     }
                 }
@@ -48,8 +57,11 @@ data class MainScreen(val initialTab: MainTab? = null) : Screen {
             Box(modifier = Modifier.fillMaxSize().padding(bottom = paddingValues.calculateBottomPadding())) {
                 Crossfade(targetState = selectedTab, modifier = Modifier.fillMaxSize()) { tab ->
                     when (tab) {
-                        MainTab.Dashboard -> HomeScreen(onMoveToTab = { selectedTab = it }).Content()
-                        MainTab.Schedule -> ScheduleScreen().Content()
+                        MainTab.Dashboard -> HomeScreen(onMoveToTab = { targetTab, day ->
+                            scheduleDayOverride = day
+                            selectedTab = targetTab
+                        }).Content()
+                        MainTab.Schedule -> ScheduleScreen(initialDayOfWeek = scheduleDayOverride).Content()
                         MainTab.Grades -> GradesScreen().Content()
                         MainTab.News -> NewsScreen().Content()
                     }

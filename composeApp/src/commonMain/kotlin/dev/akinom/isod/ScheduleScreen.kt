@@ -43,7 +43,10 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class ScheduleScreen(val semester: String = currentSemester()) : Screen, KoinComponent {
+class ScheduleScreen(
+    val semester: String = currentSemester(),
+    val initialDayOfWeek: Int? = null
+) : Screen, KoinComponent {
     private val timetableRepo: TimetableRepository by inject()
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -61,7 +64,7 @@ class ScheduleScreen(val semester: String = currentSemester()) : Screen, KoinCom
             stringResource(Res.string.day_fri)
         )
         val initialDay = remember {
-            val day = currentDayOfWeek()
+            val day = initialDayOfWeek ?: currentDayOfWeek()
             if (day > 5) 0 else day - 1
         }
         val pagerState = rememberPagerState(initialPage = initialDay, pageCount = { days.size })
