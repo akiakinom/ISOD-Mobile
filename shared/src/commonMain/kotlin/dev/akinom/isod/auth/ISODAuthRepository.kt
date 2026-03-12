@@ -22,9 +22,9 @@ sealed class IsodAuthResult {
     data class Error(val message: String, val isNetworkError: Boolean = false) : IsodAuthResult()
 }
 
-class IsodAuthRepository {
-
-    private val client = HttpClient()
+class IsodAuthRepository(
+    private val client: HttpClient
+) {
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -47,6 +47,7 @@ class IsodAuthRepository {
             when (response.status) {
                 HttpStatusCode.OK -> {
                     val body = response.bodyAsText()
+                    println("ISOD Response: $body")
                     val user = json.decodeFromString<IsodUserInfo>(body)
                     IsodAuthResult.Success(user)
                 }
@@ -58,7 +59,9 @@ class IsodAuthRepository {
                 }
             }
         } catch (e: Exception) {
-            IsodAuthResult.Error("Network error", isNetworkError = true)
+            println("ISOD Auth Error: ${e.message}")
+            e.printStackTrace()
+            IsodAuthResult.Error("Network error: ${e.message}", isNetworkError = true)
         }
     }
 }

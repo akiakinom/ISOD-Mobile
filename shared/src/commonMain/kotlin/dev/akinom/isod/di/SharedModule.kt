@@ -3,6 +3,7 @@ package dev.akinom.isod.di
 import dev.akinom.isod.IsodDatabase
 import dev.akinom.isod.Secrets
 import dev.akinom.isod.auth.CredentialsStorage
+import dev.akinom.isod.auth.IsodAuthRepository
 import dev.akinom.isod.auth.createSettings
 import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.data.cache.DatabaseDriverFactory
@@ -17,12 +18,15 @@ import dev.akinom.isod.data.repository.UsosRepository
 import dev.akinom.isod.notifications.FirstLaunchGuard
 import dev.akinom.isod.notifications.NewsNotificationChecker
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.serialization.json.Json
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -32,12 +36,19 @@ val sharedModule = module {
     single { CredentialsStorage(get()) }
 
     single {
-        HttpClient {
+        createHttpClient().config {
             install(Logging) {
-                level = LogLevel.NONE
+                level = LogLevel.ALL
                 logger = object : Logger {
                     override fun log(message: String) = println("🌍 Ktor: $message")
                 }
+            }
+            install(ContentNegotiation) {
+                json(Json {
+                    ignoreUnknownKeys = true
+                    isLenient = true
+                    coerceInputValues = true
+                })
             }
         }
     }
@@ -46,6 +57,8 @@ val sharedModule = module {
     single { IsodDatabase(get()) }
 
     single<CoroutineScope> { CoroutineScope(Dispatchers.Default + SupervisorJob()) }
+
+    single { IsodAuthRepository(get()) }
 
     single {
         IsodApiClient(
@@ -71,6 +84,8 @@ val sharedModule = module {
     single { TimetableRepository(get(), get(), get(), get()) }
     single { GradesRepository(get(), get(), get()) }
 }
+
+expect fun createHttpClient(): HttpClient
 
 val notificationModule = module {
     single {

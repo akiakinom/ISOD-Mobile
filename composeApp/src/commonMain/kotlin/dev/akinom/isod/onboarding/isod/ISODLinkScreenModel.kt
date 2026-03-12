@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 sealed class ISODLinkState {
     data object Idle    : ISODLinkState()
@@ -21,10 +23,10 @@ sealed class ISODLinkState {
     data class Error(val message: String)      : ISODLinkState()
 }
 
-class ISODLinkScreenModel(
-    private val storage: CredentialsStorage = CredentialsStorage(createSettings()),
-    private val auth: IsodAuthRepository = IsodAuthRepository(),
-) : ScreenModel {
+class ISODLinkScreenModel : ScreenModel, KoinComponent {
+
+    private val storage: CredentialsStorage by inject()
+    private val auth: IsodAuthRepository by inject()
 
     private val _state = MutableStateFlow<ISODLinkState>(ISODLinkState.Idle)
     val state = _state.asStateFlow()
