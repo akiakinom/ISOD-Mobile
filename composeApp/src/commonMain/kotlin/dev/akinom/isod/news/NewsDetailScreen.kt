@@ -235,21 +235,64 @@ class NewsDetailScreen(private val hash: String) : Screen {
 
     @Composable
     private fun HtmlText(html: String, modifier: Modifier = Modifier) {
+        val entities = remember {
+            mapOf(
+                "&aacute;" to "á", "&Aacute;" to "Á",
+                "&aogonek;" to "ą", "&Aogonek;" to "Ą",
+                "&cacute;" to "ć", "&Cacute;" to "Ć",
+                "&eogonek;" to "ę", "&Eogonek;" to "Ę",
+                "&lstroke;" to "ł", "&Lstroke;" to "Ł",
+                "&nacute;" to "ń", "&Nacute;" to "Ń",
+                "&oacute;" to "ó", "&Oacute;" to "Ó",
+                "&sacute;" to "ś", "&Sacute;" to "Ś",
+                "&zacute;" to "ź", "&Zacute;" to "Ź",
+                "&zdot;" to "ż", "&Zdot;" to "Ż",
+                "&auml;" to "ä", "&Auml;" to "Ä",
+                "&ouml;" to "ö", "&Ouml;" to "Ö",
+                "&uuml;" to "ü", "&Uuml;" to "Ü",
+                "&szlig;" to "ß",
+                "&agrave;" to "à", "&Agrave;" to "À",
+                "&acirc;" to "â", "&Acirc;" to "Â",
+                "&aelig;" to "æ", "&AElig;" to "Æ",
+                "&ccedil;" to "ç", "&Ccedil;" to "Ç",
+                "&egrave;" to "è", "&Egrave;" to "È",
+                "&eacute;" to "é", "&Eacute;" to "É",
+                "&ecirc;" to "ê", "&Ecirc;" to "Ê",
+                "&euml;" to "ë", "&Euml;" to "Ë",
+                "&icirc;" to "î", "&Icirc;" to "Î",
+                "&iuml;" to "ï", "&Iuml;" to "Ï",
+                "&ocirc;" to "ô", "&Ocirc;" to "Ô",
+                "&oelig;" to "œ", "&OElig;" to "Œ",
+                "&ugrave;" to "ù", "&Ugrave;" to "Ù",
+                "&ucirc;" to "û", "&Ucirc;" to "Û",
+                "&yuml;" to "ÿ", "&Yuml;" to "Ÿ",
+                "&nbsp;" to " ", "&ascii;" to " ",
+                "&quot;" to "\"", "&amp;" to "&",
+                "&lt;" to "<", "&gt;" to ">",
+                "&ndash;" to "–", "&mdash;" to "—",
+                "&lsquo;" to "‘", "&rsquo;" to "’",
+                "&sbquo;" to "‚", "&ldquo;" to "“",
+                "&rdquo;" to "”", "&bdquo;" to "„",
+                "&hellip;" to "…", "&trade;" to "™",
+                "&reg;" to "®", "&copy;" to "©",
+                "&euro;" to "€"
+            )
+        }
+
         val cleanText = remember(html) {
-            html.replace(Regex("<br\\s*/?>"), "\n")
+            var result = html.replace(Regex("<br\\s*/?>"), "\n")
                 .replace(Regex("<p>"), "")
                 .replace(Regex("</p>"), "\n\n")
-                .replace(Regex("&oacute;"), "ó")
-                .replace(Regex("&ascii;"), " ")
-                .replace(Regex("&nbsp;"), " ")
-                .replace(Regex("&quot;"), "\"")
-                .replace(Regex("&amp;"), "&")
-                .replace(Regex("&lt;"), "<")
-                .replace(Regex("&gt;"), ">")
-                .replace(Regex("<[^>]*>"), "")
+
+            entities.forEach { (entity, char) ->
+                result = result.replace(entity, char)
+            }
+            
+            result.replace(Regex("<[^>]*>"), "").trim()
         }
+        
         Text(
-            text = cleanText.trim(),
+            text = cleanText,
             modifier = modifier,
             style = MaterialTheme.typography.bodyLarge,
             lineHeight = 26.sp

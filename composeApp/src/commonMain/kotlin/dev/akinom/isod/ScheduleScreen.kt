@@ -123,8 +123,20 @@ class ScheduleScreen(val semester: String = currentSemester()) : Screen {
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            items(filteredEntries.sortedBy { it.startTime }) { entry ->
-                                ScheduleItem(entry)
+                            val groupedEntries = groupOverlapping(filteredEntries)
+                            items(groupedEntries) { group ->
+                                if (group.size == 1) {
+                                    ScheduleItem(group[0], isSplit = false)
+                                } else {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        group.forEach { entry ->
+                                            ScheduleItem(entry, modifier = Modifier.weight(1f).fillMaxHeight(), isSplit = true)
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -135,12 +147,12 @@ class ScheduleScreen(val semester: String = currentSemester()) : Screen {
 }
 
 @Composable
-private fun ScheduleItem(entry: TimetableEntry) {
+private fun ScheduleItem(entry: TimetableEntry, modifier: Modifier = Modifier, isSplit: Boolean = false) {
     val accentColor = typeToColor(entry.courseType)
     val typeDisplay = entry.shortType
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -209,9 +221,28 @@ private fun ScheduleItem(entry: TimetableEntry) {
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
-                    if (entry.lecturerNames.isNotEmpty()) {
+
+                    if (!isSplit && entry.lecturerNames.isNotEmpty()) {
                         Spacer(Modifier.width(16.dp))
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = accentColor.copy(alpha = 0.7f)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = entry.lecturerNames.first(),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1
+                        )
+                    }
+                }
+                
+                if (isSplit && entry.lecturerNames.isNotEmpty()) {
+                    Spacer(Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
@@ -230,4 +261,38 @@ private fun ScheduleItem(entry: TimetableEntry) {
             }
         }
     }
+}
+
+private fun String.toMinutes(): Int {
+    val parts = split(":")
+    if (parts.size < 2) return 0
+    return (parts[0].toIntOrNull() ?: 0) * 60 + (parts[1].toIntOrNull() ?: 0)
+}
+
+private fun TimetableEntry.overlapsWith(other: TimetableEntry): Boolean {
+    val start1 = this.startTime.toMinutes()
+    val end1 = this.endTime.toMinutes()
+    val start2 = other.startTime.toMinutes()
+    val end2 = other.endTime.toMinutes()
+    return maxOf(start1, start2) < minOf(end1, end2)
+}
+
+private fun groupOverlapping(entries: List<TimetableEntry>): List<List<TimetableEntry>> {
+    val sorted = entries.sortedBy { it.startTime }
+    val result = mutableListOf<MutableList<TimetableEntry>>()
+    
+    for (entry in sorted) {
+        var added = false
+        for (group in result) {
+            if (group.any { it.overlapsWith(entry) }) {
+                group.add(entry)
+                added = true
+                break
+            }
+        }
+        if (!added) {
+            result.add(mutableListOf(entry))
+        }
+    }
+    return result
 }
