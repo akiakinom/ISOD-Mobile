@@ -99,6 +99,7 @@ class NewsScreen(val semester: String = currentSemester()) : Screen {
         }
 
         Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 CenterAlignedTopAppBar(
                     title = { Text(stringResource(Res.string.news_feed_title), fontWeight = FontWeight.Bold) },

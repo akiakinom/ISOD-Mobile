@@ -72,6 +72,16 @@ class ScheduleScreen(
         val pagerState = rememberPagerState(initialPage = initialDay, pageCount = { days.size })
         val scope = rememberCoroutineScope()
 
+        // Sync pager state when initialDayOfWeek changes (e.g. navigation from Dashboard)
+        LaunchedEffect(initialDayOfWeek) {
+            initialDayOfWeek?.let { day ->
+                val targetPage = if (day > 5) 0 else day - 1
+                if (pagerState.currentPage != targetPage) {
+                    pagerState.animateScrollToPage(targetPage)
+                }
+            }
+        }
+
         var selectedEntryForOverride by remember { mutableStateOf<TimetableEntry?>(null) }
 
         val weekMonday = remember(screenModel.weekMonday) {
@@ -80,6 +90,7 @@ class ScheduleScreen(
         }
 
         Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 CenterAlignedTopAppBar(
                     title = {
@@ -117,7 +128,7 @@ class ScheduleScreen(
                     }
 
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp).navigationBarsPadding(),
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
@@ -368,6 +379,7 @@ private fun ScheduleItem(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically) {
+                    @Suppress("DEPRECATION")
                     Text(
                         text = "${entry.startTime} — ${entry.endTime}",
                         style = MaterialTheme.typography.labelLarge,
@@ -454,6 +466,7 @@ private fun ScheduleItem(
                             tint = accentColor.copy(alpha = 0.7f)
                         )
                         Spacer(Modifier.width(4.dp))
+                        @Suppress("DEPRECATION")
                         Text(
                             text = entry.lecturerNames.first(),
                             style = MaterialTheme.typography.bodySmall,

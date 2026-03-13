@@ -224,8 +224,6 @@ class HomeScreen(
                         }
                     }
                 }
-                
-                Spacer(Modifier.height(32.dp))
             }
         }
     }

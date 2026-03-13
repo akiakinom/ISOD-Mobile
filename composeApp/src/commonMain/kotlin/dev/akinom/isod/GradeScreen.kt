@@ -125,6 +125,7 @@ class GradesScreen : Screen {
         var showSemesterPicker by remember { mutableStateOf(false) }
 
         Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 CenterAlignedTopAppBar(
                     title = {

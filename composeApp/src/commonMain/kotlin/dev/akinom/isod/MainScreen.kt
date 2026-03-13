@@ -1,8 +1,6 @@
 package dev.akinom.isod
 
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
@@ -42,6 +40,7 @@ data class MainScreen(
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
                 NavigationBar {
                     MainTab.entries.forEachIndexed { index, tab ->
