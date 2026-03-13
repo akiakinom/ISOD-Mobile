@@ -84,7 +84,7 @@
     <string name="beta_suffix"> (BETA)</string>
     <string name="author">by Monika Musielik</string>
     <string name="app_description">ISOD Mobile is a mobile app for managing your schedule and grades, created by students.</string>
-    <string name="tech_stack_energy_drinks">Energy Drinks</string>
+    <string name="tech_stack_energy_drinks">WRS</string>
     <string name="tech_stack_open_source">Open Source</string>
 
     <string name="news_feed_title">News Feed</string>

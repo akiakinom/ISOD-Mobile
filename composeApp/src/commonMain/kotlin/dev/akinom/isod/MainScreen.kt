@@ -1,10 +1,10 @@
 package dev.akinom.isod
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.EventNote
@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import cafe.adriel.voyager.core.screen.Screen
 import dev.akinom.isod.news.NewsScreen
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -32,39 +33,51 @@ data class MainScreen(
 ) : Screen {
     @Composable
     override fun Content() {
-        var selectedTab by remember { mutableStateOf(initialTab ?: MainTab.Dashboard) }
+        val pagerState = rememberPagerState(
+            initialPage = MainTab.entries.indexOf(initialTab ?: MainTab.Dashboard),
+            pageCount = { MainTab.entries.size }
+        )
+        val scope = rememberCoroutineScope()
         var scheduleDayOverride by remember { mutableStateOf(initialDayOfWeek) }
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             bottomBar = {
                 NavigationBar {
-                    MainTab.entries.forEach { tab ->
+                    MainTab.entries.forEachIndexed { index, tab ->
                         TabItem(
                             tab = tab,
-                            isSelected = selectedTab == tab,
+                            isSelected = pagerState.currentPage == index,
                             onClick = { 
                                 if (tab == MainTab.Schedule) {
                                     scheduleDayOverride = null // Reset override when manually clicking tab
                                 }
-                                selectedTab = tab 
+                                scope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
                             }
                         )
                     }
                 }
             }
         ) { paddingValues ->
-            Box(modifier = Modifier.fillMaxSize().padding(bottom = paddingValues.calculateBottomPadding())) {
-                Crossfade(targetState = selectedTab, modifier = Modifier.fillMaxSize()) { tab ->
-                    when (tab) {
-                        MainTab.Dashboard -> HomeScreen(onMoveToTab = { targetTab, day ->
-                            scheduleDayOverride = day
-                            selectedTab = targetTab
-                        }).Content()
-                        MainTab.Schedule -> ScheduleScreen(initialDayOfWeek = scheduleDayOverride).Content()
-                        MainTab.Grades -> GradesScreen().Content()
-                        MainTab.News -> NewsScreen().Content()
-                    }
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = paddingValues.calculateBottomPadding()),
+                beyondViewportPageCount = 1
+            ) { page ->
+                when (MainTab.entries[page]) {
+                    MainTab.Dashboard -> HomeScreen(onMoveToTab = { targetTab, day ->
+                        scheduleDayOverride = day
+                        scope.launch {
+                            pagerState.animateScrollToPage(MainTab.entries.indexOf(targetTab))
+                        }
+                    }).Content()
+                    MainTab.Schedule -> ScheduleScreen(initialDayOfWeek = scheduleDayOverride).Content()
+                    MainTab.Grades -> GradesScreen().Content()
+                    MainTab.News -> NewsScreen().Content()
                 }
             }
         }

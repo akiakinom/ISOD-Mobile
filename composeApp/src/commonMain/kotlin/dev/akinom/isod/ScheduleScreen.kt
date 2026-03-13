@@ -419,6 +419,7 @@ private fun ScheduleItem(
                         tint = accentColor.copy(alpha = 0.7f)
                     )
                     Spacer(Modifier.width(4.dp))
+                    @Suppress("DEPRECATION")
                     Text(
                         text = "${entry.buildingShort} ${entry.room}",
                         style = MaterialTheme.typography.bodySmall,

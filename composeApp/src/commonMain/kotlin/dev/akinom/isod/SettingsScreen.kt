@@ -184,14 +184,7 @@ private fun AppInfoCard(version: String, isBeta: Boolean) {
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Black
             )
-            
-            Text(
-                text = stringResource(Res.string.author),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
-            
+
             Spacer(Modifier.height(16.dp))
             
             Text(
