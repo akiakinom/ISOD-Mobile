@@ -22,7 +22,9 @@ data class CourseGrade(
     // Sources
     val hasIsod: Boolean,
     val hasUsos: Boolean,
-)
+) {
+    val displayFinalGrade: String? get() = if (finalGrade == "0.0") "NZAL" else finalGrade
+}
 
 @Serializable
 data class ClassGrade(
@@ -31,4 +33,6 @@ data class ClassGrade(
     val credit: String?,           // final credit for this class session
     val columns: List<ClassColumn>,
     val summary: String?,
-)
+) {
+    val displayCredit: String? get() = if (credit == "0.0") "NZAL" else credit
+}

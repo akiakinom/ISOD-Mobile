@@ -342,7 +342,7 @@ private fun CourseGradeCard(
 
 @Composable
 private fun GradeSummary(course: CourseGrade) {
-    val grade = course.finalGrade
+    val grade = course.displayFinalGrade
     if (grade != null) {
         val color = when (course.passes) {
             false -> MaterialTheme.colorScheme.error
@@ -414,7 +414,7 @@ private fun ClassDetailSection(cls: ClassGrade) {
                 )
             }
             
-            cls.credit?.let {
+            cls.displayCredit?.let {
                 Surface(
                     color = accentColor.copy(alpha = 0.15f),
                     shape = RoundedCornerShape(4.dp)
