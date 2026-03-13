@@ -36,8 +36,8 @@ class GradesRepository(
 
         val fresh = fetchFresh(semester, usosTermId)
         if (fresh.isNotEmpty()) {
-            persist(semester, fresh)
-            emit(fresh)
+            val persisted = persist(semester, fresh)
+            emit(persisted)
         } else if (cached.isEmpty()) {
             emit(emptyList())
         }
@@ -109,8 +109,9 @@ class GradesRepository(
         }
     }
 
-    private fun persist(semester: String, grades: List<CourseGrade>) {
+    private fun persist(semester: String, grades: List<CourseGrade>): List<CourseGrade> {
         val now = currentTimeMillis()
+        val persisted = mutableListOf<CourseGrade>()
         db.transaction {
             // We want to preserve existing class details if we have them
             val existing = queryCached(semester).associateBy { it.courseId }
@@ -123,26 +124,30 @@ class GradesRepository(
                     g.classGrades
                 }
 
+                val gradeToPersist = g.copy(classGrades = classGradesToSave)
+                persisted.add(gradeToPersist)
+
                 queries.upsert(
                     CourseGradeEntity(
-                        courseId          = g.courseId,
+                        courseId          = gradeToPersist.courseId,
                         semester          = semester,
-                        courseNumber      = g.courseNumber,
-                        courseName        = g.courseName,
-                        ects              = g.ects.toLong(),
-                        passType          = g.passType,
-                        finalGrade        = g.finalGrade,
-                        finalGradeComment = g.finalGradeComment,
-                        passes            = g.passes?.let { if (it) 1L else 0L },
-                        countsIntoAverage = g.countsIntoAverage?.let { if (it) 1L else 0L },
-                        classGradesJson   = json.encodeToString(classGradesToSave),
-                        hasIsod           = if (g.hasIsod) 1L else 0L,
-                        hasUsos           = if (g.hasUsos) 1L else 0L,
+                        courseNumber      = gradeToPersist.courseNumber,
+                        courseName        = gradeToPersist.courseName,
+                        ects              = gradeToPersist.ects.toLong(),
+                        passType          = gradeToPersist.passType,
+                        finalGrade        = gradeToPersist.finalGrade,
+                        finalGradeComment = gradeToPersist.finalGradeComment,
+                        passes            = gradeToPersist.passes?.let { if (it) 1L else 0L },
+                        countsIntoAverage = gradeToPersist.countsIntoAverage?.let { if (it) 1L else 0L },
+                        classGradesJson   = json.encodeToString(gradeToPersist.classGrades),
+                        hasIsod           = if (gradeToPersist.hasIsod) 1L else 0L,
+                        hasUsos           = if (gradeToPersist.hasUsos) 1L else 0L,
                         lastUpdated       = now,
                     )
                 )
             }
         }
+        return persisted
     }
 }
 
