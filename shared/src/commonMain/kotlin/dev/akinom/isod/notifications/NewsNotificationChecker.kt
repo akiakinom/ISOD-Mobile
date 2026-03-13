@@ -26,14 +26,13 @@ class NewsNotificationChecker(
 
         val now = currentTimeMillis()
 
-        db.transaction {
-            val existing = queries.selectAllHeaders(semester)
-                .executeAsList()
-                .map { it.hash }
-                .toSet()
+        val existing = queries.selectAllHeaders(semester).executeAsList()
+        val isFirstSync = existing.isEmpty()
+        val existingHashes = existing.map { it.hash }.toSet()
 
+        db.transaction {
             freshHeaders
-                .filter { it.hash !in existing }
+                .filter { it.hash !in existingHashes }
                 .forEach { header ->
                     queries.upsertHeader(
                         NewsHeaderEntity(
@@ -44,7 +43,7 @@ class NewsNotificationChecker(
                             modifiedDate        = header.modifiedDate,
                             modifiedBy          = header.modifiedBy,
                             noAttachments       = header.noAttachments.toLong(),
-                            hasSentNotification = 0L,
+                            hasSentNotification = if (isFirstSync) 1L else 0L,
                             lastUpdated         = now,
                         )
                     )

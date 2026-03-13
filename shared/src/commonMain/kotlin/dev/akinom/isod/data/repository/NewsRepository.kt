@@ -48,17 +48,19 @@ class NewsRepository(
         when (val result = api.getNewsHeaders(semester)) {
             is IsodResult.Success -> {
                 val now = currentTimeMillis()
-                val existing = headerQueries.selectAllHeaders(semester)
-                    .executeAsList()
-                    .associate { it.hash to it.hasSentNotification }
+                val existingRows = headerQueries.selectAllHeaders(semester).executeAsList()
+                val isFirstSync = existingRows.isEmpty()
+                val existing = existingRows.associate { it.hash to it.hasSentNotification }
+                
                 db.transaction {
                     headerQueries.deleteAllHeaders(semester)
                     result.data.forEach { header ->
+                        val notificationState = existing[header.hash] ?: if (isFirstSync) 1L else 0L
                         headerQueries.upsertHeader(
                             header.toEntity(
                                 semester = semester,
                                 now = now,
-                                existingNotificationState = existing[header.hash] ?: 0L,
+                                existingNotificationState = notificationState,
                             )
                         )
                     }
