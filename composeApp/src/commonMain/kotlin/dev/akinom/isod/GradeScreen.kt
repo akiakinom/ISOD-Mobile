@@ -10,7 +10,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -26,8 +25,6 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.data.repository.GradesRepository
 import dev.akinom.isod.domain.ClassGrade
@@ -129,24 +126,25 @@ class GradesScreen : Screen {
 
         Scaffold(
             topBar = {
-                TopAppBar(
+                CenterAlignedTopAppBar(
                     title = {
                         Box {
                             Column(
                                 modifier = Modifier.clickable { showSemesterPicker = true },
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text(stringResource(Res.string.grades_title), style = MaterialTheme.typography.titleMedium)
+                                Text(stringResource(Res.string.grades_title), fontWeight = FontWeight.Bold)
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
                                         selectedSemester,
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = MaterialTheme.colorScheme.primary
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Icon(
                                         Icons.Default.ArrowDropDown,
                                         null,
-                                        modifier = Modifier.size(20.dp),
-                                        tint = MaterialTheme.colorScheme.primary
+                                        modifier = Modifier.size(16.dp),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -269,6 +267,7 @@ private fun CourseGradeCard(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                    @Suppress("DEPRECATION")
                     Text(
                         text = "${course.courseNumber} • ${course.ects} ECTS",
                         style = MaterialTheme.typography.labelSmall,
