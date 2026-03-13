@@ -19,4 +19,9 @@
     <string name="tomorrows_timeline">Jutrzejszy plan</string>
     <string name="no_classes_today">Brak zajęć dzisiaj</string>
     <string name="no_classes_tomorrow">Brak zajęć jutro. Odpoczywaj!</string>
+
+    <string name="today_schedule_widget_name">Plan zajęć</string>
+    <string name="today_schedule_widget_description">Pokazuje Twój plan zajęć na dziś lub jutro.</string>
+    <string name="next_class_widget_name">Następne zajęcia</string>
+    <string name="next_class_widget_description">Pokazuje szczegóły Twoich najbliższych zajęć.</string>
 </resources>

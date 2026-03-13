@@ -28,6 +28,7 @@
 
         <receiver
             android:name=".widget.TodayScheduleWidgetReceiver"
+            android:label="@string/today_schedule_widget_name"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -39,6 +40,7 @@
 
         <receiver
             android:name=".widget.NextClassWidgetReceiver"
+            android:label="@string/next_class_widget_name"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
