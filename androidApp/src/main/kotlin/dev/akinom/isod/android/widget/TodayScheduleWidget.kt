@@ -76,17 +76,21 @@ class TodayScheduleWidget : GlanceAppWidget(), KoinComponent {
                     actionStartActivity(intent)
                 }
 
-                Box(
-                    modifier = GlanceModifier
+                val backgroundModifier = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    GlanceModifier
                         .fillMaxSize()
                         .background(GlanceTheme.colors.surface)
-                        .then(
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                GlanceModifier.cornerRadius(android.R.dimen.system_app_widget_background_radius)
-                            } else {
-                                GlanceModifier.cornerRadius(16.dp)
-                            }
-                        )
+                        .cornerRadius(android.R.dimen.system_app_widget_background_radius)
+                } else {
+                    GlanceModifier
+                        .fillMaxSize()
+                        .background(R.drawable.widget_background_fallback)
+                        .cornerRadius(16.dp)
+                }
+
+                Box(
+                    modifier = GlanceModifier
+                        .then(backgroundModifier)
                         .clickable(action)
                 ) {
                     Column(

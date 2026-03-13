@@ -67,17 +67,21 @@ class NextClassWidget : GlanceAppWidget(), KoinComponent {
                     actionStartActivity(intent)
                 }
 
-                val cornerRadiusModifier = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    GlanceModifier.cornerRadius(android.R.dimen.system_app_widget_background_radius)
+                val backgroundModifier = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    GlanceModifier
+                        .fillMaxSize()
+                        .background(GlanceTheme.colors.surface)
+                        .cornerRadius(android.R.dimen.system_app_widget_background_radius)
                 } else {
-                    GlanceModifier.cornerRadius(16.dp)
+                    GlanceModifier
+                        .fillMaxSize()
+                        .background(R.drawable.widget_background_fallback) // You might need to create this drawable or use cornerRadius(16.dp)
+                        .cornerRadius(16.dp)
                 }
 
                 Box(
                     modifier = GlanceModifier
-                        .fillMaxSize()
-                        .background(GlanceTheme.colors.surface)
-                        .then(cornerRadiusModifier)
+                        .then(backgroundModifier)
                         .clickable(action)
                 ) {
                     if (nextClass == null) {
@@ -125,18 +129,25 @@ private fun NextClassHero(entry: TimetableEntry, today: Int, size: DpSize, actio
         }
     }
 
-    val innerCornerRadiusModifier = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        GlanceModifier.cornerRadius(android.R.dimen.system_app_widget_inner_radius)
+    val innerPadding = 8.dp
+    val innerModifier = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        GlanceModifier
+            .fillMaxSize()
+            .padding(innerPadding)
+            .background(accentColor)
+            .cornerRadius(android.R.dimen.system_app_widget_inner_radius)
     } else {
-        GlanceModifier.cornerRadius(24.dp)
+        GlanceModifier
+            .fillMaxSize()
+            .padding(innerPadding)
+            .background(accentColor)
+            .cornerRadius(12.dp)
     }
 
     Column(
         modifier = GlanceModifier
-            .fillMaxSize()
-            .background(accentColor)
-            .then(innerCornerRadiusModifier)
-            .padding(16.dp)
+            .then(innerModifier)
+            .padding(12.dp)
             .clickable(action)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
