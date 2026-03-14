@@ -30,6 +30,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.akinom.isod.auth.CredentialsStorage
 import dev.akinom.isod.auth.currentDayOfWeek
 import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.auth.currentTimeHHmm
@@ -61,6 +62,9 @@ import org.koin.core.component.inject
 class HomeScreenModel(val semester: String) : ScreenModel, KoinComponent {
     private val timetableRepo: TimetableRepository by inject()
     private val newsRepo: NewsRepository           by inject()
+    private val storage: CredentialsStorage        by inject()
+
+    val isBuchmanp = storage.getIsodUsername() == "buchmanp"
 
     val weekMonday = currentWeekMonday()
     val currentWeek = AcademicCalendar.getCurrentWeek(semester)
@@ -149,7 +153,7 @@ class HomeScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         @Suppress("DEPRECATION")
                         Text(
-                            stringResource(Res.string.hello),
+                            if (screenModel.isBuchmanp) "Szalom!" else stringResource(Res.string.hello),
                             style = MaterialTheme.typography.displaySmall,
                             fontWeight = FontWeight.Black,
                             color = MaterialTheme.colorScheme.onBackground
