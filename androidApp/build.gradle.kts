@@ -10,8 +10,8 @@ android {
         applicationId = "dev.akinom.isod"
         minSdk = 24
         targetSdk = 36
-        versionCode = 40
-        versionName = "0.4"
+        versionCode = 100
+        versionName = "1.0"
     }
 
     packaging {

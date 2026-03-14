@@ -1,5 +1,7 @@
 package dev.akinom.isod.data.repository
 
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
 import dev.akinom.isod.CourseGradeEntity
 import dev.akinom.isod.IsodDatabase
 import dev.akinom.isod.data.cache.currentTimeMillis
@@ -10,8 +12,13 @@ import dev.akinom.isod.data.remote.UsosApiClient
 import dev.akinom.isod.data.remote.UsosResult
 import dev.akinom.isod.domain.ClassGrade
 import dev.akinom.isod.domain.CourseGrade
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -23,24 +30,29 @@ class GradesRepository(
     private val db: IsodDatabase,
     private val isodApi: IsodApiClient,
     private val usosApi: UsosApiClient,
+    private val scope: CoroutineScope,
 ) {
     private val queries get() = db.courseGradeQueries
 
-    fun getGrades(semester: String, usosTermId: String): Flow<List<CourseGrade>> = flow {
-        val cached = queryCached(semester)
-        if (cached.isNotEmpty()) {
-            emit(cached)
-            val lastUpdated = queries.lastUpdated(semester).executeAsOneOrNull() ?: 0L
-            if (!isStale(lastUpdated, GRADES_TTL_MS)) return@flow
-        }
+    fun getGrades(semester: String, usosTermId: String): Flow<List<CourseGrade>> =
+        queries.selectBySemester(semester)
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { rows -> rows.map { it.toDomain() } }
+            .onStart { refreshGradesIfStale(semester, usosTermId) }
 
-        val fresh = fetchFresh(semester, usosTermId)
-        if (fresh.isNotEmpty()) {
-            val persisted = persist(semester, fresh)
-            emit(persisted)
-        } else if (cached.isEmpty()) {
-            emit(emptyList())
+    private fun refreshGradesIfStale(semester: String, usosTermId: String) {
+        scope.launch(Dispatchers.IO) {
+            val lastUpdated = queries.lastUpdated(semester).executeAsOneOrNull() ?: 0L
+            if (isStale(lastUpdated, GRADES_TTL_MS)) {
+                refreshGrades(semester, usosTermId)
+            }
         }
+    }
+
+    suspend fun refreshGrades(semester: String, usosTermId: String) {
+        val fresh = fetchFresh(semester, usosTermId)
+        persist(semester, fresh)
     }
 
     suspend fun refreshCourseDetails(course: CourseGrade, semester: String): CourseGrade {
@@ -56,11 +68,13 @@ class GradesRepository(
             )
         }
         val updatedCourse = course.copy(classGrades = updatedClasses)
+        
         queries.updateClassGrades(
             classGradesJson = json.encodeToString(updatedClasses),
             courseId = course.courseId,
             semester = semester
         )
+        
         return updatedCourse
     }
 
@@ -109,11 +123,9 @@ class GradesRepository(
         }
     }
 
-    private fun persist(semester: String, grades: List<CourseGrade>): List<CourseGrade> {
+    private fun persist(semester: String, grades: List<CourseGrade>) {
         val now = currentTimeMillis()
-        val persisted = mutableListOf<CourseGrade>()
         db.transaction {
-            // We want to preserve existing class details if we have them
             val existing = queryCached(semester).associateBy { it.courseId }
             
             queries.deleteBySemester(semester)
@@ -125,7 +137,6 @@ class GradesRepository(
                 }
 
                 val gradeToPersist = g.copy(classGrades = classGradesToSave)
-                persisted.add(gradeToPersist)
 
                 queries.upsert(
                     CourseGradeEntity(
@@ -147,7 +158,6 @@ class GradesRepository(
                 )
             }
         }
-        return persisted
     }
 }
 
