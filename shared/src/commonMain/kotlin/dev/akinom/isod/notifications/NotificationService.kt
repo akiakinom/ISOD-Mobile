@@ -5,6 +5,7 @@ data class NotificationPayload(
     val title: String,
     val body: String,
     val channelId: String = "isod_news",
+    val newsHash: String? = null,
 )
 
 expect class NotificationService {

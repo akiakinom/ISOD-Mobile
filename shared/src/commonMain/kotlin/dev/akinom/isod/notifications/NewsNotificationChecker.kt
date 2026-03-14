@@ -58,9 +58,10 @@ class NewsNotificationChecker(
         unsent.forEach { entity ->
             notificationService.notify(
                 NotificationPayload(
-                    id    = entity.hash,
-                    title = NewsType.fromCode(entity.type).toNotificationTitle(),
-                    body  = entity.subject,
+                    id       = entity.hash,
+                    title    = NewsType.fromCode(entity.type).toNotificationTitle(),
+                    body     = entity.subject,
+                    newsHash = entity.hash,
                 )
             )
             queries.markNotificationSent(entity.hash)

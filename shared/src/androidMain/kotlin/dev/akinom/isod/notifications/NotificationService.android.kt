@@ -3,7 +3,9 @@ package dev.akinom.isod.notifications
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.RequiresPermission
@@ -26,12 +28,25 @@ actual class NotificationService(private val context: Context) {
             ) return
         }
 
+        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
+            putExtra("newsHash", payload.newsHash)
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            payload.id.hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(context, payload.channelId)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(payload.title)
             .setContentText(payload.body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(payload.body))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
 

@@ -14,6 +14,7 @@ actual class NotificationService {
             setTitle(payload.title)
             setBody(payload.body)
             setSound(platform.UserNotifications.UNNotificationSound.defaultSound())
+            setUserInfo(payload.newsHash?.let { mapOf("newsHash" to it) } ?: emptyMap<Any?, Any?>())
         }
         val request = UNNotificationRequest.requestWithIdentifier(
             identifier = payload.id,

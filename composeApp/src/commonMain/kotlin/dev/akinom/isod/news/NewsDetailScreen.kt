@@ -39,7 +39,7 @@ class NewsDetailScreenModel(private val hash: String) : ScreenModel, KoinCompone
     val item = repo.getNewsItem(hash)
 }
 
-class NewsDetailScreen(private val hash: String) : Screen {
+data class NewsDetailScreen(val hash: String) : Screen {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
