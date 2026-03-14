@@ -2,6 +2,7 @@ package dev.akinom.isod
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.akinom.isod.auth.AppThemeSetting
 import dev.akinom.isod.auth.CredentialsStorage
 import dev.akinom.isod.auth.createSettings
 import dev.akinom.isod.auth.getAppVersion
@@ -34,10 +36,15 @@ class SettingsScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val storage = CredentialsStorage(createSettings())
+        val storage = remember { CredentialsStorage(createSettings()) }
         val hasUsos = storage.hasUsosTokens()
         val version = remember { getAppVersion() }
         val isBeta = remember(version) { version.startsWith("0.") }
+
+        val themeSetting = remember { mutableStateOf(storage.getTheme()) }
+        val updateTheme = LocalThemeSetting.current
+
+        var showThemeDialog by remember { mutableStateOf(false) }
 
         Scaffold(
             topBar = {
@@ -59,6 +66,28 @@ class SettingsScreen : Screen {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
+                    SectionHeader(stringResource(Res.string.section_appearance))
+                }
+
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(Res.string.theme_title)) },
+                        supportingContent = {
+                            Text(
+                                when (themeSetting.value) {
+                                    AppThemeSetting.SYSTEM -> stringResource(Res.string.theme_system)
+                                    AppThemeSetting.LIGHT -> stringResource(Res.string.theme_light)
+                                    AppThemeSetting.DARK -> stringResource(Res.string.theme_dark)
+                                }
+                            )
+                        },
+                        leadingContent = { Icon(Icons.Default.Palette, null) },
+                        modifier = Modifier.clickable { showThemeDialog = true }
+                    )
+                }
+
+                item {
+                    Spacer(Modifier.height(8.dp))
                     SectionHeader(stringResource(Res.string.section_account))
                 }
 
@@ -136,6 +165,48 @@ class SettingsScreen : Screen {
                 }
             }
         }
+
+        if (showThemeDialog) {
+            AlertDialog(
+                onDismissRequest = { showThemeDialog = false },
+                title = { Text(stringResource(Res.string.theme_title)) },
+                text = {
+                    Column {
+                        AppThemeSetting.entries.forEach { setting ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        themeSetting.value = setting
+                                        updateTheme(setting)
+                                        showThemeDialog = false
+                                    }
+                                    .padding(vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = themeSetting.value == setting,
+                                    onClick = null
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    when (setting) {
+                                        AppThemeSetting.SYSTEM -> stringResource(Res.string.theme_system)
+                                        AppThemeSetting.LIGHT -> stringResource(Res.string.theme_light)
+                                        AppThemeSetting.DARK -> stringResource(Res.string.theme_dark)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showThemeDialog = false }) {
+                        Text(stringResource(Res.string.cancel))
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -197,33 +268,30 @@ private fun AppInfoCard(version: String, isBeta: Boolean) {
             
             Spacer(Modifier.height(20.dp))
             
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+            Surface(
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                shape = CircleShape,
+                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
             ) {
-                InfoBadge(Icons.Default.Bolt, stringResource(Res.string.tech_stack_energy_drinks))
-                Spacer(Modifier.width(8.dp))
-                InfoBadge(Icons.Default.Favorite, stringResource(Res.string.tech_stack_open_source))
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Favorite,
+                        null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "Made by WRS",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
-        }
-    }
-}
-
-@Composable
-private fun InfoBadge(icon: ImageVector, text: String) {
-    Surface(
-        color = MaterialTheme.colorScheme.surface,
-        shape = CircleShape,
-        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(icon, null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.width(6.dp))
-            Text(text, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Medium)
         }
     }
 }

@@ -12,10 +12,10 @@
     <string name="usos_title">USOS</string>
     <string name="usos_link_subtitle">Połącz ze swoim kontem uniwersyteckim</string>
     <string name="why_link_usos">Po co łączyć z USOS?</string>
-    <string name="usos_link_reason">Aby uzyskać dostęp do wf-ów, języków i innych danych z USOS, musisz autoryzować tę aplikację w systemie uniwersyteckim.</string>
+    <string name="usos_link_reason">Aby uzyskać dostęp do WF-ów oraz języków, musisz autoryzować tę aplikację w USOS-ie.</string>
     <string name="authorize_usos_btn">Autoryzuj z USOS</string>
     <string name="skip_for_now">Pomiń na razie</string>
-    <string name="usos_login_hint">Zostaniesz przekierowany do strony logowania USOS.\nAplikacja nie przechowuje Twoich haseł.</string>
+    <string name="usos_login_hint">Nastąpi przekierowanie do strony logowania USOS.\nAplikacja nie przechowuje Twoich haseł.</string>
 
     <string name="hello">Cześć!</string>
     <string name="ready_for_classes">Gotowy na zajęcia?</string>
@@ -71,8 +71,13 @@
     <string name="class_seminar">Seminarium</string>
 
     <string name="settings_title">Ustawienia</string>
+    <string name="section_appearance">Wygląd</string>
+    <string name="theme_title">Motyw aplikacji</string>
+    <string name="theme_system">Domyślny systemu</string>
+    <string name="theme_light">Jasny</string>
+    <string name="theme_dark">Ciemny</string>
     <string name="section_account">Konto</string>
-    <string name="isod_user">Użytkownik ISOD</string>
+    <string name="isod_user">Konto ISOD</string>
     <string name="not_linked">Niepołączone</string>
     <string name="usos_account">Konto USOS</string>
     <string name="linked">Połączone</string>

@@ -7,6 +7,11 @@ private const val KEY_ISOD_USERNAME     = "isod_username"
 private const val KEY_ISOD_API_KEY      = "isod_api_key"
 private const val KEY_USOS_TOKEN        = "usos_token"
 private const val KEY_USOS_TOKEN_SECRET = "usos_token_secret"
+private const val KEY_THEME             = "app_theme"
+
+enum class AppThemeSetting {
+    SYSTEM, LIGHT, DARK
+}
 
 class CredentialsStorage(
     private val settings: Settings,
@@ -41,6 +46,19 @@ class CredentialsStorage(
     fun clearUsosTokens() {
         settings.remove(KEY_USOS_TOKEN)
         settings.remove(KEY_USOS_TOKEN_SECRET)
+    }
+
+    fun getTheme(): AppThemeSetting {
+        val themeName = settings.getString(KEY_THEME, AppThemeSetting.SYSTEM.name)
+        return try {
+            AppThemeSetting.valueOf(themeName)
+        } catch (e: IllegalArgumentException) {
+            AppThemeSetting.SYSTEM
+        }
+    }
+
+    fun setTheme(theme: AppThemeSetting) {
+        settings[KEY_THEME] = theme.name
     }
 
     fun isFullyLinked(): Boolean = hasIsodCredentials() && hasUsosTokens()

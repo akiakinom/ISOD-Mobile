@@ -71,6 +71,11 @@
     <string name="class_seminar">Seminar</string>
 
     <string name="settings_title">Settings</string>
+    <string name="section_appearance">Appearance</string>
+    <string name="theme_title">App Theme</string>
+    <string name="theme_system">System Default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
     <string name="section_account">Account</string>
     <string name="isod_user">ISOD User</string>
     <string name="not_linked">Not linked</string>
