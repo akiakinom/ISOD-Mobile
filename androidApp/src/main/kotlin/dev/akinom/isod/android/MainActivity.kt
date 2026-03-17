@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import dev.akinom.isod.App
 import dev.akinom.isod.MainTab
+import dev.akinom.isod.android.widget.WidgetUpdater
 
 class MainActivity : ComponentActivity() {
 
@@ -34,6 +35,7 @@ class MainActivity : ComponentActivity() {
         }
 
         NewsNotificationWorker.schedule(this)
+        WidgetUpdater.updateAllWidgets(this)
 
         setContent {
             App(
@@ -44,10 +46,16 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        WidgetUpdater.updateAllWidgets(this)
+    }
+
     override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
         handleIntent()
+        WidgetUpdater.updateAllWidgets(this)
     }
 
     private fun handleIntent() {

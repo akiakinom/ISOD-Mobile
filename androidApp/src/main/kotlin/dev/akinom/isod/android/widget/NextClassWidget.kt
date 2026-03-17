@@ -20,6 +20,7 @@ import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
+import androidx.glance.appwidget.updateAll
 import androidx.glance.background
 import androidx.glance.layout.*
 import androidx.glance.text.FontWeight
@@ -37,6 +38,8 @@ import dev.akinom.isod.auth.currentWeekMonday
 import dev.akinom.isod.data.repository.TimetableRepository
 import dev.akinom.isod.domain.AcademicCalendar
 import dev.akinom.isod.domain.TimetableEntry
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -75,7 +78,7 @@ class NextClassWidget : GlanceAppWidget(), KoinComponent {
                 } else {
                     GlanceModifier
                         .fillMaxSize()
-                        .background(R.drawable.widget_background_fallback) // You might need to create this drawable or use cornerRadius(16.dp)
+                        .background(R.drawable.widget_background_fallback)
                         .cornerRadius(16.dp)
                 }
 
@@ -239,4 +242,15 @@ private fun NextClassHero(entry: TimetableEntry, today: Int, size: DpSize, actio
 
 class NextClassWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = NextClassWidget()
+
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        val action = intent.action
+        if (action == Intent.ACTION_TIME_CHANGED || action == Intent.ACTION_DATE_CHANGED || action == Intent.ACTION_TIMEZONE_CHANGED) {
+            val scope = MainScope()
+            scope.launch {
+                NextClassWidget().updateAll(context)
+            }
+        }
+    }
 }
