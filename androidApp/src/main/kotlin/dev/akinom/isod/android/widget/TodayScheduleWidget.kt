@@ -87,7 +87,7 @@ class TodayScheduleWidget : GlanceAppWidget(), KoinComponent {
                 } else {
                     GlanceModifier
                         .fillMaxSize()
-                        .background(R.drawable.widget_background_fallback)
+                        .background(R.color.widget_background)
                         .cornerRadius(16.dp)
                 }
 
