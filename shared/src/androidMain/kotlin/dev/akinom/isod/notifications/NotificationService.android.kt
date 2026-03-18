@@ -50,7 +50,7 @@ actual class NotificationService(private val context: Context) {
         val largeIcon = createNotificationBitmap(payload)
 
         val notification = NotificationCompat.Builder(context, payload.channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(getIconResId(payload.type))
             .setLargeIcon(largeIcon)
             .setContentTitle(payload.title)
             .setContentText(payload.body)
@@ -64,63 +64,50 @@ actual class NotificationService(private val context: Context) {
             .notify(payload.id.hashCode(), notification)
     }
 
-    private fun createNotificationBitmap(payload: NotificationPayload): Bitmap {
+    private fun createNotificationBitmap(payload: NotificationPayload): Bitmap? {
+        val subjectCode = payload.subjectCode ?: return null
+
+        val isCourseCode = subjectCode.length <= 6 &&
+                subjectCode.all { it.isUpperCase() || it.isDigit() } &&
+                subjectCode.uppercase() != "WRS"
+
+        if (!isCourseCode) return null
+
         val size = 128
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-        // White background
         paint.color = Color.WHITE
         canvas.drawCircle(size / 2f, size / 2f, size / 2f, paint)
 
-        val subjectCode = payload.subjectCode
-        if (!subjectCode.isNullOrEmpty()) {
-            // Main text: Subject Code
-            paint.color = Color.DKGRAY
-            paint.textAlign = Paint.Align.CENTER
-            paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            
-            // Adjust text size based on length
-            paint.textSize = when {
-                subjectCode.length <= 3 -> size * 0.4f
-                subjectCode.length <= 5 -> size * 0.3f
-                else -> size * 0.25f
-            }
-            
-            val bounds = Rect()
-            paint.getTextBounds(subjectCode, 0, subjectCode.length, bounds)
-            canvas.drawText(subjectCode, size / 2f, (size / 2f) + (bounds.height() / 2f), paint)
+        paint.color = Color.DKGRAY
+        paint.textAlign = Paint.Align.CENTER
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
 
-            // Small icon in corner
-            val iconRes = getIconResId(payload.type)
-            val drawable = ContextCompat.getDrawable(context, iconRes)
-            if (drawable != null) {
-                val iconSize = (size * 0.3f).toInt()
-                drawable.setTint(Color.GRAY)
-                drawable.setBounds(size - iconSize, size - iconSize, size, size)
-                drawable.draw(canvas)
-            }
-        } else {
-            // Just the icon
-            val iconRes = getIconResId(payload.type)
-            val drawable = ContextCompat.getDrawable(context, iconRes)
-            if (drawable != null) {
-                val iconSize = (size * 0.6f).toInt()
-                val margin = (size - iconSize) / 2
-                drawable.setTint(Color.GRAY)
-                drawable.setBounds(margin, margin, size - margin, size - margin)
-                drawable.draw(canvas)
-            }
+        paint.textSize = when {
+            subjectCode.length <= 3 -> size * 0.4f
+            subjectCode.length <= 5 -> size * 0.3f
+            else -> size * 0.25f
+        }
+
+        val bounds = Rect()
+        paint.getTextBounds(subjectCode, 0, subjectCode.length, bounds)
+        canvas.drawText(subjectCode, size / 2f, (size / 2f) + (bounds.height() / 2f), paint)
+
+        val iconRes = getIconResId(payload.type)
+        val drawable = ContextCompat.getDrawable(context, iconRes)
+        if (drawable != null) {
+            val iconSize = (size * 0.3f).toInt()
+            drawable.setTint(Color.GRAY)
+            drawable.setBounds(size - iconSize, size - iconSize, size, size)
+            drawable.draw(canvas)
         }
 
         return bitmap
     }
 
     private fun getIconResId(type: NotificationType): Int {
-        // Mapping NotificationType to Android system icons as fallbacks or project icons if they existed
-        // Since we don't have custom SVGs yet, we'll use Material design equivalents from system or common names
-        // In a real app, these would be R.drawable.ic_important, etc.
         return when (type) {
             NotificationType.IMPORTANT -> android.R.drawable.ic_dialog_alert
             NotificationType.GRADE -> android.R.drawable.ic_menu_edit
