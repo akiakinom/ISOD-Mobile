@@ -1,6 +1,7 @@
 package dev.akinom.isod
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,9 +23,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
-import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -135,7 +135,6 @@ class ScheduleScreen(
                     ) {
                         Icon(Icons.Default.Info, null, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
-                        @Suppress("DEPRECATION")
                         Text(
                             text = stringResource(Res.string.day_substitution_label, substitutedDayName),
                             style = MaterialTheme.typography.bodyMedium,
@@ -219,27 +218,40 @@ class ScheduleScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             val groupedEntries = groupOverlapping(filteredEntries)
-                            items(groupedEntries) { group ->
-                                if (group.size == 1) {
-                                    ScheduleItem(
-                                        entry = group[0],
-                                        isSplit = false,
-                                        currentWeek = currentWeek,
-                                        onLongClick = { selectedEntryForOverride = it }
-                                    )
-                                } else {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        group.forEach { entry ->
-                                            ScheduleItem(
-                                                entry = entry,
-                                                modifier = Modifier.weight(1f).fillMaxHeight(),
-                                                isSplit = true,
-                                                currentWeek = currentWeek,
-                                                onLongClick = { selectedEntryForOverride = it }
-                                            )
+                            groupedEntries.forEachIndexed { index, group ->
+                                if (index > 0) {
+                                    val prevEnd = groupedEntries[index - 1].maxOf { it.endTime.toMinutes() }
+                                    val currStart = group.minOf { it.startTime.toMinutes() }
+                                    val gap = currStart - prevEnd
+                                    if (gap > 45) {
+                                        item {
+                                            GapSeparator(gap)
+                                        }
+                                    }
+                                }
+                                
+                                item {
+                                    if (group.size == 1) {
+                                        ScheduleItem(
+                                            entry = group[0],
+                                            isSplit = false,
+                                            currentWeek = currentWeek,
+                                            onLongClick = { selectedEntryForOverride = it }
+                                        )
+                                    } else {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            group.forEach { entry ->
+                                                ScheduleItem(
+                                                    entry = entry,
+                                                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                                                    isSplit = true,
+                                                    currentWeek = currentWeek,
+                                                    onLongClick = { selectedEntryForOverride = it }
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -336,6 +348,63 @@ class ScheduleScreen(
 }
 
 private data class CycleOption(val code: String, val label: StringResource, val icon: ImageVector)
+
+@Composable
+private fun GapSeparator(minutes: Int) {
+    val hours = minutes / 60
+    val remainingMinutes = minutes % 60
+    val text = when {
+        hours > 0 && remainingMinutes > 0 -> "${hours}h ${remainingMinutes}m"
+        hours > 0 -> "${hours}h"
+        else -> "${remainingMinutes}m"
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .height(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        val color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
+        Canvas(modifier = Modifier.fillMaxWidth().height(12.dp)) {
+            val width = size.width
+            val height = size.height
+            val waveLength = 20.dp.toPx()
+            val waveHeight = 3.dp.toPx()
+            val centerY = height / 2
+            
+            val path = Path().apply {
+                moveTo(0f, centerY)
+                var x = 0f
+                while (x < width) {
+                    relativeQuadraticTo(waveLength / 4, -waveHeight, waveLength / 2, 0f)
+                    relativeQuadraticTo(waveLength / 4, waveHeight, waveLength / 2, 0f)
+                    x += waveLength
+                }
+            }
+            
+            drawPath(
+                path = path,
+                color = color,
+                style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round)
+            )
+        }
+        
+        Surface(
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.padding(horizontal = 8.dp)
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+        }
+    }
+}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
