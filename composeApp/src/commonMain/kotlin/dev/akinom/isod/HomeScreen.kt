@@ -142,7 +142,7 @@ class HomeScreen(
                     .verticalScroll(rememberScrollState())
                     .statusBarsPadding()
                     .padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Header Row
                 Row(
@@ -185,26 +185,9 @@ class HomeScreen(
                     }
                 }
 
-                // Today's/Tomorrow's Timeline Summary
-                DashboardSection(
-                    title = stringResource(if (isAfterLessons) Res.string.tomorrows_timeline else Res.string.todays_timeline),
-                    icon = Icons.Default.CalendarToday,
-                    onSeeAll = { 
-                        val targetDay = if (isAfterLessons) (today % 7) + 1 else today
-                        onMoveToTab(MainTab.Schedule, targetDay)
-                    }
-                ) {
-                    if (dashboardClasses.isEmpty()) {
-                        EmptyDashboardState(
-                            message = stringResource(if (isAfterLessons) Res.string.no_classes_tomorrow else Res.string.no_classes_today),
-                            icon = Icons.Default.NightsStay
-                        )
-                    } else {
-                        dashboardClasses.forEach { entry ->
-                            CompactTimetableItem(entry) {
-                                onMoveToTab(MainTab.Schedule, entry.dayOfWeek)
-                            }
-                        }
+                dashboardClasses.forEach { entry ->
+                    CompactTimetableItem(entry) {
+                        onMoveToTab(MainTab.Schedule, entry.dayOfWeek)
                     }
                 }
 
@@ -424,10 +407,10 @@ private fun CompactTimetableItem(entry: TimetableEntry, onClick: () -> Unit) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .clickable { onClick() }
-            .padding(vertical = 10.dp),
+            .padding(top = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(55.dp)) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(48.dp)) {
             @Suppress("DEPRECATION")
             Text(entry.startTime, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = accentColor)
             @Suppress("DEPRECATION")
@@ -442,7 +425,7 @@ private fun CompactTimetableItem(entry: TimetableEntry, onClick: () -> Unit) {
 
         Column {
             Text(
-                text = entry.courseNameShort,
+                text = entry.courseName,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
