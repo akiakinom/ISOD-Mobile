@@ -455,10 +455,10 @@ private fun ScheduleItem(
                         Spacer(Modifier.width(4.dp))
                         @Suppress("DEPRECATION")
                         Text(
-                            text = entry.lecturerNames.first(),
+                            text = entry.lecturerNames.joinToString("\n"),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1
+                            maxLines = 2
                         )
                     }
                 }
@@ -475,10 +475,10 @@ private fun ScheduleItem(
                         Spacer(Modifier.width(4.dp))
                         @Suppress("DEPRECATION")
                         Text(
-                            text = entry.lecturerNames.first(),
+                            text = entry.lecturerNames.joinToString("\n"),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1
+                            maxLines = 2
                         )
                     }
                 }
