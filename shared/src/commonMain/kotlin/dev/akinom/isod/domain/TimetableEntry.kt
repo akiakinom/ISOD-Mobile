@@ -8,7 +8,7 @@ data class TimetableEntry(
     val id: String,
     val courseName: String,
     val courseNameShort: String,
-    val courseType: String, // "W", "L", "C", "P", "S"
+    val courseType: String, // "W", "L", "C", "P", "S", "WF"
     val dayOfWeek: Int, // 1-7 (Mon-Sun)
     val startTime: String, // "HH:mm"
     val endTime: String, // "HH:mm"
@@ -27,7 +27,19 @@ data class TimetableEntry(
         "C", "Ć" -> "ĆWI"
         "P" -> "PRO"
         "S" -> "SEM"
+        "WF" -> "WF"
         else -> courseType.take(3).uppercase()
+    }
+
+    val displayLocation: String get() {
+        val b = buildingShort.trim()
+        val r = room.trim()
+        return when {
+            b.isEmpty() -> r
+            r.isEmpty() -> b
+            b.uppercase() == r.uppercase() -> b
+            else -> "$b $r"
+        }
     }
 
     val dedupeKey: String get() = "${courseName}_${dayOfWeek}_${startTime}"
@@ -57,12 +69,13 @@ fun PlanItem.toTimetableEntry() = TimetableEntry(
     courseName = courseName,
     courseNameShort = courseNameShort,
     courseType = when {
+        typeOfClasses.uppercase().contains("WF") -> "WF"
         typeOfClasses.contains("W", ignoreCase = true) -> "W"
         typeOfClasses.contains("L", ignoreCase = true) -> "L"
         typeOfClasses.contains("C", ignoreCase = true) -> "C"
         typeOfClasses.contains("P", ignoreCase = true) -> "P"
         typeOfClasses.contains("S", ignoreCase = true) -> "S"
-        else -> typeOfClasses.take(1).uppercase()
+        else -> typeOfClasses.take(2).uppercase()
     },
     dayOfWeek = dayOfWeek,
     startTime = startTime.to24h(),
@@ -91,6 +104,7 @@ fun UsosActivity.toTimetableEntry(): TimetableEntry {
                     pl.contains("ćwiczenia") -> "C"
                     pl.contains("projekt") -> "P"
                     pl.contains("seminarium") -> "S"
+                    pl.contains("wychowanie fizyczne") || pl.contains("wf") -> "WF"
                     else -> "W"
                 }
             }
@@ -126,7 +140,8 @@ private fun getDayOfWeekFromDate(dateStr: String): Int {
 
 fun PlanItem.isExcluded(): Boolean {
     val shortName = courseNameShort.uppercase()
-    return shortName.startsWith("DSJO") || shortName.startsWith("WF")
+    val loc = "$building $buildingShort $room".uppercase()
+    return shortName.startsWith("DSJO") || loc.contains("RIV")
 }
 
 private fun String.to24h(): String {
@@ -153,6 +168,7 @@ suspend fun TimetableEntry.getFullTypeName(): String {
         "C", "Ć" -> getString(Res.string.class_exercises)
         "P"   -> getString(Res.string.class_project)
         "S"   -> getString(Res.string.class_seminar)
+        "WF"  -> "WF"
         else -> courseType
     }
 }

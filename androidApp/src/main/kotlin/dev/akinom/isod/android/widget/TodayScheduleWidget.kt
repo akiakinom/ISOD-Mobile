@@ -185,7 +185,7 @@ fun TimetableItemWidget(entry: TimetableEntry, size: DpSize, action: androidx.gl
                     style = TextStyle(color = accentColor, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                 )
                 Text(
-                    text = " • ${entry.buildingShort} ${entry.room}",
+                    text = " • ${entry.displayLocation}",
                     style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 10.sp)
                 )
             }

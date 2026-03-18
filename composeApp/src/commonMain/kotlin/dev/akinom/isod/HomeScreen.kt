@@ -41,14 +41,16 @@ import dev.akinom.isod.domain.AcademicCalendar
 import dev.akinom.isod.domain.NewsHeader
 import dev.akinom.isod.domain.TimetableEntry
 import dev.akinom.isod.domain.TimetableWidgetLogic
+import dev.akinom.isod.domain.parseSubject
 import dev.akinom.isod.news.NewsDetailScreen
 import dev.akinom.isod.news.getDisplaySubject
 import dev.akinom.isod.news.getTagColors
 import dev.akinom.isod.news.parseDateToSortable
-import dev.akinom.isod.news.parseSubject
 import dev.akinom.isod.news.toColor
+import dev.akinom.isod.news.toIcon
 import dev.akinom.isod.news.toStringRes
 import dev.akinom.isod.news.typeToColor
+import dev.akinom.isod.news.typeToIcon
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -198,7 +200,7 @@ class HomeScreen(
                             icon = Icons.Default.NightsStay
                         )
                     } else {
-                        dashboardClasses.take(3).forEach { entry ->
+                        dashboardClasses.forEach { entry ->
                             CompactTimetableItem(entry) {
                                 onMoveToTab(MainTab.Schedule, entry.dayOfWeek)
                             }
@@ -238,6 +240,7 @@ class HomeScreen(
 @Composable
 private fun NextClassCard(entry: TimetableEntry, today: Int, currentTime: String, onClick: () -> Unit) {
     val accentColor = typeToColor(entry.courseType)
+    val typeIcon = typeToIcon(entry.courseType)
     val isNow = entry.dayOfWeek == today && currentTime >= entry.startTime && currentTime < entry.endTime
     
     val timeLabel = when {
@@ -269,11 +272,7 @@ private fun NextClassCard(entry: TimetableEntry, today: Int, currentTime: String
         )) {
             Column(modifier = Modifier.padding(24.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        color = accentColor,
-                        shape = CircleShape,
-                        modifier = Modifier.size(8.dp)
-                    ) {}
+                    Icon(typeIcon, null, modifier = Modifier.size(16.dp), tint = accentColor)
                     Spacer(Modifier.width(8.dp))
                     @Suppress("DEPRECATION")
                     Text(
@@ -299,8 +298,9 @@ private fun NextClassCard(entry: TimetableEntry, today: Int, currentTime: String
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Place, null, modifier = Modifier.size(16.dp), tint = accentColor)
                     Spacer(Modifier.width(6.dp))
+                    @Suppress("DEPRECATION")
                     Text(
-                        text = "${entry.buildingShort} ${entry.room}",
+                        text = entry.displayLocation,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -333,11 +333,13 @@ private fun NextClassCard(entry: TimetableEntry, today: Int, currentTime: String
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
+                            @Suppress("DEPRECATION")
                             Text(
                                 text = entry.startTime,
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            @Suppress("DEPRECATION")
                             Text(
                                 text = entry.endTime,
                                 style = MaterialTheme.typography.labelMedium,
@@ -415,6 +417,7 @@ private fun DashboardSection(
 @Composable
 private fun CompactTimetableItem(entry: TimetableEntry, onClick: () -> Unit) {
     val accentColor = typeToColor(entry.courseType)
+    val typeIcon = typeToIcon(entry.courseType)
     
     Row(
         modifier = Modifier
@@ -427,6 +430,7 @@ private fun CompactTimetableItem(entry: TimetableEntry, onClick: () -> Unit) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(55.dp)) {
             @Suppress("DEPRECATION")
             Text(entry.startTime, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = accentColor)
+            @Suppress("DEPRECATION")
             Text(entry.endTime, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
         }
         
@@ -444,14 +448,18 @@ private fun CompactTimetableItem(entry: TimetableEntry, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurface
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(typeIcon, null, modifier = Modifier.size(12.dp), tint = accentColor)
+                Spacer(Modifier.width(4.dp))
+                @Suppress("DEPRECATION")
                 Text(
                     text = entry.shortType,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = accentColor
                 )
+                @Suppress("DEPRECATION")
                 Text(
-                    " • ${entry.buildingShort} ${entry.room}",
+                    " • ${entry.displayLocation}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -465,6 +473,8 @@ private fun CompactNewsItem(item: NewsHeader, onClick: () -> Unit) {
     val typeColor = item.type.toColor()
     val typeRes = item.type.toStringRes()
     val parsed = remember(item.subject) { parseSubject(item.subject) }
+    val icon = item.toIcon(parsed.tag)
+    val typeIcon = item.toIcon(null)
     
     Column(
         modifier = Modifier
@@ -479,28 +489,44 @@ private fun CompactNewsItem(item: NewsHeader, onClick: () -> Unit) {
                 contentColor = typeColor,
                 shape = RoundedCornerShape(4.dp)
             ) {
-                Text(
-                    text = if (typeRes != null) stringResource(typeRes) else item.type.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Icon(typeIcon, null, modifier = Modifier.size(12.dp))
+                    Spacer(Modifier.width(4.dp))
+                    @Suppress("DEPRECATION")
+                    Text(
+                        text = if (typeRes != null) stringResource(typeRes) else item.type.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
             if (parsed.tag != null) {
-                val (tagContainer, tagContent) = getTagColors(parsed.tag)
+                val tagVal = parsed.tag!!
+                val (tagContainer, tagContent) = getTagColors(tagVal)
                 Spacer(Modifier.width(8.dp))
                 Surface(
                     color = tagContainer,
                     contentColor = tagContent,
                     shape = RoundedCornerShape(4.dp)
                 ) {
-                    @Suppress("DEPRECATION")
-                    Text(
-                        text = parsed.tag,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        if (tagVal.uppercase() == "WRS" || tagVal.uppercase() == "DZIEKANAT") {
+                            Icon(icon, null, modifier = Modifier.size(12.dp))
+                            Spacer(Modifier.width(4.dp))
+                        }
+                        @Suppress("DEPRECATION")
+                        Text(
+                            text = tagVal,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -511,6 +537,7 @@ private fun CompactNewsItem(item: NewsHeader, onClick: () -> Unit) {
             if (parsed.isGradeUpdate) {
                 Icon(Icons.Default.Star, null, Modifier.size(16.6.dp).padding(end = 4.dp), tint = MaterialTheme.colorScheme.primary)
             }
+            @Suppress("DEPRECATION")
             Text(
                 text = parsed.getDisplaySubject(),
                 style = MaterialTheme.typography.bodyLarge,
@@ -539,6 +566,7 @@ fun EmptyDashboardState(message: String, icon: ImageVector) {
             tint = MaterialTheme.colorScheme.outlineVariant
         )
         Spacer(Modifier.height(12.dp))
+        @Suppress("DEPRECATION")
         Text(
             text = message,
             style = MaterialTheme.typography.bodyMedium,

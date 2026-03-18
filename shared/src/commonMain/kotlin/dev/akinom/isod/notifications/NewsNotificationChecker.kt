@@ -6,6 +6,7 @@ import dev.akinom.isod.data.cache.currentTimeMillis
 import dev.akinom.isod.data.remote.IsodApiClient
 import dev.akinom.isod.data.remote.IsodResult
 import dev.akinom.isod.domain.NewsType
+import dev.akinom.isod.domain.parseSubject
 
 class NewsNotificationChecker(
     private val db: IsodDatabase,
@@ -56,15 +57,33 @@ class NewsNotificationChecker(
         println("🔔 NewsNotificationChecker: ${unsent.size} unsent notifications")
 
         unsent.forEach { entity ->
+            val parsed = parseSubject(entity.subject)
+            val type = determineNotificationType(NewsType.fromCode(entity.type), parsed.tag)
+            
             notificationService.notify(
                 NotificationPayload(
-                    id       = entity.hash,
-                    title    = NewsType.fromCode(entity.type).toNotificationTitle(),
-                    body     = entity.subject,
-                    newsHash = entity.hash,
+                    id          = entity.hash,
+                    title       = type.toTitle(parsed.tag),
+                    body        = parsed.displaySubject,
+                    type        = type,
+                    subjectCode = parsed.tag,
+                    newsHash    = entity.hash,
                 )
             )
             queries.markNotificationSent(entity.hash)
+        }
+    }
+
+    private fun determineNotificationType(newsType: NewsType, tag: String?): NotificationType {
+        if (tag?.uppercase() == "DZIEKANAT") return NotificationType.DZIEKANAT
+        if (tag?.uppercase() == "WRS") return NotificationType.WRS
+        
+        return when (newsType) {
+            NewsType.IMPORTANT -> NotificationType.IMPORTANT
+            NewsType.QUIZ, NewsType.PROJECT_STATUS -> NotificationType.GRADE
+            NewsType.ANNOUNCEMENT, NewsType.PROJECT_GROUP_CHANGE -> NotificationType.CLASS_MESSAGE
+            NewsType.CLASS_ENROLLMENT -> NotificationType.CLASS_SIGN_UP_UPDATE
+            else -> NotificationType.OTHER
         }
     }
 
@@ -73,12 +92,12 @@ class NewsNotificationChecker(
     }
 }
 
-private fun NewsType.toNotificationTitle(): String = when (this) {
-    NewsType.QUIZ         -> "📝 Quiz"
-    NewsType.ANNOUNCEMENT -> "📢 Announcement"
-    NewsType.IMPORTANT    -> "⚠️ Important"
-    NewsType.PROJECT_STATUS -> "🎓 Grade"
-    NewsType.PROJECT_GROUP_CHANGE -> "📎 Material"
-    NewsType.CLASS_ENROLLMENT -> "✅ Enrollment"
-    else                  -> "📬 ISOD"
+private fun NotificationType.toTitle(tag: String?): String = when (this) {
+    NotificationType.IMPORTANT -> "Important"
+    NotificationType.GRADE -> "Grade"
+    NotificationType.CLASS_MESSAGE -> tag ?: "Class Message"
+    NotificationType.DZIEKANAT -> "Dziekanat"
+    NotificationType.WRS -> "WRS"
+    NotificationType.CLASS_SIGN_UP_UPDATE -> "Enrollment"
+    NotificationType.OTHER -> "ISOD"
 }

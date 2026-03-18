@@ -74,6 +74,7 @@ kotlin {
 
             implementation(libs.components.resources)
             implementation(libs.runtime)
+            implementation(libs.compose.icons)
         }
 
         androidMain.dependencies {

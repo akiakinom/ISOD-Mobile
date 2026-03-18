@@ -30,6 +30,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.akinom.isod.Res
 import dev.akinom.isod.*
 import dev.akinom.isod.data.repository.NewsRepository
+import dev.akinom.isod.domain.parseSubject
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -109,7 +110,7 @@ data class NewsDetailScreen(val hash: String) : Screen {
                                 }
 
                                 if (parsed.tag != null) {
-                                    val (tagContainer, tagContent) = getTagColors(parsed.tag)
+                                    val (tagContainer, tagContent) = getTagColors(parsed.tag!!)
                                     Spacer(Modifier.width(12.dp))
                                     Surface(
                                         color = tagContainer,
@@ -117,7 +118,7 @@ data class NewsDetailScreen(val hash: String) : Screen {
                                         shape = RoundedCornerShape(8.dp)
                                     ) {
                                         Text(
-                                            text = parsed.tag,
+                                            text = parsed.tag!!,
                                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                             style = MaterialTheme.typography.labelMedium,
                                             fontWeight = FontWeight.Bold

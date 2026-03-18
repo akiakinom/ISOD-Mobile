@@ -186,7 +186,7 @@ private fun NextClassHero(entry: TimetableEntry, today: Int, size: DpSize, actio
         Spacer(modifier = GlanceModifier.height(4.dp))
         
         Text(
-            text = "${entry.buildingShort} ${entry.room}",
+            text = entry.displayLocation,
             style = TextStyle(
                 color = GlanceTheme.colors.onPrimary,
                 fontSize = 12.sp

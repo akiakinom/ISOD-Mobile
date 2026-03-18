@@ -1,12 +1,27 @@
 package dev.akinom.isod.news
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.Comment
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Campaign
+import androidx.compose.material.icons.filled.CoPresent
+import androidx.compose.material.icons.filled.DirectionsRun
+import androidx.compose.material.icons.filled.Functions
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Quiz
+import androidx.compose.material.icons.filled.Report
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import dev.akinom.isod.domain.NewsType
 import dev.akinom.isod.Res
 import dev.akinom.isod.*
 import dev.akinom.isod.domain.NewsHeader
+import dev.akinom.isod.domain.ParsedSubject
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -38,25 +53,51 @@ fun NewsType.toStringRes(): StringResource? {
 @Composable
 fun typeToColor(type: String): Color {
     val typeShort = type.take(3).uppercase()
-    val projectYellow = Color(0xFFF9A825)
-    val labGreen = Color(0xFF4CAF50)
-    val wykLavender = Color(0xFF9575CD)
-    val cwiBlue = Color(0xFF2196F3)
+    
+    val blue = Color(0xFF2196F3)
+    val green = Color(0xFF4CAF50)
+    val orange = Color(0xFFFF9800)
+    val yellow = Color(0xFFFFEB3B)
+    val red = Color(0xFFF44336)
+    val gray = Color(0xFF9E9E9E)
 
     return when (typeShort) {
-        "WYK" -> wykLavender
-        "LAB" -> labGreen
-        "ĆWI" -> cwiBlue
-        "PRO" -> projectYellow
-        "SEM" -> Color(0xFF9C27B0)
+        "WYK" -> blue
+        "LAB" -> green
+        "ĆWI" -> orange
+        "PRO" -> yellow
+        "WF" -> red
+        "SEM" -> gray
         else -> {
             when(type.take(1).uppercase()) {
-                "W" -> wykLavender
-                "L" -> labGreen
-                "C" -> cwiBlue
-                "P" -> projectYellow
-                "S" -> Color(0xFF9C27B0)
+                "W" -> blue
+                "L" -> green
+                "C" -> orange
+                "P" -> yellow
+                "S" -> gray
                 else -> MaterialTheme.colorScheme.outline
+            }
+        }
+    }
+}
+
+fun typeToIcon(type: String): ImageVector {
+    val typeShort = type.take(3).uppercase()
+    return when (typeShort) {
+        "WYK" -> Icons.Default.School
+        "LAB" -> Icons.Default.Terminal
+        "ĆWI" -> Icons.Default.Functions
+        "PRO" -> Icons.AutoMirrored.Filled.Assignment
+        "WF" -> Icons.Default.DirectionsRun
+        "SEM" -> Icons.Default.CoPresent
+        else -> {
+            when (type.take(1).uppercase()) {
+                "W" -> Icons.Default.School
+                "L" -> Icons.Default.Terminal
+                "C" -> Icons.Default.Functions
+                "P" -> Icons.AutoMirrored.Filled.Assignment
+                "S" -> Icons.Default.CoPresent
+                else -> Icons.AutoMirrored.Filled.Assignment
             }
         }
     }
@@ -85,91 +126,30 @@ fun getTagColors(tag: String): Pair<Color, Color> {
     return palette[index]
 }
 
-data class ParsedSubject(
-    val tag: String?,
-    val displaySubject: String,
-    val isGradeUpdate: Boolean = false,
-    val gradeValue: String? = null
-)
-
-fun parseSubject(subject: String): ParsedSubject {
-    val acronyms = setOf("WRS")
-    
-    fun formatTag(tag: String): String {
-        val t = tag.trim()
-        val upper = t.uppercase()
-        if (upper in acronyms) return upper
-        if (upper == "DZIEKANAT") return "Dziekanat"
-        
-        // Keep course short names uppercase
-        if (t.length <= 6 && t.all { it.isLetterOrDigit() && (it.isDigit() || it.isUpperCase()) }) return t
-
-        return t.lowercase().replaceFirstChar { it.uppercase() }
-    }
-    
-    fun formatSubject(subj: String): String {
-        return subj.trim().replaceFirstChar { it.uppercase() }
-    }
-
-    fun cleanGradeValue(value: String): String {
-        val v = value.trim()
-        // Handle: 'ob' w polu 'obecność' bez komentarza
-        val regex = Regex("""'([^']+)' w polu '([^']+)'(.*)""")
-        val match = regex.find(v)
-        if (match != null) {
-            val grade = match.groupValues[1]
-            val field = match.groupValues[2]
-            return "$grade ($field)"
-        }
-        return v.removeSurrounding("'")
-    }
-
-    // 1. Grade update check: "Zajęcia - JIMP2: Nowa wartość: 5.0"
-    val gradeMatch = Regex("""^Zajęcia\s*-\s*([^:]+):\s*Nowa wartość:\s*(.*)$""").find(subject)
-    if (gradeMatch != null) {
-        val gradeRaw = gradeMatch.groupValues[2].trim()
-        val cleanedGrade = cleanGradeValue(gradeRaw)
-        return ParsedSubject(
-            tag = formatTag(gradeMatch.groupValues[1]),
-            displaySubject = "Grade: $cleanedGrade", // Fallback
-            isGradeUpdate = true,
-            gradeValue = cleanedGrade
-        )
-    }
-
-    // 2. Class related check: "Zajęcia - JIMP2: Coś tam" or "Ogłoszenie - JIMP2"
-    val classMatch = Regex("""^(Zajęcia|Ogłoszenie)\s*-\s*([^:]+)(.*)$""").find(subject)
-    if (classMatch != null) {
-        val tag = formatTag(classMatch.groupValues[2])
-        val rest = classMatch.groupValues[3].trim().removePrefix(":").trim()
-        return ParsedSubject(
-            tag = tag,
-            displaySubject = if (rest.isEmpty()) formatSubject(subject) else formatSubject(rest)
-        )
-    }
-
-    // 3. Bracket category check: "[DZIEKANAT] Subject"
-    val bracketMatch = Regex("""^\[([^\]]+)\]\s*(.*)$""").find(subject)
-    if (bracketMatch != null) {
-        return ParsedSubject(
-            tag = formatTag(bracketMatch.groupValues[1]),
-            displaySubject = formatSubject(bracketMatch.groupValues[2])
-        )
-    }
-
-    return ParsedSubject(null, formatSubject(subject))
-}
-
 @Composable
 fun ParsedSubject.getDisplaySubject(): String {
-    return if (isGradeUpdate && gradeValue != null) {
-        stringResource(Res.string.new_grade, gradeValue)
+    val grade = this.gradeValue
+    val isUpdate = this.isGradeUpdate
+    val subj = this.displaySubject
+    return if (isUpdate && grade != null) {
+        stringResource(Res.string.new_grade, grade)
     } else {
-        displaySubject
+        subj
     }
 }
 
-fun String.capitalize(): String = replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+fun NewsHeader.toIcon(tag: String? = null): ImageVector {
+    if (tag?.uppercase() == "DZIEKANAT") return Icons.Default.Campaign
+    if (tag?.uppercase() == "WRS") return Icons.Default.Bolt
+    
+    return when (this.type) {
+        NewsType.IMPORTANT -> Icons.Default.Report
+        NewsType.QUIZ, NewsType.PROJECT_STATUS -> Icons.Default.Quiz
+        NewsType.ANNOUNCEMENT, NewsType.PROJECT_GROUP_CHANGE -> Icons.AutoMirrored.Filled.Comment
+        NewsType.CLASS_ENROLLMENT -> Icons.AutoMirrored.Filled.Assignment
+        else -> Icons.Default.Notifications
+    }
+}
 
 /**
  * Parses "DD.MM.YYYY HH:MM:SS" into "YYYYMMDDHHMMSS" for sorting.

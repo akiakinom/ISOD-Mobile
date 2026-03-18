@@ -10,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Attachment
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.NotificationsNone
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,11 +25,11 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.domain.NewsHeader
 import dev.akinom.isod.domain.NewsType
+import dev.akinom.isod.domain.parseSubject
 import dev.akinom.isod.HomeScreenModel
 import dev.akinom.isod.Res
 import dev.akinom.isod.*
 import org.jetbrains.compose.resources.stringResource
-import kotlin.collections.sortedByDescending
 
 class NewsScreen(val semester: String = currentSemester()) : Screen {
 
@@ -162,6 +161,7 @@ class NewsScreen(val semester: String = currentSemester()) : Screen {
                             )
                             Spacer(Modifier.height(16.dp))
                             val emptyText = if (news.isEmpty()) stringResource(Res.string.no_news_yet) else stringResource(Res.string.no_matching_news)
+                            @Suppress("DEPRECATION")
                             Text(emptyText, color = MaterialTheme.colorScheme.outline)
                         }
                     }
@@ -212,30 +212,45 @@ private fun NewsCard(item: NewsHeader, onClick: () -> Unit) {
                         shape = RoundedCornerShape(6.dp)
                     ) {
                         val typeText = item.type.toStringRes()?.let { stringResource(it) } 
-                            ?: item.type.name.replace("_", " ").lowercase().capitalize()
+                            ?: item.type.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
                             
-                        Text(
-                            text = typeText,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.ExtraBold
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Icon(item.toIcon(null), null, modifier = Modifier.size(14.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = typeText,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        }
                     }
 
                     if (parsed.tag != null) {
-                        val (tagContainer, tagContent) = getTagColors(parsed.tag)
+                        val tagVal = parsed.tag!!
+                        val (tagContainer, tagContent) = getTagColors(tagVal)
                         Spacer(Modifier.width(8.dp))
                         Surface(
                             color = tagContainer,
                             contentColor = tagContent,
                             shape = RoundedCornerShape(6.dp)
                         ) {
-                            Text(
-                                text = parsed.tag,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                if (tagVal.uppercase() == "WRS" || tagVal.uppercase() == "DZIEKANAT") {
+                                    Icon(item.toIcon(tagVal), null, modifier = Modifier.size(14.dp))
+                                    Spacer(Modifier.width(4.dp))
+                                }
+                                Text(
+                                    text = tagVal,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }
@@ -249,6 +264,7 @@ private fun NewsCard(item: NewsHeader, onClick: () -> Unit) {
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(Modifier.width(4.dp))
+                        @Suppress("DEPRECATION")
                         Text(
                             item.noAttachments.toString(),
                             style = MaterialTheme.typography.labelSmall,
@@ -260,25 +276,15 @@ private fun NewsCard(item: NewsHeader, onClick: () -> Unit) {
 
             Spacer(Modifier.height(12.dp))
 
-            Row(verticalAlignment = Alignment.Top) {
-                if (parsed.isGradeUpdate) {
-                    Icon(
-                        Icons.Default.Star,
-                        null,
-                        modifier = Modifier.padding(top = 2.dp, end = 8.dp).size(20.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-                Text(
-                    text = parsed.getDisplaySubject(),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = if (parsed.isGradeUpdate) FontWeight.ExtraBold else FontWeight.Bold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    lineHeight = 22.sp,
-                    color = if (parsed.isGradeUpdate) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                )
-            }
+            Text(
+                text = parsed.getDisplaySubject(),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = if (parsed.isGradeUpdate) FontWeight.ExtraBold else FontWeight.Bold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 22.sp,
+                color = if (parsed.isGradeUpdate) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+            )
 
             Spacer(Modifier.height(12.dp))
             
@@ -287,6 +293,7 @@ private fun NewsCard(item: NewsHeader, onClick: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                @Suppress("DEPRECATION")
                 Text(
                     text = item.modifiedBy,
                     style = MaterialTheme.typography.labelSmall,
@@ -295,6 +302,7 @@ private fun NewsCard(item: NewsHeader, onClick: () -> Unit) {
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
+                @Suppress("DEPRECATION")
                 Text(
                     text = item.modifiedDate.split(" ")[0],
                     style = MaterialTheme.typography.labelSmall,

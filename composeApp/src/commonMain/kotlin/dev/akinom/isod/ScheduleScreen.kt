@@ -38,6 +38,7 @@ import dev.akinom.isod.data.repository.TimetableRepository
 import dev.akinom.isod.domain.AcademicCalendar
 import dev.akinom.isod.domain.TimetableEntry
 import dev.akinom.isod.news.typeToColor
+import dev.akinom.isod.news.typeToIcon
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.StringResource
@@ -134,6 +135,7 @@ class ScheduleScreen(
                     ) {
                         Icon(Icons.Default.Info, null, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
+                        @Suppress("DEPRECATION")
                         Text(
                             text = stringResource(Res.string.day_substitution_label, substitutedDayName),
                             style = MaterialTheme.typography.bodyMedium,
@@ -346,6 +348,7 @@ private fun ScheduleItem(
 ) {
     val isActive = entry.isActive(currentWeek)
     val accentColor = typeToColor(entry.courseType)
+    val typeIcon = typeToIcon(entry.courseType)
     val typeDisplay = entry.shortType
 
     Card(
@@ -401,13 +404,16 @@ private fun ScheduleItem(
                             contentColor = accentColor,
                             shape = RoundedCornerShape(4.dp)
                         ) {
-                            Text(
-                                text = typeDisplay,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 10.sp
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)) {
+                                Icon(typeIcon, null, modifier = Modifier.size(12.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    text = typeDisplay,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 10.sp
+                                )
+                            }
                         }
                     }
                 }
@@ -433,7 +439,7 @@ private fun ScheduleItem(
                     Spacer(Modifier.width(4.dp))
                     @Suppress("DEPRECATION")
                     Text(
-                        text = "${entry.buildingShort} ${entry.room}",
+                        text = entry.displayLocation,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -447,6 +453,7 @@ private fun ScheduleItem(
                             tint = accentColor.copy(alpha = 0.7f)
                         )
                         Spacer(Modifier.width(4.dp))
+                        @Suppress("DEPRECATION")
                         Text(
                             text = entry.lecturerNames.first(),
                             style = MaterialTheme.typography.bodySmall,

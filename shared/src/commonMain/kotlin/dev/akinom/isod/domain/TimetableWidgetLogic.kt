@@ -33,11 +33,6 @@ object TimetableWidgetLogic {
             it.dayOfWeek == effectiveDayOfWeek && it.startTime <= currentTime && it.endTime > currentTime && it.isActive(currentWeek)
         }
 
-        val isEndingSoon = current?.let {
-            val endMinutes = timeToMinutes(it.endTime)
-            endMinutes - currentMinutes <= 30
-        } ?: false
-
         val futureThisWeek = sortedEntries.filter {
             ((it.dayOfWeek == effectiveDayOfWeek && it.startTime > currentTime) || (it.dayOfWeek > effectiveDayOfWeek)) && it.isActive(currentWeek)
         }
@@ -46,6 +41,11 @@ object TimetableWidgetLogic {
         val futureNextWeek = sortedEntries.filter { it.isActive(nextWeek) }
         
         val allFuture = futureThisWeek + futureNextWeek
+
+        val isEndingSoon = current?.let {
+            val endMinutes = timeToMinutes(it.endTime)
+            endMinutes - currentMinutes <= 20 && allFuture.isNotEmpty()
+        } ?: false
 
         return if (current != null && !isEndingSoon) {
             listOfNotNull(current) + allFuture.take(1)
@@ -61,6 +61,9 @@ object TimetableWidgetLogic {
         currentWeek: Int? = null,
         todayDate: LocalDate? = null
     ): Pair<Boolean, List<TimetableEntry>> {
+        val nextClasses = getNextClasses(entries, todayDayOfWeek, currentTime, currentWeek, todayDate)
+        val firstNext = nextClasses.firstOrNull()
+        
         val effectiveTodayDayOfWeek = todayDate?.let { AcademicCalendar.getEffectiveDayOfWeek(it) } ?: todayDayOfWeek
         
         val todayClasses = entries.filter { it.dayOfWeek == effectiveTodayDayOfWeek && it.isActive(currentWeek) }
@@ -72,14 +75,22 @@ object TimetableWidgetLogic {
             currentTime > todayClasses.last().endTime
         }
 
-        return if (isAfterLessons) {
+        val baseList = if (isAfterLessons) {
             val tomorrowDate = todayDate?.let { LocalDate.fromEpochDays(it.toEpochDays() + 1) }
             val effectiveTomorrowDayOfWeek = tomorrowDate?.let { AcademicCalendar.getEffectiveDayOfWeek(it) } ?: ((todayDayOfWeek % 7) + 1)
-            
             val tomorrowWeek = if (todayDayOfWeek == 7) (currentWeek?.plus(1) ?: 1) else currentWeek
-            true to entries.filter { it.dayOfWeek == effectiveTomorrowDayOfWeek && it.isActive(tomorrowWeek) }.sortedBy { it.startTime }
+            entries.filter { it.dayOfWeek == effectiveTomorrowDayOfWeek && it.isActive(tomorrowWeek) }.sortedBy { it.startTime }
         } else {
-            false to todayClasses
+            todayClasses.filter { it.startTime >= (firstNext?.startTime ?: "00:00") }
         }
+
+        // Return all classes after the one displayed in the "Next Class" card
+        val resultList = if (firstNext != null) {
+            baseList.filter { it.dedupeKey != firstNext.dedupeKey && (it.dayOfWeek > firstNext.dayOfWeek || (it.dayOfWeek == firstNext.dayOfWeek && it.startTime >= firstNext.endTime)) }
+        } else {
+            baseList
+        }
+
+        return isAfterLessons to resultList
     }
 }

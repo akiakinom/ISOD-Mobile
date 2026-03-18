@@ -57,13 +57,20 @@ object TimetableWidgetUtils {
 
     fun widgetTypeToColor(type: String): ColorProvider {
         val t = type.uppercase()
-        val projectYellow = Color(0xFFFFE082) // Consistent Muted Yellow
+        val labGreen = Color(0xFF4CAF50)
+        val wykBlue = Color(0xFF2196F3)
+        val cwiOrange = Color(0xFFFF9800)
+        val proYellow = Color(0xFFFFEB3B)
+        val wfRed = Color(0xFFF44336)
+        val semGray = Color(0xFF9E9E9E)
+
         return when {
-            t.contains("WYK") || t.contains("W") -> ColorProvider(Color(0xFF2196F3))
-            t.contains("LAB") || t.contains("L") -> ColorProvider(Color(0xFF4CAF50))
-            t.contains("ĆWI") || t.contains("C") -> ColorProvider(Color(0xFF009688))
-            t.contains("PRO") || t.contains("P") -> ColorProvider(projectYellow)
-            t.contains("SEM") || t.contains("S") -> ColorProvider(Color(0xFF9C27B0))
+            t.startsWith("W") -> ColorProvider(wykBlue)
+            t.startsWith("L") -> ColorProvider(labGreen)
+            t.startsWith("C") || t.startsWith("Ć") -> ColorProvider(cwiOrange)
+            t.startsWith("P") -> ColorProvider(proYellow)
+            t.startsWith("WF") -> ColorProvider(wfRed)
+            t.startsWith("S") -> ColorProvider(semGray)
             else -> ColorProvider(Color(0xFF757575))
         }
     }

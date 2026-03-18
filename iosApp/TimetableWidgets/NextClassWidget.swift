@@ -79,7 +79,7 @@ struct NextClassItem: View {
             }
             Text(item.courseNameShort)
                 .font(.system(size: 14, weight: .bold))
-            Text("\(item.buildingShort) \(item.room)")
+            Text("\(item.location)")
                 .font(.system(size: 12))
         }
         .padding(.vertical, 2)
