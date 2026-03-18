@@ -65,11 +65,11 @@ object TimetableWidgetUtils {
         val semGray = Color(0xFF9E9E9E)
 
         return when {
+            t.startsWith("WF") -> ColorProvider(wfRed)
             t.startsWith("W") -> ColorProvider(wykBlue)
             t.startsWith("L") -> ColorProvider(labGreen)
             t.startsWith("C") || t.startsWith("Ć") -> ColorProvider(cwiOrange)
             t.startsWith("P") -> ColorProvider(proYellow)
-            t.startsWith("WF") -> ColorProvider(wfRed)
             t.startsWith("S") -> ColorProvider(semGray)
             else -> ColorProvider(Color(0xFF757575))
         }
