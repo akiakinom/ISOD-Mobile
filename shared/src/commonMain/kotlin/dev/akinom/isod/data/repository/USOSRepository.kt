@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.*
 
 private val json = Json { ignoreUnknownKeys = true }
 
@@ -82,24 +82,43 @@ class UsosRepository(
     }
 }
 
-private fun UsosActivityEntity.toDomain() = UsosActivity(
-    type          = type,
-    startTime     = startTime,
-    endTime       = endTime,
-    name          = json.decodeFromString<LangDict>(nameJson),
-    courseId      = courseId,
-    courseName    = courseNameJson?.let { json.decodeFromString<LangDict>(it) },
-    classtypeName = classtypeNameJson?.let { json.decodeFromString<LangDict>(it) },
-    lecturers     = lecturersJson?.let { json.decodeFromString<List<String>>(it) } ?: emptyList(),
-    buildingName  = buildingNameJson?.let { json.decodeFromString<LangDict>(it) },
-    groupNumber   = groupNumber?.toInt(),
-    roomNumber    = roomNumber,
-    frequency     = frequency,
-)
+private fun UsosActivityEntity.toDomain(): UsosActivity {
+    val bNameDict = buildingNameJson?.let { json.decodeFromString<LangDict>(it) }
+    val bId = buildingNameJson?.let {
+        runCatching { json.parseToJsonElement(it).jsonObject["building_id"]?.jsonPrimitive?.content }.getOrNull()
+    }
+
+    return UsosActivity(
+        type          = type,
+        startTime     = startTime,
+        endTime       = endTime,
+        name          = json.decodeFromString<LangDict>(nameJson),
+        courseId      = courseId,
+        courseName    = courseNameJson?.let { json.decodeFromString<LangDict>(it) },
+        classtypeName = classtypeNameJson?.let { json.decodeFromString<LangDict>(it) },
+        lecturers     = lecturersJson?.let { json.decodeFromString<List<String>>(it) } ?: emptyList(),
+        buildingName  = bNameDict,
+        buildingId    = bId,
+        groupNumber   = groupNumber?.toInt(),
+        roomNumber    = roomNumber,
+        frequency     = frequency,
+    )
+}
 
 private fun UsosActivity.toEntity(weekStart: String, now: Long): UsosActivityEntity {
     // Composite ID so the same activity doesn't get duplicated across refreshes
     val id = "${courseId ?: type}_${startTime}"
+
+    val bNameJson = if (buildingName != null || buildingId != null) {
+        buildJsonObject {
+            buildingName?.let {
+                put("pl", it.pl)
+                put("en", it.en)
+            }
+            buildingId?.let { put("building_id", it) }
+        }.toString()
+    } else null
+
     return UsosActivityEntity(
         id                = id,
         type              = type,
@@ -111,7 +130,7 @@ private fun UsosActivity.toEntity(weekStart: String, now: Long): UsosActivityEnt
         classtypeNameJson = classtypeName?.let { json.encodeToString(it) },
         groupNumber       = groupNumber?.toLong(),
         lecturersJson     = json.encodeToString(lecturers),
-        buildingNameJson  = buildingName?.let { json.encodeToString(it) },
+        buildingNameJson  = bNameJson,
         roomNumber        = roomNumber,
         frequency         = frequency,
         weekStart         = weekStart,

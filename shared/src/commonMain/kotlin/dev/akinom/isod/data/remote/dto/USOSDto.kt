@@ -43,7 +43,7 @@ data class UsosActivityDto(
         lecturers     = emptyList(),
         groupNumber   = groupNumber,
         buildingName  = buildingName,
-        buildingId    = buildingId,
+        buildingId    = buildingId?.drop(5),
         roomNumber    = roomNumber,
         roomId        = roomId,
         unitId        = unitId,

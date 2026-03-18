@@ -38,7 +38,7 @@ val sharedModule = module {
     single {
         createHttpClient().config {
             install(Logging) {
-                level = LogLevel.ALL
+                level = LogLevel.INFO
                 logger = object : Logger {
                     override fun log(message: String) = println("🌍 Ktor: $message")
                 }
