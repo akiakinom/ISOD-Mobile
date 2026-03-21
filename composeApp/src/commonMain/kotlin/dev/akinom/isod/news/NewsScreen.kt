@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Attachment
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.NotificationsNone
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -25,7 +25,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.domain.NewsHeader
 import dev.akinom.isod.domain.NewsType
-import dev.akinom.isod.domain.parseSubject
 import dev.akinom.isod.HomeScreenModel
 import dev.akinom.isod.Res
 import dev.akinom.isod.*
@@ -42,17 +41,13 @@ class NewsScreen(val semester: String = currentSemester()) : Screen {
         
         var selectedFilters by remember { mutableStateOf(setOf("All")) }
         
-        val newsWithParsed = remember(news) {
-            news.map { it to parseSubject(it.subject) }
-        }
-
-        val filters = remember(newsWithParsed) {
-            val availableTypes = newsWithParsed.map { it.first.type }.distinct()
+        val filters = remember(news) {
+            val availableTypes = news.map { it.type }.distinct()
             val typeFilters = NewsType.entries
-                .filter { it in availableTypes && it != NewsType.UNKNOWN }
+                .filter { it in availableTypes && it != NewsType.OTHER }
                 .map { it.name }
             
-            val availableTags = newsWithParsed.mapNotNull { it.second.tag }.distinct()
+            val availableTags = news.map { it.label }.filter { it.isNotEmpty() }.distinct()
             val tagFilters = availableTags.filter { it == "Dziekanat" || it == "WRS" }
             
             listOf("All") + typeFilters + tagFilters
@@ -85,14 +80,14 @@ class NewsScreen(val semester: String = currentSemester()) : Screen {
             }
         }
 
-        val filteredNews = remember(newsWithParsed, selectedFilters) {
+        val filteredNews = remember(news, selectedFilters) {
             val result = if ("All" in selectedFilters) {
-                newsWithParsed.map { it.first }
+                news
             } else {
-                newsWithParsed.filter { (item, parsed) ->
+                news.filter { item ->
                     val typeName = item.type.name
-                    typeName in selectedFilters || (parsed.tag != null && parsed.tag in selectedFilters)
-                }.map { it.first }
+                    typeName in selectedFilters || (item.label.isNotEmpty() && item.label in selectedFilters)
+                }
             }
             result.sortedByDescending { it.parseDateToSortable() }
         }
@@ -111,7 +106,6 @@ class NewsScreen(val semester: String = currentSemester()) : Screen {
                     .padding(paddingValues)
                     .background(MaterialTheme.colorScheme.surface)
             ) {
-                // Filter Chips Flow Grid
                 if (filters.size > 1) {
                     FlowRow(
                         modifier = Modifier
@@ -125,8 +119,7 @@ class NewsScreen(val semester: String = currentSemester()) : Screen {
                             val label = when {
                                 filter == "All" -> stringResource(Res.string.filter_all)
                                 filter in NewsType.entries.map { it.name } -> {
-                                    val type = NewsType.valueOf(filter)
-                                    type.toStringRes()?.let { stringResource(it) } ?: filter
+                                    NewsType.valueOf(filter).toLabel()
                                 }
                                 else -> filter
                             }
@@ -173,7 +166,7 @@ class NewsScreen(val semester: String = currentSemester()) : Screen {
                     ) {
                         items(filteredNews) { item ->
                             NewsCard(item) {
-                                navigator.push(NewsDetailScreen(item.hash))
+                                navigator.push(NewsDetailScreen(item.id))
                             }
                         }
                     }
@@ -186,7 +179,6 @@ class NewsScreen(val semester: String = currentSemester()) : Screen {
 @Composable
 private fun NewsCard(item: NewsHeader, onClick: () -> Unit) {
     val typeColor = item.type.toColor()
-    val parsed = remember(item.subject) { parseSubject(item.subject) }
     
     Card(
         onClick = onClick,
@@ -195,8 +187,7 @@ private fun NewsCard(item: NewsHeader, onClick: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(
             1.dp, 
-            if (parsed.isGradeUpdate) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) 
-            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -206,32 +197,30 @@ private fun NewsCard(item: NewsHeader, onClick: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        color = typeColor.copy(alpha = 0.1f),
-                        contentColor = typeColor,
-                        shape = RoundedCornerShape(6.dp)
-                    ) {
-                        val typeText = item.type.toStringRes()?.let { stringResource(it) } 
-                            ?: item.type.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
-                            
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    if (item.type != NewsType.OTHER) {
+                        Surface(
+                            color = typeColor.copy(alpha = 0.1f),
+                            contentColor = typeColor,
+                            shape = RoundedCornerShape(6.dp)
                         ) {
-                            Icon(item.toIcon(null), null, modifier = Modifier.size(14.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text(
-                                text = typeText,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.ExtraBold
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Icon(item.type.toIcon(), null, modifier = Modifier.size(14.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    text = item.type.toLabel(),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.ExtraBold
+                                )
+                            }
                         }
                     }
 
-                    if (parsed.tag != null) {
-                        val tagVal = parsed.tag!!
-                        val (tagContainer, tagContent) = getTagColors(tagVal)
-                        Spacer(Modifier.width(8.dp))
+                    if (item.label.isNotEmpty()) {
+                        val (tagContainer, tagContent) = getTagColors(item.label)
+                        if (item.type != NewsType.OTHER) Spacer(Modifier.width(8.dp))
                         Surface(
                             color = tagContainer,
                             contentColor = tagContent,
@@ -241,12 +230,8 @@ private fun NewsCard(item: NewsHeader, onClick: () -> Unit) {
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             ) {
-                                if (tagVal.uppercase() == "WRS" || tagVal.uppercase() == "DZIEKANAT") {
-                                    Icon(item.toIcon(tagVal), null, modifier = Modifier.size(14.dp))
-                                    Spacer(Modifier.width(4.dp))
-                                }
                                 Text(
-                                    text = tagVal,
+                                    text = item.label,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -254,61 +239,42 @@ private fun NewsCard(item: NewsHeader, onClick: () -> Unit) {
                         }
                     }
                 }
-                
-                if (item.noAttachments > 0) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.Attachment,
-                            null,
-                            modifier = Modifier.size(14.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        @Suppress("DEPRECATION")
-                        Text(
-                            item.noAttachments.toString(),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
             }
 
-            Spacer(Modifier.height(12.dp))
-
-            Text(
-                text = parsed.getDisplaySubject(),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = if (parsed.isGradeUpdate) FontWeight.ExtraBold else FontWeight.Bold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                lineHeight = 22.sp,
-                color = if (parsed.isGradeUpdate) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(Modifier.height(12.dp))
+            if (item.type != NewsType.OTHER || item.label.isNotEmpty())
+                Spacer(Modifier.height(12.dp))
             
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                @Suppress("DEPRECATION")
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = item.modifiedBy,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-                @Suppress("DEPRECATION")
-                Text(
-                    text = item.modifiedDate.split(" ")[0],
-                    style = MaterialTheme.typography.labelSmall,
+                    text = item.title,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    color =  MaterialTheme.colorScheme.onSurface
                 )
+            }
+            
+            Spacer(Modifier.height(8.dp))
+            
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = item.author,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (item.date != null) {
+                    Text(
+                        text = " • ",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = item.date.toString(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }

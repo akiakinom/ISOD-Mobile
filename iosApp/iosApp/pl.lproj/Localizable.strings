@@ -16,3 +16,16 @@
 "day_fri" = "Piątek";
 "day_sat" = "Sobota";
 "day_sun" = "Niedziela";
+
+"news_type_announcement" = "Ogłoszenie";
+"news_type_quiz" = "Quiz";
+"news_type_important" = "Ważne";
+"news_type_project_status" = "Status projektu";
+"news_type_project_group_change" = "Zmiana grupy";
+"news_type_class_enrollment" = "Zapisy";
+"news_type_grade" = "Oceny";
+"news_type_class" = "Zajęcia";
+"news_type_deans_office" = "Dziekanat";
+"news_type_wrs" = "WRS";
+"news_type_timetable" = "Zmiana planu";
+"news_type_other" = "Inne";

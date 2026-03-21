@@ -8,10 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Attachment
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,21 +27,21 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.akinom.isod.Res
 import dev.akinom.isod.*
 import dev.akinom.isod.data.repository.NewsRepository
-import dev.akinom.isod.domain.parseSubject
+import dev.akinom.isod.domain.NewsType
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class NewsDetailScreenModel(private val hash: String) : ScreenModel, KoinComponent {
+class NewsDetailScreenModel(id: String) : ScreenModel, KoinComponent {
     private val repo: NewsRepository by inject()
-    val item = repo.getNewsItem(hash)
+    val item = repo.getNewsItem(id)
 }
 
-data class NewsDetailScreen(val hash: String) : Screen {
+data class NewsDetailScreen(val id: String) : Screen {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
-        val screenModel = rememberScreenModel { NewsDetailScreenModel(hash) }
+        val screenModel = rememberScreenModel { NewsDetailScreenModel(id) }
         val item by screenModel.item.collectAsState(initial = null)
         val navigator = LocalNavigator.currentOrThrow
 
@@ -60,8 +57,7 @@ data class NewsDetailScreen(val hash: String) : Screen {
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
                         ) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(
-                                Res.string.back))
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.back))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -78,9 +74,7 @@ data class NewsDetailScreen(val hash: String) : Screen {
             } else {
                 val data = item!!
                 val typeColor = data.type.toColor()
-                val typeRes = data.type.toStringRes()
-                val parsed = remember(data.subject) { parseSubject(data.subject) }
-                
+
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -96,54 +90,60 @@ data class NewsDetailScreen(val hash: String) : Screen {
                     ) {
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Surface(
-                                    color = typeColor.copy(alpha = 0.1f),
-                                    contentColor = typeColor,
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Text(
-                                        text = if (typeRes != null) stringResource(typeRes) else data.type.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.ExtraBold
-                                    )
+                                if (data.type != NewsType.OTHER) {
+                                    Surface(
+                                        color = typeColor.copy(alpha = 0.1f),
+                                        contentColor = typeColor,
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                        ) {
+                                            Icon(data.type.toIcon(), null, modifier = Modifier.size(16.dp))
+                                            Spacer(Modifier.width(6.dp))
+                                            Text(
+                                                text = data.type.toLabel(),
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.ExtraBold
+                                            )
+                                        }
+                                    }
                                 }
 
-                                if (parsed.tag != null) {
-                                    val (tagContainer, tagContent) = getTagColors(parsed.tag!!)
-                                    Spacer(Modifier.width(12.dp))
+                                if (data.label.isNotEmpty()) {
+                                    val (tagContainer, tagContent) = getTagColors(data.label)
+                                    if (data.type != NewsType.OTHER) Spacer(Modifier.width(12.dp))
                                     Surface(
                                         color = tagContainer,
                                         contentColor = tagContent,
                                         shape = RoundedCornerShape(8.dp)
                                     ) {
-                                        Text(
-                                            text = parsed.tag!!,
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Bold
-                                        )
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                        ) {
+                                            Text(
+                                                text = data.label,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
                                     }
                                 }
                             }
 
-                            Spacer(Modifier.height(20.dp))
+                            if (data.type != NewsType.OTHER || data.label.isNotEmpty()) {
+                                Spacer(Modifier.height(20.dp))
+                            }
 
                             Row(verticalAlignment = Alignment.Top) {
-                                if (parsed.isGradeUpdate) {
-                                    Icon(
-                                        Icons.Default.Star,
-                                        null,
-                                        modifier = Modifier.padding(top = 4.dp, end = 12.dp).size(28.dp),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
                                 Text(
-                                    text = parsed.getDisplaySubject(),
+                                    text = data.title,
                                     style = MaterialTheme.typography.headlineMedium,
                                     fontWeight = FontWeight.Black,
                                     lineHeight = 36.sp,
-                                    color = if (parsed.isGradeUpdate) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
 
@@ -153,8 +153,8 @@ data class NewsDetailScreen(val hash: String) : Screen {
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(20.dp)
                             ) {
-                                MetaItem(Icons.Default.Person, data.modifiedBy)
-                                MetaItem(Icons.Default.Schedule, data.modifiedDate.split(" ")[0])
+                                MetaItem(Icons.Default.Person, data.author)
+                                MetaItem(Icons.Default.Schedule, data.date?.toString() ?: "")
                             }
                         }
                     }
@@ -170,50 +170,6 @@ data class NewsDetailScreen(val hash: String) : Screen {
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        if (data.attachments.isNotEmpty()) {
-                            Spacer(Modifier.height(32.dp))
-                            Text(
-                                stringResource(Res.string.attachments),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(Modifier.height(16.dp))
-                            
-                            data.attachments.forEach { attachment ->
-                                Card(
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                    shape = MaterialTheme.shapes.medium,
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
-                                    onClick = { /* TODO */ }
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(16.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Attachment,
-                                            null,
-                                            modifier = Modifier.size(20.dp),
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                        Spacer(Modifier.width(16.dp))
-                                        Column {
-                                            Text(
-                                                text = attachment.filename,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                            Text(
-                                                text = "${attachment.size / 1024} KB",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        
                         Spacer(Modifier.height(48.dp))
                     }
                 }
@@ -248,55 +204,31 @@ data class NewsDetailScreen(val hash: String) : Screen {
                 "&sacute;" to "ś", "&Sacute;" to "Ś",
                 "&zacute;" to "ź", "&Zacute;" to "Ź",
                 "&zdot;" to "ż", "&Zdot;" to "Ż",
-                "&auml;" to "ä", "&Auml;" to "Ä",
-                "&ouml;" to "ö", "&Ouml;" to "Ö",
-                "&uuml;" to "ü", "&Uuml;" to "Ü",
-                "&szlig;" to "ß",
-                "&agrave;" to "à", "&Agrave;" to "À",
-                "&acirc;" to "â", "&Acirc;" to "Â",
-                "&aelig;" to "æ", "&AElig;" to "Æ",
-                "&ccedil;" to "ç", "&Ccedil;" to "Ç",
-                "&egrave;" to "è", "&Egrave;" to "È",
-                "&eacute;" to "é", "&Eacute;" to "É",
-                "&ecirc;" to "ê", "&Ecirc;" to "Ê",
-                "&euml;" to "ë", "&Euml;" to "Ë",
-                "&icirc;" to "î", "&Icirc;" to "Î",
-                "&iuml;" to "ï", "&Iuml;" to "Ï",
-                "&ocirc;" to "ô", "&Ocirc;" to "Ô",
-                "&oelig;" to "œ", "&OElig;" to "Œ",
-                "&ugrave;" to "ù", "&Ugrave;" to "Ù",
-                "&ucirc;" to "û", "&Ucirc;" to "Û",
-                "&yuml;" to "ÿ", "&Yuml;" to "Ÿ",
-                "&nbsp;" to " ", "&ascii;" to " ",
-                "&quot;" to "\"", "&amp;" to "&",
-                "&lt;" to "<", "&gt;" to ">",
-                "&ndash;" to "–", "&mdash;" to "—",
-                "&lsquo;" to "‘", "&rsquo;" to "’",
-                "&sbquo;" to "‚", "&ldquo;" to "“",
-                "&rdquo;" to "”", "&bdquo;" to "„",
-                "&hellip;" to "…", "&trade;" to "™",
-                "&reg;" to "®", "&copy;" to "©",
-                "&euro;" to "€"
+                "&quot;" to "\"", "&amp;" to "&", "&lt;" to "<", "&gt;" to ">",
+                "&nbsp;" to " ", "&ndash;" to "–", "&mdash;" to "—"
             )
         }
 
-        val cleanText = remember(html) {
-            var result = html.replace(Regex("<br\\s*/?>"), "\n")
-                .replace(Regex("<p>"), "")
-                .replace(Regex("</p>"), "\n\n")
-
+        val decoded = remember(html) {
+            var result = html
+                .replace(Regex("<br\\s*/?>"), "\n")
+                .replace(Regex("<p.*?>"), "")
+                .replace("</p>", "\n\n")
+                .replace(Regex("<.*?>"), "")
+                .trim()
+            
             entities.forEach { (entity, char) ->
                 result = result.replace(entity, char)
             }
-            
-            result.replace(Regex("<[^>]*>"), "").trim()
+            result
         }
-        
+
         Text(
-            text = cleanText,
-            modifier = modifier,
+            text = decoded,
             style = MaterialTheme.typography.bodyLarge,
-            lineHeight = 26.sp
+            lineHeight = 28.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = modifier
         )
     }
 }

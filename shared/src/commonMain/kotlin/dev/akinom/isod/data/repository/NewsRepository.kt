@@ -8,11 +8,9 @@ import dev.akinom.isod.NewsHeaderEntity
 import dev.akinom.isod.NewsItemEntity
 import dev.akinom.isod.data.cache.CacheConfig
 import dev.akinom.isod.data.cache.currentTimeMillis
-import dev.akinom.isod.data.cache.decodeStringList
 import dev.akinom.isod.data.cache.isStale
 import dev.akinom.isod.data.remote.IsodApiClient
 import dev.akinom.isod.data.remote.IsodResult
-import dev.akinom.isod.domain.NewsAttachment
 import dev.akinom.isod.domain.NewsHeader
 import dev.akinom.isod.domain.NewsItem
 import dev.akinom.isod.domain.NewsType
@@ -23,38 +21,35 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
-
-private val json = Json { ignoreUnknownKeys = true }
+import kotlinx.datetime.LocalDate
 
 class NewsRepository(
     private val db: IsodDatabase,
     private val api: IsodApiClient,
     private val scope: CoroutineScope,
 ) {
-    private val headerQueries = db.newsQueries
-    private val itemQueries   = db.newsQueries
+    private val newsQueries = db.newsQueries
 
     fun getNewsHeaders(semester: String): Flow<List<NewsHeader>> =
-        headerQueries.selectAllHeaders(semester)
+        newsQueries.selectAllHeaders(semester)
             .asFlow()
             .mapToList(Dispatchers.IO)
             .map { rows -> rows.map { it.toDomain() } }
             .onStart { refreshHeadersIfStale(semester) }
 
     suspend fun refreshHeaders(semester: String) {
-        when (val result = api.getNewsHeaders(semester)) {
+        when (val result = api.getNewsHeaders()) {
             is IsodResult.Success -> {
                 val now = currentTimeMillis()
-                val existingRows = headerQueries.selectAllHeaders(semester).executeAsList()
+                val existingRows = newsQueries.selectAllHeaders(semester).executeAsList()
                 val isFirstSync = existingRows.isEmpty()
-                val existing = existingRows.associate { it.hash to it.hasSentNotification }
+                val existing = existingRows.associate { it.id to it.hasSentNotification }
                 
                 db.transaction {
-                    headerQueries.deleteAllHeaders(semester)
+                    newsQueries.deleteAllHeaders(semester)
                     result.data.forEach { header ->
-                        val notificationState = existing[header.hash] ?: if (isFirstSync) 1L else 0L
-                        headerQueries.upsertHeader(
+                        val notificationState = existing[header.id] ?: if (isFirstSync) 1L else 0L
+                        newsQueries.upsertHeader(
                             header.toEntity(
                                 semester = semester,
                                 now = now,
@@ -68,18 +63,18 @@ class NewsRepository(
         }
     }
 
-    fun getNewsItem(hash: String): Flow<NewsItem?> =
-        itemQueries.selectItem(hash)
+    fun getNewsItem(id: String): Flow<NewsItem?> =
+        newsQueries.selectItem(id)
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
             .map { it?.toDomain() }
-            .onStart { fetchItemIfMissing(hash) }
+            .onStart { fetchItemIfMissing(id) }
 
-    suspend fun fetchItem(hash: String) {
-        when (val result = api.getNewsItem(hash)) {
+    suspend fun fetchItem(id: String) {
+        when (val result = api.getNewsItem(id)) {
             is IsodResult.Success -> {
                 val now = currentTimeMillis()
-                itemQueries.upsertItem(result.data.toEntity(now))
+                newsQueries.upsertItem(result.data.toEntity(now))
             }
             is IsodResult.Error -> println("⚠️ NewsRepository item fetch failed: ${result.message}")
         }
@@ -87,28 +82,28 @@ class NewsRepository(
 
     private fun refreshHeadersIfStale(semester: String) {
         scope.launch(Dispatchers.IO) {
-            val lastUpdated = headerQueries.headersLastUpdated(semester).executeAsOneOrNull()
+            val lastUpdated = newsQueries.headersLastUpdated(semester).executeAsOneOrNull()
             if (lastUpdated == null || isStale(lastUpdated, CacheConfig.NEWS_TTL_MS)) {
                 refreshHeaders(semester)
             }
         }
     }
 
-    private fun fetchItemIfMissing(hash: String) {
+    private fun fetchItemIfMissing(id: String) {
         scope.launch(Dispatchers.IO) {
-            val cached = itemQueries.selectItem(hash).executeAsOneOrNull()
-            if (cached == null) fetchItem(hash)
+            val cached = newsQueries.selectItem(id).executeAsOneOrNull()
+            if (cached == null) fetchItem(id)
         }
     }
 }
 
 private fun NewsHeaderEntity.toDomain() = NewsHeader(
-    hash          = hash,
-    subject       = subject,
-    modifiedDate  = modifiedDate,
-    modifiedBy    = modifiedBy,
-    type = NewsType.fromCode(type),
-    noAttachments = noAttachments.toInt(),
+    id = id,
+    title = title,
+    date = date?.let { LocalDate.parse(it) },
+    author = author,
+    type = try { NewsType.valueOf(type) } catch (e: Exception) { NewsType.OTHER },
+    label = label,
 )
 
 private fun NewsHeader.toEntity(
@@ -116,36 +111,35 @@ private fun NewsHeader.toEntity(
     now: Long,
     existingNotificationState: Long = 0L,
 ) = NewsHeaderEntity(
-    hash                = hash,
-    subject             = subject,
-    modifiedDate        = modifiedDate,
-    modifiedBy          = modifiedBy,
-    type                = type.code,
-    noAttachments       = noAttachments.toLong(),
-    semester            = semester,
+    id = id,
+    semester = semester,
+    title = title,
+    date = date?.toString(),
+    author = author,
+    type = type.name,
+    label = label,
     hasSentNotification = existingNotificationState,
-    lastUpdated         = now,
+    lastUpdated = now,
 )
 
 private fun NewsItemEntity.toDomain() = NewsItem(
-    hash         = hash,
-    subject      = subject,
+    id = id,
+    title = title,
     content = content,
-    modifiedDate = modifiedDate,
-    modifiedBy   = modifiedBy,
-    type = NewsType.fromCode(type),
-    attachments  = attachments.decodeStringList()
-        .map { json.decodeFromString<NewsAttachment>(it) },
+    date = date?.let { LocalDate.parse(it) },
+    author = author,
+    type = try { NewsType.valueOf(type) } catch (e: Exception) { NewsType.OTHER },
+    label = label,
 )
 
 private fun NewsItem.toEntity(now: Long) = NewsItemEntity(
-    hash         = hash,
-    subject      = subject,
-    content      = content,
-    modifiedDate = modifiedDate,
-    modifiedBy   = modifiedBy,
-    type         = type.code,
-    attachments  = json.encodeToString(attachments),
-    semester     = "",
-    lastUpdated  = now,
+    id = id,
+    semester = "",
+    title = title,
+    content = content,
+    date = date?.toString(),
+    author = author,
+    type = type.name,
+    label = label,
+    lastUpdated = now,
 )

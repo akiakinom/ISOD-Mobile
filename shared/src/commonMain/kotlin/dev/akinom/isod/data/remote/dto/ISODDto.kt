@@ -67,7 +67,6 @@ fun String.toNewsType(type: Int = -1): NewsType {
         startsWith("[DZIEKANAT]") -> NewsType.DEANS_OFFICE
         startsWith("Informacja o zapisach") -> NewsType.TIMETABLE_UPDATE
         startsWith("[WRS]") -> NewsType.FACULTY_STUDENT_COUNCIL
-        type == 1000 -> NewsType.IMPORTANT
         else -> NewsType.OTHER
     }
 }
@@ -77,16 +76,29 @@ fun String.toNewsLabel(): String {
         startsWith("Zajęcia -") || startsWith("Ogłoszenie -") -> {
             substringAfter("- ").substringBefore(":").trim()
         }
+        startsWith("[WRS]") || startsWith("[DZIEKANAT]") -> ""
         Regex("^\\[([A-Z0-9+]+)]").containsMatchIn(this) -> {
-            Regex("^\\[([A-Z0-9+]+)]").find(this)!!.groupValues[1]
+            Regex("^\\[([A-Z0-9+]+)]").find(this)!!.groupValues[1].lowercase()
+                .replaceFirstChar { it.uppercase() }
         }
         else -> ""
     }
 }
 
+fun String.toNewsTitle(): String {
+    return when {
+        startsWith("Zajęcia -") -> substringAfter("Zajęcia -").substringAfter(":").trim()
+        startsWith("Ogłoszenie -") -> substringAfter("Ogłoszenie -").substringAfter(":").trim()
+        startsWith("[DZIEKANAT]") -> removePrefix("[DZIEKANAT]").trim()
+        startsWith("[WRS]") -> removePrefix("[WRS]").trim()
+        startsWith("Informacja o zapisach") -> this
+        else -> replace(Regex("^\\[([A-Z0-9+]+)]\\s*"), "")
+    }.replaceFirstChar { it.uppercase() }
+}
+
 fun String.toLocalDate(): LocalDate? = runCatching {
     val parts = split(".")
-    LocalDate(parts[2].toInt(), parts[1].toInt(), parts[0].toInt())
+    LocalDate(parts[2].split(" ")[0].toInt(), parts[1].toInt(), parts[0].toInt())
 }.getOrNull()
 
 @Serializable
@@ -101,7 +113,7 @@ data class NewsHeaderDto(
 
     fun toDomain() = NewsHeader(
         id = hash,
-        title = subject,
+        title = subject.toNewsTitle(),
         date = modifiedDate.toLocalDate(),
         author = modifiedBy,
         type = subject.toNewsType(type),
@@ -129,7 +141,7 @@ data class NewsItemDto(
 ) {
     fun toDomain() = NewsItem(
         id = hash,
-        title = subject,
+        title = subject.toNewsTitle(),
         content = content,
         date = modifiedDate.toLocalDate(),
         author = modifiedBy,

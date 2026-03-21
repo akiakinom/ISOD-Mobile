@@ -1,24 +1,24 @@
 CREATE TABLE NewsHeaderEntity (
-    hash                 TEXT NOT NULL PRIMARY KEY,
+    id                   TEXT NOT NULL PRIMARY KEY,
     semester             TEXT NOT NULL,
-    subject              TEXT NOT NULL,
+    title                TEXT NOT NULL,
+    date                 TEXT,
+    author               TEXT NOT NULL,
     type                 TEXT NOT NULL,
-    modifiedDate         TEXT NOT NULL,
-    modifiedBy           TEXT NOT NULL,
-    noAttachments        INTEGER NOT NULL,
+    label                TEXT NOT NULL,
     hasSentNotification  INTEGER NOT NULL DEFAULT 0,
     lastUpdated          INTEGER NOT NULL
 );
 
 CREATE TABLE NewsItemEntity (
-    hash         TEXT NOT NULL PRIMARY KEY,
+    id           TEXT NOT NULL PRIMARY KEY,
     semester     TEXT NOT NULL,
-    subject      TEXT NOT NULL,
-    type         TEXT NOT NULL,
+    title                TEXT NOT NULL,
     content      TEXT NOT NULL,
-    modifiedDate TEXT NOT NULL,
-    modifiedBy   TEXT NOT NULL,
-    attachments  TEXT NOT NULL,
+    date                 TEXT,
+    author               TEXT NOT NULL,
+    type                 TEXT NOT NULL,
+    label                TEXT NOT NULL,
     lastUpdated  INTEGER NOT NULL
 );
 
@@ -29,10 +29,10 @@ upsertItem:
 INSERT OR REPLACE INTO NewsItemEntity VALUES ?;
 
 selectAllHeaders:
-SELECT * FROM NewsHeaderEntity WHERE semester = ? ORDER BY modifiedDate DESC;
+SELECT * FROM NewsHeaderEntity WHERE semester = ? ORDER BY date DESC;
 
 selectItem:
-SELECT * FROM NewsItemEntity WHERE hash = ?;
+SELECT * FROM NewsItemEntity WHERE id = ?;
 
 deleteAllHeaders:
 DELETE FROM NewsHeaderEntity WHERE semester = ?;
@@ -44,7 +44,7 @@ selectUnsentNotifications:
 SELECT * FROM NewsHeaderEntity WHERE hasSentNotification = 0;
 
 markNotificationSent:
-UPDATE NewsHeaderEntity SET hasSentNotification = 1 WHERE hash = ?;
+UPDATE NewsHeaderEntity SET hasSentNotification = 1 WHERE id = ?;
 
 markAllNotificationsSent:
 UPDATE NewsHeaderEntity SET hasSentNotification = 1;

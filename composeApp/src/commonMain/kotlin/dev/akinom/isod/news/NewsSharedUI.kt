@@ -3,16 +3,8 @@ package dev.akinom.isod.news
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.filled.Comment
-import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.Campaign
-import androidx.compose.material.icons.filled.CoPresent
-import androidx.compose.material.icons.filled.DirectionsRun
-import androidx.compose.material.icons.filled.Functions
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Quiz
-import androidx.compose.material.icons.filled.Report
-import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -21,34 +13,8 @@ import dev.akinom.isod.domain.NewsType
 import dev.akinom.isod.Res
 import dev.akinom.isod.*
 import dev.akinom.isod.domain.NewsHeader
-import dev.akinom.isod.domain.ParsedSubject
-import org.jetbrains.compose.resources.StringResource
+import dev.akinom.isod.domain.NewsItem
 import org.jetbrains.compose.resources.stringResource
-
-@Composable
-fun NewsType.toColor(): Color {
-    return when (this) {
-        NewsType.ANNOUNCEMENT -> MaterialTheme.colorScheme.primary
-        NewsType.QUIZ -> Color(0xFFE91E63)
-        NewsType.IMPORTANT -> MaterialTheme.colorScheme.error
-        NewsType.PROJECT_STATUS -> Color(0xFF9C27B0)
-        NewsType.PROJECT_GROUP_CHANGE -> Color(0xFF673AB7)
-        NewsType.CLASS_ENROLLMENT -> Color(0xFF009688)
-        else -> MaterialTheme.colorScheme.outline
-    }
-}
-
-fun NewsType.toStringRes(): StringResource? {
-    return when (this) {
-        NewsType.ANNOUNCEMENT -> Res.string.news_type_announcement
-        NewsType.QUIZ -> Res.string.news_type_quiz
-        NewsType.IMPORTANT -> Res.string.news_type_important
-        NewsType.PROJECT_STATUS -> Res.string.news_type_project_status
-        NewsType.PROJECT_GROUP_CHANGE -> Res.string.news_type_project_group_change
-        NewsType.CLASS_ENROLLMENT -> Res.string.news_type_class_enrollment
-        else -> null
-    }
-}
 
 @Composable
 fun typeToColor(type: String): Color {
@@ -88,7 +54,7 @@ fun typeToIcon(type: String): ImageVector {
         "LAB" -> Icons.Default.Terminal
         "ĆWI" -> Icons.Default.Functions
         "PRO" -> Icons.AutoMirrored.Filled.Assignment
-        "WF" -> Icons.Default.DirectionsRun
+        "WF" -> Icons.AutoMirrored.Filled.DirectionsRun
         "SEM" -> Icons.Default.CoPresent
         else -> {
             when (type.take(1).uppercase()) {
@@ -126,46 +92,43 @@ fun getTagColors(tag: String): Pair<Color, Color> {
     return palette[index]
 }
 
-@Composable
-fun ParsedSubject.getDisplaySubject(): String {
-    val grade = this.gradeValue
-    val isUpdate = this.isGradeUpdate
-    val subj = this.displaySubject
-    return if (isUpdate && grade != null) {
-        stringResource(Res.string.new_grade, grade)
-    } else {
-        subj
-    }
-}
-
-fun NewsHeader.toIcon(tag: String? = null): ImageVector {
-    if (tag?.uppercase() == "DZIEKANAT") return Icons.Default.Campaign
-    if (tag?.uppercase() == "WRS") return Icons.Default.Bolt
-    
-    return when (this.type) {
+fun NewsType.toIcon(): ImageVector {
+    return when (this) {
+        NewsType.DEANS_OFFICE -> Icons.Default.Campaign
+        NewsType.FACULTY_STUDENT_COUNCIL -> Icons.Default.Bolt
         NewsType.IMPORTANT -> Icons.Default.Report
-        NewsType.QUIZ, NewsType.PROJECT_STATUS -> Icons.Default.Quiz
-        NewsType.ANNOUNCEMENT, NewsType.PROJECT_GROUP_CHANGE -> Icons.AutoMirrored.Filled.Comment
-        NewsType.CLASS_ENROLLMENT -> Icons.AutoMirrored.Filled.Assignment
+        NewsType.GRADE -> Icons.Default.Star
+        NewsType.CLASS -> Icons.AutoMirrored.Filled.Comment
+        NewsType.TIMETABLE_UPDATE -> Icons.Default.Schedule
         else -> Icons.Default.Notifications
     }
 }
 
-/**
- * Parses "DD.MM.YYYY HH:MM:SS" into "YYYYMMDDHHMMSS" for sorting.
- */
-fun NewsHeader.parseDateToSortable(): String {
-    return try {
-        val parts = modifiedDate.split(" ")
-        val dateParts = parts[0].split(".")
-        val timePart = if (parts.size > 1) parts[1] else "00:00:00"
-        
-        val day = dateParts[0].padStart(2, '0')
-        val month = dateParts[1].padStart(2, '0')
-        val year = dateParts[2]
-        
-        "$year$month$day$timePart"
-    } catch (e: Exception) {
-        modifiedDate
+fun NewsType.toColor(): Color {
+    return when (this) {
+        NewsType.IMPORTANT -> Color(0xFFF44336)
+        NewsType.GRADE -> Color(0xFF4CAF50)
+        NewsType.CLASS -> Color(0xFF2196F3)
+        NewsType.DEANS_OFFICE -> Color(0xFFFF9800)
+        NewsType.FACULTY_STUDENT_COUNCIL -> Color(0xFFFFC107)
+        NewsType.TIMETABLE_UPDATE -> Color(0xFF9C27B0)
+        NewsType.OTHER -> Color(0xFF9E9E9E)
     }
+}
+
+@Composable
+fun NewsType.toLabel(): String {
+    return when (this) {
+        NewsType.IMPORTANT -> stringResource(Res.string.news_type_important)
+        NewsType.GRADE -> stringResource(Res.string.news_type_grade)
+        NewsType.CLASS -> stringResource(Res.string.news_type_class)
+        NewsType.DEANS_OFFICE -> stringResource(Res.string.news_type_deans_office)
+        NewsType.FACULTY_STUDENT_COUNCIL -> stringResource(Res.string.news_type_wrs)
+        NewsType.TIMETABLE_UPDATE -> stringResource(Res.string.news_type_timetable)
+        NewsType.OTHER -> ""
+    }
+}
+
+fun NewsHeader.parseDateToSortable(): String {
+    return date?.toString() ?: ""
 }

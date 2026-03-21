@@ -23,7 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
@@ -39,16 +38,15 @@ import dev.akinom.isod.data.repository.NewsRepository
 import dev.akinom.isod.data.repository.TimetableRepository
 import dev.akinom.isod.domain.AcademicCalendar
 import dev.akinom.isod.domain.NewsHeader
+import dev.akinom.isod.domain.NewsType
 import dev.akinom.isod.domain.TimetableEntry
 import dev.akinom.isod.domain.TimetableWidgetLogic
-import dev.akinom.isod.domain.parseSubject
 import dev.akinom.isod.news.NewsDetailScreen
-import dev.akinom.isod.news.getDisplaySubject
 import dev.akinom.isod.news.getTagColors
 import dev.akinom.isod.news.parseDateToSortable
 import dev.akinom.isod.news.toColor
 import dev.akinom.isod.news.toIcon
-import dev.akinom.isod.news.toStringRes
+import dev.akinom.isod.news.toLabel
 import dev.akinom.isod.news.typeToColor
 import dev.akinom.isod.news.typeToIcon
 import kotlinx.coroutines.delay
@@ -56,7 +54,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -105,7 +102,7 @@ class HomeScreen(
         val today = currentDayOfWeek()
         val now = currentTimeHHmm()
         
-        val (isAfterLessons, dashboardClasses) = remember(timetable, today, now, screenModel.currentWeek) {
+        val (_, dashboardClasses) = remember(timetable, today, now, screenModel.currentWeek) {
             TimetableWidgetLogic.getDashboardSchedule(
                 entries = timetable,
                 todayDayOfWeek = today,
@@ -208,7 +205,7 @@ class HomeScreen(
                         }
                         sortedNews.take(3).forEach { item ->
                             CompactNewsItem(item) {
-                                navigator.push(NewsDetailScreen(item.hash))
+                                navigator.push(NewsDetailScreen(item.id))
                             }
                         }
                     }
@@ -454,10 +451,7 @@ private fun CompactTimetableItem(entry: TimetableEntry, onClick: () -> Unit) {
 @Composable
 private fun CompactNewsItem(item: NewsHeader, onClick: () -> Unit) {
     val typeColor = item.type.toColor()
-    val typeRes = item.type.toStringRes()
-    val parsed = remember(item.subject) { parseSubject(item.subject) }
-    val icon = item.toIcon(parsed.tag)
-    val typeIcon = item.toIcon(null)
+    val icon = item.type.toIcon()
     
     Column(
         modifier = Modifier
@@ -467,29 +461,29 @@ private fun CompactNewsItem(item: NewsHeader, onClick: () -> Unit) {
             .padding(10.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Surface(
-                color = typeColor.copy(alpha = 0.1f),
-                contentColor = typeColor,
-                shape = RoundedCornerShape(4.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+            if (item.type != NewsType.OTHER) {
+                Surface(
+                    color = typeColor.copy(alpha = 0.1f),
+                    contentColor = typeColor,
+                    shape = RoundedCornerShape(4.dp)
                 ) {
-                    Icon(typeIcon, null, modifier = Modifier.size(12.dp))
-                    Spacer(Modifier.width(4.dp))
-                    @Suppress("DEPRECATION")
-                    Text(
-                        text = if (typeRes != null) stringResource(typeRes) else item.type.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Icon(icon, null, modifier = Modifier.size(12.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = item.type.toLabel(),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
-            if (parsed.tag != null) {
-                val tagVal = parsed.tag!!
-                val (tagContainer, tagContent) = getTagColors(tagVal)
-                Spacer(Modifier.width(8.dp))
+            if (item.label.isNotEmpty()) {
+                val (tagContainer, tagContent) = getTagColors(item.label)
+                if (item.type != NewsType.OTHER) Spacer(Modifier.width(8.dp))
                 Surface(
                     color = tagContainer,
                     contentColor = tagContent,
@@ -499,13 +493,13 @@ private fun CompactNewsItem(item: NewsHeader, onClick: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
-                        if (tagVal.uppercase() == "WRS" || tagVal.uppercase() == "DZIEKANAT") {
+                        if (item.label.uppercase() == "WRS" || item.label.uppercase() == "DZIEKANAT") {
                             Icon(icon, null, modifier = Modifier.size(12.dp))
                             Spacer(Modifier.width(4.dp))
                         }
                         @Suppress("DEPRECATION")
                         Text(
-                            text = tagVal,
+                            text = item.label,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -513,21 +507,22 @@ private fun CompactNewsItem(item: NewsHeader, onClick: () -> Unit) {
                 }
             }
         }
-        
-        Spacer(Modifier.height(6.6.dp))
+
+        if (item.type != NewsType.OTHER || item.label.isNotEmpty())
+            Spacer(Modifier.height(6.dp))
         
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (parsed.isGradeUpdate) {
-                Icon(Icons.Default.Star, null, Modifier.size(16.6.dp).padding(end = 4.dp), tint = MaterialTheme.colorScheme.primary)
+            if (item.type == NewsType.GRADE) {
+                Icon(Icons.Default.Star, null, Modifier.size(16.dp).padding(end = 4.dp), tint = MaterialTheme.colorScheme.primary)
             }
             @Suppress("DEPRECATION")
             Text(
-                text = parsed.getDisplaySubject(),
+                text = item.title,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = if (parsed.isGradeUpdate) FontWeight.ExtraBold else FontWeight.SemiBold,
-                maxLines = 1,
+                fontWeight = if (item.type == NewsType.GRADE) FontWeight.ExtraBold else FontWeight.SemiBold,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                color = if (parsed.isGradeUpdate) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                color = if (item.type == NewsType.GRADE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
             )
         }
     }

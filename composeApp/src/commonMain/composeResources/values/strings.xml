@@ -107,6 +107,13 @@
     <string name="news_type_project_group_change">Group change</string>
     <string name="news_type_class_enrollment">Enrollment</string>
 
+    <string name="news_type_grade">Grades</string>
+    <string name="news_type_class">Classes</string>
+    <string name="news_type_deans_office">Dean\'s Office</string>
+    <string name="news_type_wrs">Student Council</string>
+    <string name="news_type_timetable">Timetable update</string>
+    <string name="news_type_other">Other</string>
+
     <string name="error_invalid_credentials">Invalid username or API key.</string>
     <string name="error_network">No internet connection.</string>
     <string name="error_server">Could not reach ISOD. Try again later.</string>

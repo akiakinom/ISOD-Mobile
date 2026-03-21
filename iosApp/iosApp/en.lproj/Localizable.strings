@@ -16,3 +16,16 @@
 "day_fri" = "Friday";
 "day_sat" = "Saturday";
 "day_sun" = "Sunday";
+
+"news_type_announcement" = "Announcement";
+"news_type_quiz" = "Quiz";
+"news_type_important" = "Important";
+"news_type_project_status" = "Project status";
+"news_type_project_group_change" = "Group change";
+"news_type_class_enrollment" = "Enrollment";
+"news_type_grade" = "Grades";
+"news_type_class" = "Classes";
+"news_type_deans_office" = "Dean's Office";
+"news_type_wrs" = "Student Council";
+"news_type_timetable" = "Timetable update";
+"news_type_other" = "Other";

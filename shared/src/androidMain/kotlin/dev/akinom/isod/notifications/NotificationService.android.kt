@@ -50,8 +50,6 @@ actual class NotificationService(private val context: Context) {
         val largeIcon = createNotificationBitmap(payload)
 
         val notification = NotificationCompat.Builder(context, payload.channelId)
-            .setSmallIcon(getIconResId(payload.type))
-            .setLargeIcon(largeIcon)
             .setContentTitle(payload.title)
             .setContentText(payload.body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(payload.body))
@@ -95,30 +93,8 @@ actual class NotificationService(private val context: Context) {
         paint.getTextBounds(subjectCode, 0, subjectCode.length, bounds)
         canvas.drawText(subjectCode, size / 2f, (size / 2f) + (bounds.height() / 2f), paint)
 
-        val iconRes = getIconResId(payload.type)
-        val drawable = ContextCompat.getDrawable(context, iconRes)
-        if (drawable != null) {
-            val iconSize = (size * 0.3f).toInt()
-            drawable.setTint(Color.GRAY)
-            drawable.setBounds(size - iconSize, size - iconSize, size, size)
-            drawable.draw(canvas)
-        }
-
         return bitmap
     }
-
-    private fun getIconResId(type: NotificationType): Int {
-        return when (type) {
-            NotificationType.IMPORTANT -> android.R.drawable.ic_dialog_alert
-            NotificationType.GRADE -> android.R.drawable.ic_menu_edit
-            NotificationType.CLASS_MESSAGE -> android.R.drawable.ic_menu_send
-            NotificationType.DZIEKANAT -> android.R.drawable.ic_menu_myplaces
-            NotificationType.WRS -> android.R.drawable.ic_menu_share
-            NotificationType.CLASS_SIGN_UP_UPDATE -> android.R.drawable.ic_menu_agenda
-            NotificationType.OTHER -> android.R.drawable.ic_dialog_info
-        }
-    }
-
     actual fun requestPermission() {
         // Permission must be requested from an Activity — this is a no-op here.
     }
