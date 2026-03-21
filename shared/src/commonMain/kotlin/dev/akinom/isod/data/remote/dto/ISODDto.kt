@@ -1,6 +1,7 @@
 package dev.akinom.isod.data.remote.dto
 
 import dev.akinom.isod.domain.*
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -59,6 +60,35 @@ data class NewsHeadersResponseDto(
     val semester: String = "",
 )
 
+fun String.toNewsType(type: Int = -1): NewsType {
+    return when {
+        startsWith("Zajęcia -") -> NewsType.GRADE
+        startsWith("Ogłoszenie -") -> NewsType.CLASS
+        startsWith("[DZIEKANAT]") -> NewsType.DEANS_OFFICE
+        startsWith("Informacja o zapisach") -> NewsType.TIMETABLE_UPDATE
+        startsWith("[WRS]") -> NewsType.FACULTY_STUDENT_COUNCIL
+        type == 1000 -> NewsType.IMPORTANT
+        else -> NewsType.OTHER
+    }
+}
+
+fun String.toNewsLabel(): String {
+    return when {
+        startsWith("Zajęcia -") || startsWith("Ogłoszenie -") -> {
+            substringAfter("- ").substringBefore(":").trim()
+        }
+        Regex("^\\[([A-Z0-9+]+)]").containsMatchIn(this) -> {
+            Regex("^\\[([A-Z0-9+]+)]").find(this)!!.groupValues[1]
+        }
+        else -> ""
+    }
+}
+
+fun String.toLocalDate(): LocalDate? = runCatching {
+    val parts = split(".")
+    LocalDate(parts[2].toInt(), parts[1].toInt(), parts[0].toInt())
+}.getOrNull()
+
 @Serializable
 data class NewsHeaderDto(
     val hash: String,
@@ -68,13 +98,14 @@ data class NewsHeaderDto(
     val type: Int = -1,
     val noAttachments: Int = 0,
 ) {
+
     fun toDomain() = NewsHeader(
-        hash          = hash,
-        subject       = subject,
-        modifiedDate  = modifiedDate,
-        modifiedBy    = modifiedBy,
-        type          = NewsType.fromCode(type.toString()),  // ← convert to String
-        noAttachments = noAttachments,
+        id = hash,
+        title = subject,
+        date = modifiedDate.toLocalDate(),
+        author = modifiedBy,
+        type = subject.toNewsType(type),
+        label = subject.toNewsLabel()
     )
 }
 
@@ -97,13 +128,13 @@ data class NewsItemDto(
     val noAttachments: Int = 0,
 ) {
     fun toDomain() = NewsItem(
-        hash         = hash,
-        subject      = subject,
-        content      = content,
-        modifiedDate = modifiedDate,
-        modifiedBy   = modifiedBy,
-        type = NewsType.fromCode(type.toString()),
-        attachments  = attachments.map { it.toDomain() },
+        id = hash,
+        title = subject,
+        content = content,
+        date = modifiedDate.toLocalDate(),
+        author = modifiedBy,
+        type = subject.toNewsType(type),
+        label = subject.toNewsLabel()
     )
 }
 

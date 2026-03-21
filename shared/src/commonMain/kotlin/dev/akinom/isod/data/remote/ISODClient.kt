@@ -32,16 +32,8 @@ class IsodApiClient(
             json.decodeFromString<PlanResponseDto>(body).planItems.map { it.toDomain() }
         }
 
-    suspend fun getNewsHeaders(
-        semester: String? = null,
-        from: Int? = null,
-        to: Int? = null,
-    ): IsodResult<List<NewsHeader>> =
-        fetch("mynewsheaders", buildMap {
-            if (semester != null) put("semester", semester)
-            if (from != null)    put("from", from.toString())
-            if (to != null)      put("to", to.toString())
-        }) { body ->
+    suspend fun getNewsHeaders(): IsodResult<List<NewsHeader>> =
+        fetch("mynewsheaders" ) { body ->
             json.decodeFromString<NewsHeadersResponseDto>(body).items.map { it.toDomain() }
         }
 

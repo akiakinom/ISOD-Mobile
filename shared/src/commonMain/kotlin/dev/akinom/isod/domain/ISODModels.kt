@@ -1,5 +1,6 @@
 package dev.akinom.isod.domain
 
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 
 data class PlanItem(
@@ -22,22 +23,22 @@ data class PlanItem(
 )
 
 data class NewsHeader(
-    val hash: String,
-    val subject: String,
-    val modifiedDate: String,
-    val modifiedBy: String,
+    val id: String,
+    val title: String,
+    val date: LocalDate?,
+    val author: String,
     val type: NewsType,
-    val noAttachments: Int,
+    val label: String,
 )
 
 data class NewsItem(
-    val hash: String,
-    val subject: String,
+    val id: String,
+    val title: String,
     val content: String,
-    val modifiedDate: String,
-    val modifiedBy: String,
+    val date: LocalDate?,
+    val author: String,
     val type: NewsType,
-    val attachments: List<NewsAttachment>,
+    val label: String,
 )
 
 @Serializable
@@ -46,18 +47,14 @@ data class NewsAttachment(
     val size: Long,
 )
 
-enum class NewsType(val code: String) {
-    ANNOUNCEMENT("1000"),
-    QUIZ("1001"),
-    IMPORTANT("1002"),
-    PROJECT_STATUS("1003"),
-    PROJECT_GROUP_CHANGE("1004"),
-    CLASS_ENROLLMENT("1005"),
-    UNKNOWN("-1");
-
-    companion object {
-        fun fromCode(code: String) = entries.firstOrNull { it.code == code } ?: UNKNOWN
-    }
+enum class NewsType {
+    IMPORTANT,
+    GRADE,
+    CLASS,
+    DEANS_OFFICE,
+    FACULTY_STUDENT_COUNCIL,
+    TIMETABLE_UPDATE,
+    OTHER
 }
 
 data class Course(

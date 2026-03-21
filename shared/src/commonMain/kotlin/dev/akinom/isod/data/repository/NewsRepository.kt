@@ -9,7 +9,6 @@ import dev.akinom.isod.NewsItemEntity
 import dev.akinom.isod.data.cache.CacheConfig
 import dev.akinom.isod.data.cache.currentTimeMillis
 import dev.akinom.isod.data.cache.decodeStringList
-import dev.akinom.isod.data.cache.encodeToString
 import dev.akinom.isod.data.cache.isStale
 import dev.akinom.isod.data.remote.IsodApiClient
 import dev.akinom.isod.data.remote.IsodResult
@@ -24,7 +23,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 private val json = Json { ignoreUnknownKeys = true }
@@ -109,7 +107,7 @@ private fun NewsHeaderEntity.toDomain() = NewsHeader(
     subject       = subject,
     modifiedDate  = modifiedDate,
     modifiedBy    = modifiedBy,
-    type          = NewsType.fromCode(type),
+    type = NewsType.fromCode(type),
     noAttachments = noAttachments.toInt(),
 )
 
@@ -132,10 +130,10 @@ private fun NewsHeader.toEntity(
 private fun NewsItemEntity.toDomain() = NewsItem(
     hash         = hash,
     subject      = subject,
-    content      = content,
+    content = content,
     modifiedDate = modifiedDate,
     modifiedBy   = modifiedBy,
-    type         = NewsType.fromCode(type),
+    type = NewsType.fromCode(type),
     attachments  = attachments.decodeStringList()
         .map { json.decodeFromString<NewsAttachment>(it) },
 )
