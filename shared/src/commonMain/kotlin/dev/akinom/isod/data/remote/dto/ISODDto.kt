@@ -74,12 +74,12 @@ fun String.toNewsType(type: Int = -1): NewsType {
 fun String.toClassType(): ClassType {
     val upper = this.uppercase()
     return when {
-        upper.contains("WF") || upper.contains("WYCHOWANIE FIZYCZNE") -> ClassType.PHYSICAL_EDUCATION
-        upper.contains("W") || upper.contains("WYKŁAD") -> ClassType.LECTURE
-        upper.contains("L") || upper.contains("LABORATORIUM") -> ClassType.LABORATORY
-        upper.contains("C") || upper.contains("Ć") || upper.contains("ĆWICZENIA") -> ClassType.EXERCISES
-        upper.contains("P") || upper.contains("PROJEKT") -> ClassType.PROJECT
-        upper.contains("S") || upper.contains("SEMINARIUM") -> ClassType.SEMINAR
+        upper.contains("WYCHOWANIE FIZYCZNE") || upper == "WF" -> ClassType.PHYSICAL_EDUCATION
+        upper.contains("WYKŁAD") || upper.contains("LECTURE") || upper == "W" -> ClassType.LECTURE
+        upper.contains("LABORATORIUM") || upper.contains("LABORATORY") || upper == "L" -> ClassType.LABORATORY
+        upper.contains("ĆWICZENIA") || upper.contains("EXERCISE") || upper == "C" || upper == "Ć" -> ClassType.EXERCISES
+        upper.contains("PROJEKT") || upper.contains("PROJECT") || upper == "P" -> ClassType.PROJECT
+        upper.contains("SEMINARIUM") || upper.contains("SEMINAR") || upper == "S" -> ClassType.SEMINAR
         else -> ClassType.OTHER
     }
 }
