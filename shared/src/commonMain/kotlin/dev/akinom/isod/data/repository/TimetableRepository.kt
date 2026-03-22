@@ -93,7 +93,7 @@ class TimetableRepository(
     private fun loadOverrides(): Map<String, String> {
         val saved = settings.getString("timetable_overrides", "")
         if (saved.isBlank()) return emptyMap()
-        return saved.split(";").associate {
+        return saved.split(";").filter { it.contains("=") }.associate {
             val parts = it.split("=")
             parts[0] to parts.getOrElse(1) { "" }
         }

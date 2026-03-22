@@ -38,6 +38,7 @@ import dev.akinom.isod.auth.currentWeekMonday
 import dev.akinom.isod.data.repository.TimetableRepository
 import dev.akinom.isod.domain.AcademicCalendar
 import dev.akinom.isod.domain.TimetableEntry
+import dev.akinom.isod.news.toShortLabel
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
@@ -109,7 +110,7 @@ class NextClassWidget : GlanceAppWidget(), KoinComponent {
 @Composable
 private fun NextClassHero(entry: TimetableEntry, today: Int, size: DpSize, action: androidx.glance.action.Action) {
     val context = LocalContext.current
-    val accentColor: ColorProvider = TimetableWidgetUtils.widgetTypeToColor(entry.courseType)
+    val accentColor: ColorProvider = TimetableWidgetUtils.widgetTypeToColor(entry.courseType.toShortLabel())
     val useFullName = size.width > 250.dp
     
     val currentTime = TimetableWidgetUtils.getCurrentTime()

@@ -31,6 +31,7 @@
     <string name="now">TERAZ</string>
     <string name="tomorrow_at">Jutro o %1$s</string>
     <string name="on_day_at">%1$s o %2$s</string>
+    <string name="ends_at">kończy się o %1$s</string>
 
     <string name="tab_home">Panel</string>
     <string name="tab_schedule">Plan</string>
@@ -40,6 +41,8 @@
     <string name="weekly_schedule">Plan tygodniowy</string>
     <string name="no_classes_scheduled">Brak zaplanowanych zajęć</string>
     <string name="take_rest">Czas na odpoczynek!</string>
+    <string name="gap_label_hours_mins">%1$d h %2$d min</string>
+    <string name="gap_label_mins">%1$d min</string>
 
     <string name="day_mon">Pon</string>
     <string name="day_tue">Wt</string>

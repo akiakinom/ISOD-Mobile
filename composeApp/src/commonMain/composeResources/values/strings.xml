@@ -31,6 +31,7 @@
     <string name="now">NOW</string>
     <string name="tomorrow_at">Tomorrow at %1$s</string>
     <string name="on_day_at">on %1$s at %2$s</string>
+    <string name="ends_at">ends at %1$s</string>
 
     <string name="tab_home">Home</string>
     <string name="tab_schedule">Schedule</string>
@@ -40,6 +41,8 @@
     <string name="weekly_schedule">Weekly Schedule</string>
     <string name="no_classes_scheduled">No classes scheduled</string>
     <string name="take_rest">Take some rest!</string>
+    <string name="gap_label_hours_mins">%1$d h %2$d min</string>
+    <string name="gap_label_mins">%1$d min</string>
 
     <string name="day_mon">Mon</string>
     <string name="day_tue">Tue</string>

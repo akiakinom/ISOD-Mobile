@@ -29,6 +29,8 @@ import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.data.repository.GradesRepository
 import dev.akinom.isod.domain.ClassGrade
 import dev.akinom.isod.domain.CourseGrade
+import dev.akinom.isod.news.toLabel
+import dev.akinom.isod.news.toShortLabel
 import dev.akinom.isod.news.typeToColor
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -384,16 +386,8 @@ private fun ClassDetailSection(cls: ClassGrade) {
                         .background(accentColor.copy(alpha = 0.1f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    val label = when(cls.classType.take(1).uppercase()) {
-                        "W" -> "W"
-                        "L" -> "L"
-                        "C" -> "Ć"
-                        "P" -> "P"
-                        "S" -> "S"
-                        else -> cls.classType.take(1).uppercase()
-                    }
                     Text(
-                        label,
+                        text = cls.classType.toShortLabel().take(1),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = accentColor
@@ -401,14 +395,7 @@ private fun ClassDetailSection(cls: ClassGrade) {
                 }
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = when(cls.classType.uppercase()) {
-                        "W" -> stringResource(Res.string.class_lecture)
-                        "L" -> stringResource(Res.string.class_laboratory)
-                        "C" -> stringResource(Res.string.class_exercises)
-                        "P" -> stringResource(Res.string.class_project)
-                        "S" -> stringResource(Res.string.class_seminar)
-                        else -> cls.classType
-                    },
+                    text =  cls.classType.toLabel(),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )

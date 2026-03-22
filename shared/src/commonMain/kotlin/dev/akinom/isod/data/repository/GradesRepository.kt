@@ -10,6 +10,7 @@ import dev.akinom.isod.data.remote.IsodApiClient
 import dev.akinom.isod.data.remote.IsodResult
 import dev.akinom.isod.data.remote.UsosApiClient
 import dev.akinom.isod.data.remote.UsosResult
+import dev.akinom.isod.data.remote.dto.toClassType
 import dev.akinom.isod.domain.ClassGrade
 import dev.akinom.isod.domain.CourseGrade
 import kotlinx.coroutines.CoroutineScope

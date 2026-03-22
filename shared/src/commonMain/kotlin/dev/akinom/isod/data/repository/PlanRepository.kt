@@ -10,6 +10,7 @@ import dev.akinom.isod.data.cache.encodeToString
 import dev.akinom.isod.data.cache.isStale
 import dev.akinom.isod.data.remote.IsodApiClient
 import dev.akinom.isod.data.remote.IsodResult
+import dev.akinom.isod.data.remote.dto.toClassType
 import dev.akinom.isod.domain.PlanItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -74,7 +75,7 @@ private fun dev.akinom.isod.PlanItemEntity.toDomain() = PlanItem(
     building        = building,
     buildingShort   = buildingShort,
     room            = room,
-    typeOfClasses   = typeOfClasses,
+    typeOfClasses   = typeOfClasses.toClassType(),
 )
 
 private fun PlanItem.toEntity(semester: String, now: Long) = dev.akinom.isod.PlanItemEntity(
@@ -93,7 +94,7 @@ private fun PlanItem.toEntity(semester: String, now: Long) = dev.akinom.isod.Pla
     building        = building,
     buildingShort   = buildingShort,
     room            = room,
-    typeOfClasses   = typeOfClasses,
+    typeOfClasses   = typeOfClasses.name,
     semester        = semester,
     lastUpdated     = now,
 )

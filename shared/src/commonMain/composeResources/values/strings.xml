@@ -46,4 +46,26 @@
     <string name="ends_at">Ends at %s</string>
     <string name="starts_at">Starts at %s</string>
     <string name="new_grade">New grade: %s</string>
+
+    <string name="gap_label_hours_mins">%d h %d min gap</string>
+    <string name="gap_label_mins">%d min gap</string>
+    <string name="cycle_sem">Every week</string>
+    <string name="cycle_pa">Even weeks (PA)</string>
+    <string name="cycle_np">Odd weeks (NP)</string>
+    <string name="cycle_1ps">First half (1PS)</string>
+    <string name="cycle_2ps">Second half (2PS)</string>
+    <string name="cycle_none">Hidden (None)</string>
+
+    <string name="day_substitution_label">Classes follow %s schedule</string>
+    <string name="news_type_important">Important</string>
+    <string name="news_type_grade">Grades</string>
+    <string name="news_type_class">Classes</string>
+    <string name="news_type_deans_office">Dean\'s Office</string>
+    <string name="news_type_wrs">Student Council</string>
+    <string name="news_type_timetable">Timetable</string>
+    <string name="grades_title">Grades</string>
+    <string name="no_grades_for_semester">No grades for %s</string>
+    <string name="no_detailed_grades">No detailed grades available.</string>
+    <string name="no_partial_grades">No partial grades yet.</string>
+    <string name="grade_value_label">Value</string>
 </resources>

@@ -12,14 +12,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import dev.akinom.isod.domain.NewsType
 import dev.akinom.isod.Res
 import dev.akinom.isod.*
+import dev.akinom.isod.domain.ClassType
 import dev.akinom.isod.domain.NewsHeader
 import dev.akinom.isod.domain.NewsItem
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun typeToColor(type: String): Color {
-    val typeShort = type.take(3).uppercase()
-    
+fun typeToColor(type: ClassType): Color {
     val blue = Color(0xFF2196F3)
     val green = Color(0xFF4CAF50)
     val orange = Color(0xFFFF9800)
@@ -27,45 +26,51 @@ fun typeToColor(type: String): Color {
     val red = Color(0xFFF44336)
     val gray = Color(0xFF9E9E9E)
 
-    return when (typeShort) {
-        "WYK" -> blue
-        "LAB" -> green
-        "ĆWI" -> orange
-        "PRO" -> yellow
-        "WF" -> red
-        "SEM" -> gray
-        else -> {
-            when(type.take(1).uppercase()) {
-                "W" -> blue
-                "L" -> green
-                "C" -> orange
-                "P" -> yellow
-                "S" -> gray
-                else -> MaterialTheme.colorScheme.outline
-            }
-        }
+    return when (type) {
+        ClassType.LECTURE -> blue
+        ClassType.LABORATORY -> green
+        ClassType.EXERCISES -> orange
+        ClassType.PROJECT -> yellow
+        ClassType.PHYSICAL_EDUCATION -> red
+        ClassType.SEMINAR -> gray
+        ClassType.OTHER -> MaterialTheme.colorScheme.outline
     }
 }
 
-fun typeToIcon(type: String): ImageVector {
-    val typeShort = type.take(3).uppercase()
-    return when (typeShort) {
-        "WYK" -> Icons.Default.School
-        "LAB" -> Icons.Default.Terminal
-        "ĆWI" -> Icons.Default.Functions
-        "PRO" -> Icons.AutoMirrored.Filled.Assignment
-        "WF" -> Icons.AutoMirrored.Filled.DirectionsRun
-        "SEM" -> Icons.Default.CoPresent
-        else -> {
-            when (type.take(1).uppercase()) {
-                "W" -> Icons.Default.School
-                "L" -> Icons.Default.Terminal
-                "C" -> Icons.Default.Functions
-                "P" -> Icons.AutoMirrored.Filled.Assignment
-                "S" -> Icons.Default.CoPresent
-                else -> Icons.AutoMirrored.Filled.Assignment
-            }
-        }
+fun typeToIcon(type: ClassType): ImageVector {
+    return when (type) {
+        ClassType.LECTURE -> Icons.Default.School
+        ClassType.LABORATORY -> Icons.Default.Terminal
+        ClassType.EXERCISES -> Icons.Default.Functions
+        ClassType.PROJECT -> Icons.AutoMirrored.Filled.Assignment
+        ClassType.PHYSICAL_EDUCATION -> Icons.AutoMirrored.Filled.DirectionsRun
+        ClassType.SEMINAR -> Icons.Default.CoPresent
+        ClassType.OTHER -> Icons.AutoMirrored.Filled.Assignment
+    }
+}
+
+@Composable
+fun ClassType.toLabel(): String {
+    return when (this) {
+        ClassType.LECTURE -> stringResource(Res.string.class_lecture)
+        ClassType.LABORATORY -> stringResource(Res.string.class_laboratory)
+        ClassType.EXERCISES -> stringResource(Res.string.class_exercises)
+        ClassType.PROJECT -> stringResource(Res.string.class_project)
+        ClassType.SEMINAR -> stringResource(Res.string.class_seminar)
+        ClassType.PHYSICAL_EDUCATION -> "WF"
+        ClassType.OTHER -> "Inne"
+    }
+}
+
+fun ClassType.toShortLabel(): String {
+    return when (this) {
+        ClassType.LECTURE -> "W"
+        ClassType.LABORATORY -> "L"
+        ClassType.EXERCISES -> "Ć"
+        ClassType.PROJECT -> "P"
+        ClassType.SEMINAR -> "S"
+        ClassType.PHYSICAL_EDUCATION -> "WF"
+        ClassType.OTHER -> "?"
     }
 }
 

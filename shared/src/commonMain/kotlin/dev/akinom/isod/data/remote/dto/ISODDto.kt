@@ -49,7 +49,7 @@ data class PlanItemDto(
         building      = building,
         buildingShort = buildingShort,
         room          = room,
-        typeOfClasses = typeOfClasses,
+        typeOfClasses = typeOfClasses.toClassType(),
     )
 }
 
@@ -68,6 +68,19 @@ fun String.toNewsType(type: Int = -1): NewsType {
         startsWith("Informacja o zapisach") -> NewsType.TIMETABLE_UPDATE
         startsWith("[WRS]") -> NewsType.FACULTY_STUDENT_COUNCIL
         else -> NewsType.OTHER
+    }
+}
+
+fun String.toClassType(): ClassType {
+    val upper = this.uppercase()
+    return when {
+        upper.contains("WF") || upper.contains("WYCHOWANIE FIZYCZNE") -> ClassType.PHYSICAL_EDUCATION
+        upper.contains("W") || upper.contains("WYKŁAD") -> ClassType.LECTURE
+        upper.contains("L") || upper.contains("LABORATORIUM") -> ClassType.LABORATORY
+        upper.contains("C") || upper.contains("Ć") || upper.contains("ĆWICZENIA") -> ClassType.EXERCISES
+        upper.contains("P") || upper.contains("PROJEKT") -> ClassType.PROJECT
+        upper.contains("S") || upper.contains("SEMINARIUM") -> ClassType.SEMINAR
+        else -> ClassType.OTHER
     }
 }
 
@@ -216,7 +229,7 @@ data class CourseClassDto(
         id               = id,
         courseNumber     = courseNumber,
         courseName       = courseName,
-        type             = type,
+        type             = type.toClassType(),
         hours            = hours,
         day              = day,
         timeFrom         = timeFrom,
@@ -273,7 +286,7 @@ data class ClassHeaderDto(
     fun toDomain() = ClassHeader(
         courseNumber     = courseNumber,
         courseName       = courseName,
-        type             = type,
+        type             = type.toClassType(),
         hours            = hours,
         day              = day,
         timeFrom         = timeFrom,

@@ -19,7 +19,7 @@ data class PlanItem(
     val building: String,
     val buildingShort: String,
     val room: String,
-    val typeOfClasses: String,     // "W", "L", "C", "P"
+    val typeOfClasses: ClassType,
 )
 
 data class NewsHeader(
@@ -57,6 +57,16 @@ enum class NewsType {
     OTHER
 }
 
+enum class ClassType {
+    LECTURE,
+    LABORATORY,
+    EXERCISES,
+    PROJECT,
+    SEMINAR,
+    PHYSICAL_EDUCATION,
+    OTHER
+}
+
 data class Course(
     val courseNumber: String,
     val courseName: String,
@@ -76,7 +86,7 @@ data class CourseClass(
     val id: String,
     val courseNumber: String,
     val courseName: String,
-    val type: String,              // "W", "L", "C", etc.
+    val type: ClassType,
     val hours: Int,
     val day: String,
     val timeFrom: String,
@@ -105,7 +115,7 @@ data class ClassDetail(
 data class ClassHeader(
     val courseNumber: String,
     val courseName: String,
-    val type: String,
+    val type: ClassType,
     val hours: Int,
     val day: String,
     val timeFrom: String,

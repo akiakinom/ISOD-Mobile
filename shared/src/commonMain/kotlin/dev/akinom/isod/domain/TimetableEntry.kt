@@ -8,7 +8,7 @@ data class TimetableEntry(
     val id: String,
     val courseName: String,
     val courseNameShort: String,
-    val courseType: String, // "W", "L", "C", "P", "S", "WF"
+    val courseType: ClassType,
     val dayOfWeek: Int, // 1-7 (Mon-Sun)
     val startTime: String, // "HH:mm"
     val endTime: String, // "HH:mm"
@@ -21,14 +21,14 @@ data class TimetableEntry(
     val cycle: String = "SEM",
     val userCycleOverride: String? = null
 ) {
-    val shortType: String get() = when(courseType.uppercase()) {
-        "W" -> "WYK"
-        "L" -> "LAB"
-        "C", "Ć" -> "ĆWI"
-        "P" -> "PRO"
-        "S" -> "SEM"
-        "WF" -> "WF"
-        else -> courseType.take(3).uppercase()
+    val shortType: String get() = when(courseType) {
+        ClassType.LECTURE -> "WYK"
+        ClassType.LABORATORY -> "LAB"
+        ClassType.EXERCISES -> "ĆWI"
+        ClassType.PROJECT -> "PRO"
+        ClassType.SEMINAR -> "SEM"
+        ClassType.PHYSICAL_EDUCATION -> "WF"
+        ClassType.OTHER -> "???"
     }
 
     val displayLocation: String get() {
@@ -68,15 +68,7 @@ fun PlanItem.toTimetableEntry() = TimetableEntry(
     id = "${courseName}_${dayOfWeek}_${startTime}",
     courseName = courseName,
     courseNameShort = courseNameShort,
-    courseType = when {
-        typeOfClasses.uppercase().contains("WF") -> "WF"
-        typeOfClasses.contains("W", ignoreCase = true) -> "W"
-        typeOfClasses.contains("L", ignoreCase = true) -> "L"
-        typeOfClasses.contains("C", ignoreCase = true) -> "C"
-        typeOfClasses.contains("P", ignoreCase = true) -> "P"
-        typeOfClasses.contains("S", ignoreCase = true) -> "S"
-        else -> typeOfClasses.take(2).uppercase()
-    },
+    courseType = typeOfClasses,
     dayOfWeek = dayOfWeek,
     startTime = startTime.to24h(),
     endTime = endTime.to24h(),
@@ -85,7 +77,7 @@ fun PlanItem.toTimetableEntry() = TimetableEntry(
     room = room,
     lecturerNames = teachers,
     source = TimetableSource.ISOD,
-    cycle = if (cycleShort.isBlank()) "SEM" else cycleShort
+    cycle = cycleShort.ifBlank { "SEM" }
 )
 
 fun UsosActivity.toTimetableEntry(): TimetableEntry {
@@ -99,18 +91,18 @@ fun UsosActivity.toTimetableEntry(): TimetableEntry {
             "classgroup", "classgroup2" -> {
                 val pl = classtypeName?.get("pl")?.lowercase() ?: ""
                 when {
-                    pl.contains("wykład") -> "W"
-                    pl.contains("laboratorium") -> "L"
-                    pl.contains("ćwiczenia") -> "C"
-                    pl.contains("projekt") -> "P"
-                    pl.contains("seminarium") -> "S"
-                    pl.contains("wychowanie fizyczne") || pl.contains("wf") -> "WF"
-                    else -> "W"
+                    pl.contains("wykład") -> ClassType.LECTURE
+                    pl.contains("laboratorium") -> ClassType.LABORATORY
+                    pl.contains("ćwiczenia") -> ClassType.EXERCISES
+                    pl.contains("projekt") -> ClassType.PROJECT
+                    pl.contains("seminarium") -> ClassType.SEMINAR
+                    pl.contains("wychowanie fizyczne") || pl.contains("wf") -> ClassType.PHYSICAL_EDUCATION
+                    else -> ClassType.LECTURE
                 }
             }
-            "meeting" -> "S"
-            "exam" -> "E"
-            else -> "W"
+            "meeting" -> ClassType.SEMINAR
+            "exam" -> ClassType.OTHER
+            else -> ClassType.LECTURE
         },
         dayOfWeek = dow,
         startTime = startTime.substring(11, 16),
@@ -162,13 +154,13 @@ private fun String.to24h(): String {
 }
 
 suspend fun TimetableEntry.getFullTypeName(): String {
-    return when(courseType.uppercase()) {
-        "W"   -> getString(Res.string.class_lecture)
-        "L"   -> getString(Res.string.class_laboratory)
-        "C", "Ć" -> getString(Res.string.class_exercises)
-        "P"   -> getString(Res.string.class_project)
-        "S"   -> getString(Res.string.class_seminar)
-        "WF"  -> "WF"
-        else -> courseType
+    return when(courseType) {
+        ClassType.LECTURE -> getString(Res.string.class_lecture)
+        ClassType.LABORATORY -> getString(Res.string.class_laboratory)
+        ClassType.EXERCISES -> getString(Res.string.class_exercises)
+        ClassType.PROJECT -> getString(Res.string.class_project)
+        ClassType.SEMINAR -> getString(Res.string.class_seminar)
+        ClassType.PHYSICAL_EDUCATION -> "WF"
+        ClassType.OTHER -> "Inne"
     }
 }

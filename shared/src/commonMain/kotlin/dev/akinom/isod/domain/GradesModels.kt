@@ -29,7 +29,7 @@ data class CourseGrade(
 @Serializable
 data class ClassGrade(
     val classId: String,
-    val classType: String,         // "W", "L", "C", etc.
+    val classType: ClassType,
     val credit: String?,           // final credit for this class session
     val columns: List<ClassColumn>,
     val summary: String?,
