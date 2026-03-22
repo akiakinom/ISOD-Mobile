@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package dev.akinom.isod.onboarding.usos
 
 import androidx.compose.animation.AnimatedVisibility
@@ -7,6 +9,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,6 +36,7 @@ class USOSLinkScreen : Screen {
         val screenModel = rememberScreenModel { USOSLinkScreenModel() }
         val state       by screenModel.state.collectAsState()
         var visible     by remember { mutableStateOf(false) }
+        var reloadToken by remember { mutableStateOf(0) }
 
         LaunchedEffect(Unit) { visible = true }
 
@@ -41,137 +46,193 @@ class USOSLinkScreen : Screen {
             }
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
-            contentAlignment = Alignment.Center,
-        ) {
-
-            when (val s = state) {
-                is USOSLinkState.Authorizing -> {
-                    UsosWebView(
-                        url = s.authorizeUrl,
-                        onCallbackReceived = { verifier ->
-                            screenModel.handleCallback(verifier)
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            topBar = {
+                val s = state
+                if (s is USOSLinkState.Authorizing) {
+                    TopAppBar(
+                        title = { Text(stringResource(Res.string.usos_title), style = MaterialTheme.typography.titleMedium) },
+                        navigationIcon = {
+                            IconButton(onClick = { screenModel.cancelAuth() }) {
+                                Icon(Icons.Default.Close, contentDescription = null)
+                            }
                         },
+                        actions = {
+                            IconButton(onClick = { reloadToken++ }) {
+                                Icon(Icons.Default.Refresh, contentDescription = "Reload")
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            titleContentColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                } else {
+                    CenterAlignedTopAppBar(
+                        title = {
+                            Text(
+                                text = "USOS",
+                                fontWeight = FontWeight.Black,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        },
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.background
+                        )
                     )
                 }
+            }
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center,
+            ) {
 
-                else -> {
-                    AnimatedVisibility(
-                        visible = visible,
-                        enter = fadeIn() + slideInVertically(initialOffsetY = { it / 4 }),
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 32.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
+                when (val s = state) {
+                    is USOSLinkState.Authorizing -> {
+                        key(reloadToken) {
+                            UsosWebView(
+                                url = s.authorizeUrl,
+                                onCallbackReceived = { verifier ->
+                                    screenModel.handleCallback(verifier)
+                                },
+                                onError = { message ->
+                                    screenModel.failAuth(message)
+                                }
+                            )
+                        }
+                    }
+
+                    is USOSLinkState.LoadingToken, is USOSLinkState.LoadingAccess -> {
+                         CircularProgressIndicator(
+                            modifier = Modifier.size(48.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            strokeWidth = 4.dp,
+                        )
+                    }
+
+                    else -> {
+                        AnimatedVisibility(
+                            visible = visible,
+                            enter = fadeIn() + slideInVertically(initialOffsetY = { it / 4 }),
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.AccountBalance,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-
-                            Spacer(Modifier.height(16.dp))
-
-                            Text(
-                                text = stringResource(Res.string.usos_title),
-                                style = MaterialTheme.typography.displaySmall,
-                                fontWeight = FontWeight.Black,
-                                color = MaterialTheme.colorScheme.onBackground,
-                            )
-                            Text(
-                                text = stringResource(Res.string.usos_link_subtitle),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-
-                            Spacer(Modifier.height(40.dp))
-
-                            ElevatedCard(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = MaterialTheme.shapes.large,
-                                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
                             ) {
-                                Column(
-                                    modifier = Modifier.padding(24.dp),
-                                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                                Icon(
+                                    imageVector = Icons.Default.AccountBalance,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(80.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+
+                                Spacer(Modifier.height(24.dp))
+
+                                Text(
+                                    text = stringResource(Res.string.usos_title),
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    text = stringResource(Res.string.usos_link_subtitle),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center
+                                )
+
+                                Spacer(Modifier.height(40.dp))
+
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = MaterialTheme.shapes.extraLarge,
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
                                 ) {
-                                    Text(
-                                        text = stringResource(Res.string.why_link_usos),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-
-                                    Text(
-                                        text = stringResource(Res.string.usos_link_reason),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        lineHeight = 20.sp
-                                    )
-
-                                    AnimatedVisibility(visible = s is USOSLinkState.Error) {
+                                    Column(
+                                        modifier = Modifier.padding(24.dp),
+                                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                                    ) {
                                         Text(
-                                            text = "⚠ ${(s as? USOSLinkState.Error)?.message ?: ""}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.error,
+                                            text = stringResource(Res.string.why_link_usos),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+
+                                        Text(
+                                            text = stringResource(Res.string.usos_link_reason),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            lineHeight = 22.sp
+                                        )
+
+                                        AnimatedVisibility(visible = s is USOSLinkState.Error) {
+                                            Text(
+                                                text = "⚠ ${(s as? USOSLinkState.Error)?.message ?: ""}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.error,
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(Modifier.height(48.dp))
+
+                                Button(
+                                    onClick = { screenModel.startAuth() },
+                                    enabled = s !is USOSLinkState.LoadingToken
+                                            && s !is USOSLinkState.LoadingAccess,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(56.dp),
+                                    shape = MaterialTheme.shapes.large,
+                                ) {
+                                    if (s is USOSLinkState.LoadingToken || s is USOSLinkState.LoadingAccess) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            strokeWidth = 3.dp,
+                                        )
+                                    } else {
+                                        Text(
+                                            text = stringResource(Res.string.authorize_usos_btn),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
                                         )
                                     }
                                 }
-                            }
 
-                            Spacer(Modifier.height(32.dp))
-
-                            Button(
-                                onClick = { screenModel.startAuth() },
-                                enabled = s !is USOSLinkState.LoadingToken
-                                        && s !is USOSLinkState.LoadingAccess,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
-                                shape = MaterialTheme.shapes.large,
-                            ) {
-                                if (s is USOSLinkState.LoadingToken || s is USOSLinkState.LoadingAccess) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(24.dp),
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        strokeWidth = 3.dp,
-                                    )
-                                } else {
+                                TextButton(
+                                    onClick = { navigator.replaceAll(MainScreen()) },
+                                    enabled = s !is USOSLinkState.LoadingToken
+                                            && s !is USOSLinkState.LoadingAccess,
+                                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                ) {
                                     Text(
-                                        text = stringResource(Res.string.authorize_usos_btn),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
+                                        text = stringResource(Res.string.skip_for_now),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
-                            }
 
-                            TextButton(
-                                onClick = { navigator.replaceAll(MainScreen()) },
-                                enabled = s !is USOSLinkState.LoadingToken
-                                        && s !is USOSLinkState.LoadingAccess,
-                                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                            ) {
+                                Spacer(Modifier.height(24.dp))
+
                                 Text(
-                                    text = stringResource(Res.string.skip_for_now),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    text = stringResource(Res.string.usos_login_hint),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                    textAlign = TextAlign.Center,
+                                    lineHeight = 18.sp,
                                 )
                             }
-
-                            Spacer(Modifier.height(16.dp))
-
-                            Text(
-                                text = stringResource(Res.string.usos_login_hint),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                textAlign = TextAlign.Center,
-                                lineHeight = 18.sp,
-                            )
                         }
                     }
                 }

@@ -18,6 +18,8 @@ import platform.WebKit.WKNavigationActionPolicy
 import platform.WebKit.WKNavigationDelegateProtocol
 import platform.WebKit.WKWebView
 import platform.WebKit.WKWebViewConfiguration
+import platform.Foundation.NSError
+import platform.WebKit.WKNavigation
 import platform.darwin.NSObject
 
 @OptIn(ExperimentalForeignApi::class)
@@ -25,6 +27,7 @@ import platform.darwin.NSObject
 actual fun UsosWebView(
     url: String,
     onCallbackReceived: (verifier: String) -> Unit,
+    onError: (message: String) -> Unit,
 ) {
     val navigationDelegate = remember {
         object : NSObject(), WKNavigationDelegateProtocol {
@@ -45,9 +48,20 @@ actual fun UsosWebView(
                         onCallbackReceived(verifier)
                         decisionHandler(WKNavigationActionPolicy.WKNavigationActionPolicyCancel)
                         return
+                    } else {
+                        val error = components?.queryItems?.filterIsInstance<NSURLQueryItem>()
+                            ?.firstOrNull { it.name == "error" }
+                            ?.value ?: "Authorization denied"
+                        onError(error)
+                        decisionHandler(WKNavigationActionPolicy.WKNavigationActionPolicyCancel)
+                        return
                     }
                 }
                 decisionHandler(WKNavigationActionPolicy.WKNavigationActionPolicyAllow)
+            }
+
+            override fun webView(webView: WKWebView, didFailProvisionalNavigation: WKNavigation?, withError: NSError) {
+                onError(withError.localizedDescription)
             }
         }
     }

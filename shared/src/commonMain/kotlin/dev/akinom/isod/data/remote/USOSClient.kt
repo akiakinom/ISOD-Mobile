@@ -23,6 +23,7 @@ private const val TT_USER_URL      = "$BASE_URL/services/tt/user"
 private const val USER_INFO_URL    = "$BASE_URL/services/users/user"
 private const val USERS_URL        = "$BASE_URL/services/users/users"
 private const val GRADES_TERMS_URL = "$BASE_URL/services/grades/terms2"
+private const val STUDIES_URL      = "$BASE_URL/services/studies/user"
 
 private val json = Json {
     ignoreUnknownKeys = true
@@ -107,6 +108,11 @@ class UsosApiClient(
     ) { body ->
         json.decodeFromString<UsosUserInfoDto>(body).toDomain()
     }
+
+    suspend fun getStudies(): UsosResult<String> = fetch(
+        url = STUDIES_URL,
+        params = mapOf("fields" to "id|program|status")
+    ) { it }
 
     private suspend fun <T> fetch(
         url: String,

@@ -34,37 +34,49 @@ class UsosAuthRepository(
 ) {
     private val client = HttpClient()
 
-    suspend fun getRequestToken(): UsosAuthResult {
+    suspend fun getRequestToken(scopes: String = "studies"): UsosAuthResult {
         return try {
+            val extraParams = mapOf(
+                "oauth_callback" to USOS_CALLBACK_URL,
+                "scopes"         to scopes
+            )
+
             val authHeader = OAuth1Signer.buildHeader(
                 method         = "POST",
                 url            = REQUEST_TOKEN,
                 consumerKey    = consumerKey,
                 consumerSecret = consumerSecret,
-                extraParams    = mapOf("oauth_callback" to USOS_CALLBACK_URL),
+                extraParams    = extraParams,
             )
 
             val response = client.post(REQUEST_TOKEN) {
                 header(HttpHeaders.Authorization, authHeader)
                 parameter("oauth_callback", USOS_CALLBACK_URL)
+                parameter("scopes", scopes)
             }
 
             val body = response.bodyAsText()
-            println("📡 USOS request token response fetched.")
+            println("📡 USOS request token response: $body")
+
+            if (!response.status.isSuccess()) {
+                return UsosAuthResult.Error("USOS Error: ${response.status}")
+            }
 
             val params = parseOAuthResponse(body)
             val token       = params["oauth_token"]        ?: return UsosAuthResult.Error("Missing oauth_token")
             val tokenSecret = params["oauth_token_secret"] ?: return UsosAuthResult.Error("Missing oauth_token_secret")
 
+            val authorizeUrl = "$AUTHORIZE_URL?oauth_token=$token&interactivity=minimal"
+
             UsosAuthResult.RequestTokenSuccess(
                 UsosRequestToken(
                     token        = token,
                     tokenSecret  = tokenSecret,
-                    authorizeUrl = "$AUTHORIZE_URL?oauth_token=$token",
+                    authorizeUrl = authorizeUrl,
                 )
             )
         } catch (e: Exception) {
-            UsosAuthResult.Error("Network error", isNetworkError = true)
+            UsosAuthResult.Error("Network error: ${e.message}", isNetworkError = true)
         }
     }
 

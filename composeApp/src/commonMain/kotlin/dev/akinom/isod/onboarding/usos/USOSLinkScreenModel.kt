@@ -42,7 +42,8 @@ class USOSLinkScreenModel(
         if (_state.value is USOSLinkState.LoadingToken) return
         screenModelScope.launch {
             _state.value = USOSLinkState.LoadingToken
-            when (val result = auth.getRequestToken()) {
+            val scopes = "studies"
+            when (val result = auth.getRequestToken(scopes)) {
                 is UsosAuthResult.RequestTokenSuccess -> {
                     _state.value = USOSLinkState.Authorizing(
                         authorizeUrl = result.requestToken.authorizeUrl,
@@ -78,6 +79,14 @@ class USOSLinkScreenModel(
                 else -> {}
             }
         }
+    }
+
+    fun failAuth(message: String) {
+        _state.value = USOSLinkState.Error(message)
+    }
+
+    fun cancelAuth() {
+        _state.value = USOSLinkState.Idle
     }
 
     fun resetError() {

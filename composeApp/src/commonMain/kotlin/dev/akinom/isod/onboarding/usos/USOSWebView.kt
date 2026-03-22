@@ -6,4 +6,5 @@ import androidx.compose.runtime.Composable
 expect fun UsosWebView(
     url: String,
     onCallbackReceived: (verifier: String) -> Unit,
+    onError: (message: String) -> Unit,
 )
