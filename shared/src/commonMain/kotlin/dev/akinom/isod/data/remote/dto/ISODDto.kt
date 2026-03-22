@@ -5,6 +5,17 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+fun String.removeTitles(): String {
+    val titles = listOf("dr.", "prof.", "mgr.", "inz.", "mgr", "hab.", "dr")
+    titles.forEach { title ->
+        if (contains(title)) {
+            replace(title, "").trim()
+        }
+    }
+
+    return this
+}
+
 @Serializable
 data class PlanResponseDto(
     val username: String,
@@ -13,6 +24,7 @@ data class PlanResponseDto(
     val lastname: String,
     val planItems: List<PlanItemDto> = emptyList(),
 )
+
 
 @Serializable
 data class PlanItemDto(
@@ -39,7 +51,7 @@ data class PlanItemDto(
         courseNameShort = courseNameShort,
         courseNumber  = courseNumber,
         courseVersion = courseVersion,
-        teachers      = teachers,
+        teachers      = teachers.map { it.removeTitles() },
         startTime     = startTime,
         endTime       = endTime,
         dayOfWeek     = dayOfWeek.toIntOrNull() ?: 0,

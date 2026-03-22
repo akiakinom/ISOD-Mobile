@@ -3,6 +3,7 @@ package dev.akinom.isod.domain
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 
 data class SemesterConfig(
@@ -43,13 +44,32 @@ object AcademicCalendar {
     fun getCurrentWeek(semesterId: String, today: LocalDate = getToday()): Int? {
         val config = getConfiguration(semesterId) ?: return null
         
+        val isoDay = today.dayOfWeek.isoDayNumber
+        val adjustedToday = if (isoDay > 5) {
+            LocalDate.fromEpochDays(today.toEpochDays() + (8 - isoDay))
+        } else {
+            today
+        }
+
         val startMonday = config.start.toEpochDays() - (config.start.dayOfWeek.isoDayNumber - 1)
-        val todayMonday = today.toEpochDays() - (today.dayOfWeek.isoDayNumber - 1)
+        val todayMonday = adjustedToday.toEpochDays() - (adjustedToday.dayOfWeek.isoDayNumber - 1)
         
         val week = ((todayMonday - startMonday) / 7) + 1
         
-        if (today < config.start || week > 15) return null
+        if (adjustedToday < config.start || week > 15) return null
         
         return week.toInt()
+    }
+
+    fun getMondayOfWeek(semesterId: String, weekNumber: Int): LocalDate? {
+        val config = getConfiguration(semesterId) ?: return null
+        val startMondayEpoch = config.start.toEpochDays() - (config.start.dayOfWeek.isoDayNumber - 1)
+        return LocalDate.fromEpochDays(startMondayEpoch + (weekNumber - 1) * 7)
+    }
+
+    fun getWeekRangeString(monday: LocalDate): String {
+        val sunday = LocalDate.fromEpochDays(monday.toEpochDays() + 4)
+        fun format(d: LocalDate) = "${d.day.toString().padStart(2, '0')}.${d.month.number.toString().padStart(2, '0')}"
+        return "${format(monday)} - ${format(sunday)}"
     }
 }

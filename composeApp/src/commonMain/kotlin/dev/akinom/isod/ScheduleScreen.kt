@@ -30,7 +30,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.rememberScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
 import dev.akinom.isod.auth.currentDayOfWeek
 import dev.akinom.isod.auth.currentSemester
@@ -39,12 +41,45 @@ import dev.akinom.isod.domain.AcademicCalendar
 import dev.akinom.isod.domain.TimetableEntry
 import dev.akinom.isod.news.typeToColor
 import dev.akinom.isod.news.typeToIcon
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class ScheduleScreenModel(val semester: String) : ScreenModel, KoinComponent {
+    private val timetableRepo: TimetableRepository by inject()
+
+    private val _selectedWeek = MutableStateFlow(AcademicCalendar.getCurrentWeek(semester) ?: 1)
+    val selectedWeek: StateFlow<Int> = _selectedWeek
+
+    val actualCurrentWeek = AcademicCalendar.getCurrentWeek(semester)
+
+    val weekMonday: StateFlow<LocalDate> = _selectedWeek
+        .map { week ->
+            AcademicCalendar.getMondayOfWeek(semester, week) ?: AcademicCalendar.getToday()
+        }.stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), AcademicCalendar.getToday())
+
+    val timetable: StateFlow<List<TimetableEntry>> = 
+        weekMonday.flatMapLatest { monday ->
+            timetableRepo.getTimetable(semester, monday.toString())
+        }.stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun selectWeek(week: Int) {
+        _selectedWeek.value = week
+    }
+
+    val availableWeeks = (1..15).toList()
+}
 
 class ScheduleScreen(
     val semester: String = currentSemester(),
@@ -55,9 +90,10 @@ class ScheduleScreen(
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
-        val screenModel = rememberScreenModel { HomeScreenModel(semester) }
+        val screenModel = rememberScreenModel { ScheduleScreenModel(semester) }
         val timetable by screenModel.timetable.collectAsState()
-        val currentWeek = screenModel.currentWeek
+        val selectedWeek by screenModel.selectedWeek.collectAsState()
+        val weekMonday by screenModel.weekMonday.collectAsState()
         
         val days = listOf(
             stringResource(Res.string.day_mon),
@@ -84,24 +120,45 @@ class ScheduleScreen(
         }
 
         var selectedEntryForOverride by remember { mutableStateOf<TimetableEntry?>(null) }
-
-        val weekMonday = remember(screenModel.weekMonday) {
-            val parts = screenModel.weekMonday.split("-")
-            LocalDate(parts[0].toInt(), parts[1].toInt(), parts[2].toInt())
-        }
+        var showWeekPicker by remember { mutableStateOf(false) }
 
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 CenterAlignedTopAppBar(
                     title = {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(stringResource(Res.string.weekly_schedule), fontWeight = FontWeight.Bold)
-                            if (currentWeek != null) {
-                                Text(
-                                    stringResource(Res.string.week_number, currentWeek),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                        Box {
+                            Column(
+                                modifier = Modifier.clickable { showWeekPicker = true },
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(stringResource(Res.string.weekly_schedule), fontWeight = FontWeight.Bold)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        stringResource(Res.string.week_number, selectedWeek),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Icon(
+                                        Icons.Default.ArrowDropDown,
+                                        null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            if (showWeekPicker) {
+                                WeekDropdown(
+                                    weeks = screenModel.availableWeeks,
+                                    currentWeek = selectedWeek,
+                                    actualCurrentWeek = screenModel.actualCurrentWeek,
+                                    semesterId = semester,
+                                    onSelected = {
+                                        screenModel.selectWeek(it)
+                                        showWeekPicker = false
+                                    },
+                                    onDismiss = { showWeekPicker = false }
                                 )
                             }
                         }
@@ -235,7 +292,7 @@ class ScheduleScreen(
                                         ScheduleItem(
                                             entry = group[0],
                                             isSplit = false,
-                                            currentWeek = currentWeek,
+                                            currentWeek = selectedWeek,
                                             onLongClick = { selectedEntryForOverride = it }
                                         )
                                     } else {
@@ -248,7 +305,7 @@ class ScheduleScreen(
                                                     entry = entry,
                                                     modifier = Modifier.weight(1f).fillMaxHeight(),
                                                     isSplit = true,
-                                                    currentWeek = currentWeek,
+                                                    currentWeek = selectedWeek,
                                                     onLongClick = { selectedEntryForOverride = it }
                                                 )
                                             }
@@ -347,6 +404,66 @@ class ScheduleScreen(
     }
 }
 
+@Composable
+private fun WeekDropdown(
+    weeks: List<Int>,
+    currentWeek: Int,
+    actualCurrentWeek: Int?,
+    semesterId: String,
+    onSelected: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    DropdownMenu(
+        expanded = true, 
+        onDismissRequest = onDismiss,
+        modifier = Modifier.heightIn(max = 400.dp)
+    ) {
+        weeks.forEach { week ->
+            val monday = AcademicCalendar.getMondayOfWeek(semesterId, week)
+            val range = monday?.let { AcademicCalendar.getWeekRangeString(it) } ?: ""
+            val isActual = week == actualCurrentWeek
+            
+            DropdownMenuItem(
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            stringResource(Res.string.week_number, week), 
+                            fontWeight = if (week == currentWeek) FontWeight.Bold else FontWeight.Normal,
+                            color = if (week == currentWeek) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        )
+                        if (isActual) {
+                            Spacer(Modifier.width(6.dp))
+                            Surface(
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                contentColor = MaterialTheme.colorScheme.primary,
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(Res.string.now),
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 9.sp
+                                )
+                            }
+                        }
+                        if (range.isNotEmpty()) {
+                            Spacer(Modifier.width(8.dp))
+                            @Suppress("DEPRECATION")
+                            Text(
+                                "($range)", 
+                                style = MaterialTheme.typography.labelSmall, 
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                },
+                onClick = { onSelected(week) }
+            )
+        }
+    }
+}
+
 private data class CycleOption(val code: String, val label: StringResource, val icon: ImageVector)
 
 @Composable
@@ -417,7 +534,6 @@ private fun ScheduleItem(
 ) {
     val isActive = entry.isActive(currentWeek)
     val accentColor = typeToColor(entry.courseType)
-    val typeIcon = typeToIcon(entry.courseType)
     val typeDisplay = entry.shortType
 
     Card(
@@ -431,8 +547,8 @@ private fun ScheduleItem(
     ) {
         Row(
             modifier = Modifier
-                .height(IntrinsicSize.Min)
                 .fillMaxWidth()
+                .height(IntrinsicSize.Max)
                 .combinedClickable(
                     onClick = {},
                     onLongClick = { onLongClick(entry) }
@@ -474,8 +590,6 @@ private fun ScheduleItem(
                             shape = RoundedCornerShape(4.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)) {
-                                Icon(typeIcon, null, modifier = Modifier.size(12.dp))
-                                Spacer(Modifier.width(4.dp))
                                 Text(
                                     text = typeDisplay,
                                     style = MaterialTheme.typography.labelSmall,
