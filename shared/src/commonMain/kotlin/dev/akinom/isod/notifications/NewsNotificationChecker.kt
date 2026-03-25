@@ -55,12 +55,15 @@ class NewsNotificationChecker(
         println("🔔 NewsNotificationChecker: ${unsent.size} unsent notifications")
 
         unsent.forEach { entity ->
+            val subjectCode = Regex("\\[(.*?)]").find(entity.title)?.groupValues?.get(1)
+
             notificationService.notify(
                 NotificationPayload(
                     id          = entity.id,
                     title       = entity.title,
                     body        = entity.label,
                     type        = entity.type,
+                    subjectCode = subjectCode,
                     newsHash    = entity.id,
                 )
             )

@@ -19,6 +19,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import dev.akinom.isod.domain.NewsType
 
 actual class NotificationService(private val context: Context) {
 
@@ -47,83 +48,102 @@ actual class NotificationService(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val largeIcon = createNotificationBitmap(payload)
+        val largeIcon = createLargeIcon(payload)
+        val smallIconRes = getResId("ic_isod_notif", "drawable")
+        val accentColor = getNewsColor(payload.type)
 
-        val notification = NotificationCompat.Builder(context, payload.channelId)
+        val builder = NotificationCompat.Builder(context, payload.channelId)
+            .setSmallIcon(if (smallIconRes != 0) smallIconRes else android.R.drawable.ic_dialog_info)
             .setContentTitle(payload.title)
             .setContentText(payload.body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(payload.body))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
-            .build()
+            .setColor(accentColor)
 
-        NotificationManagerCompat.from(context)
-            .notify(payload.id.hashCode(), notification)
+        if (largeIcon != null) {
+            builder.setLargeIcon(largeIcon)
+        }
+
+        NotificationManagerCompat.from(context).notify(payload.id.hashCode(), builder.build())
     }
 
-    private fun createNotificationBitmap(payload: NotificationPayload): Bitmap? {
-        val subjectCode = payload.subjectCode ?: return null
+    private fun createLargeIcon(payload: NotificationPayload): Bitmap? {
+        val subjectCode = payload.subjectCode
+        if (subjectCode != null && isSubjectIcon(subjectCode)) {
+            return createSubjectBitmap(subjectCode, payload.type)
+        }
 
-        val isCourseCode = subjectCode.length <= 6 &&
+        val newsType = try { NewsType.valueOf(payload.type) } catch (e: Exception) { NewsType.OTHER }
+        val iconName = if (newsType == NewsType.FACULTY_STUDENT_COUNCIL) "wrs_logo" else "isod_logo"
+        val iconRes = getResId(iconName, "drawable")
+        
+        if (iconRes == 0) return null
+
+        return ContextCompat.getDrawable(context, iconRes)?.let { drawable ->
+            val size = 192
+            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            drawable.setBounds(0, 0, size, size)
+            drawable.draw(canvas)
+            bitmap
+        }
+    }
+
+    private fun isSubjectIcon(subjectCode: String): Boolean {
+        return subjectCode.length <= 6 &&
                 subjectCode.all { it.isUpperCase() || it.isDigit() } &&
                 subjectCode.uppercase() != "WRS"
+    }
 
-        if (!isCourseCode) return null
-
-        val size = 128
+    private fun createSubjectBitmap(text: String, typeString: String): Bitmap {
+        val size = 192
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-        paint.color = Color.WHITE
+        paint.color = getNewsColor(typeString)
         canvas.drawCircle(size / 2f, size / 2f, size / 2f, paint)
 
-        paint.color = Color.DKGRAY
+        paint.color = Color.WHITE
         paint.textAlign = Paint.Align.CENTER
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-
         paint.textSize = when {
-            subjectCode.length <= 3 -> size * 0.4f
-            subjectCode.length <= 5 -> size * 0.3f
+            text.length <= 3 -> size * 0.4f
+            text.length <= 5 -> size * 0.3f
             else -> size * 0.25f
         }
-
         val bounds = Rect()
-        paint.getTextBounds(subjectCode, 0, subjectCode.length, bounds)
-        canvas.drawText(subjectCode, size / 2f, (size / 2f) + (bounds.height() / 2f), paint)
-
+        paint.getTextBounds(text, 0, text.length, bounds)
+        canvas.drawText(text, size / 2f, (size / 2f) + (bounds.height() / 2f), paint)
+        
         return bitmap
     }
-    actual fun requestPermission() {
-        // Permission must be requested from an Activity — this is a no-op here.
+
+    private fun getNewsColor(typeString: String): Int {
+        val type = try { NewsType.valueOf(typeString) } catch (e: Exception) { NewsType.OTHER }
+        return when (type) {
+            NewsType.IMPORTANT -> 0xFFF44336.toInt()
+            NewsType.GRADE -> 0xFF4CAF50.toInt()
+            NewsType.CLASS -> 0xFF2196F3.toInt()
+            NewsType.DEANS_OFFICE -> 0xFFFF9800.toInt()
+            NewsType.FACULTY_STUDENT_COUNCIL -> 0xFFFFC107.toInt()
+            NewsType.TIMETABLE_UPDATE -> 0xFF9C27B0.toInt()
+            else -> 0xFF9E9E9E.toInt()
+        }
     }
+
+    private fun getResId(name: String, type: String): Int {
+        return context.resources.getIdentifier(name, type, context.packageName)
+    }
+
+    actual fun requestPermission() { }
 
     private fun createChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = try {
-                val id = context.resources.getIdentifier("notif_channel_news_name", "string", context.packageName)
-                if (id != 0) context.getString(id) else "ISOD News"
-            } catch (e: Exception) {
-                "ISOD News"
-            }
-
-            val desc = try {
-                val id = context.resources.getIdentifier("notif_channel_news_desc", "string", context.packageName)
-                if (id != 0) context.getString(id) else "Notifications for new ISOD announcements and news"
-            } catch (e: Exception) {
-                "Notifications for new ISOD announcements and news"
-            }
-
-            val channel = NotificationChannel(
-                "isod_news",
-                name,
-                NotificationManager.IMPORTANCE_DEFAULT,
-            ).apply {
-                description = desc
-            }
-            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
-                    as NotificationManager
+            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val channel = NotificationChannel("isod_news", "ISOD News", NotificationManager.IMPORTANCE_DEFAULT)
             manager.createNotificationChannel(channel)
         }
     }
