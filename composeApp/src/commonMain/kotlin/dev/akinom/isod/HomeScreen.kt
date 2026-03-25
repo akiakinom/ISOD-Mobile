@@ -493,10 +493,6 @@ private fun CompactNewsItem(item: NewsHeader, onClick: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
-                        if (item.label.uppercase() == "WRS" || item.label.uppercase() == "DZIEKANAT") {
-                            Icon(icon, null, modifier = Modifier.size(12.dp))
-                            Spacer(Modifier.width(4.dp))
-                        }
                         @Suppress("DEPRECATION")
                         Text(
                             text = item.label,
@@ -512,17 +508,14 @@ private fun CompactNewsItem(item: NewsHeader, onClick: () -> Unit) {
             Spacer(Modifier.height(6.dp))
         
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (item.type == NewsType.GRADE) {
-                Icon(Icons.Default.Star, null, Modifier.size(16.dp).padding(end = 4.dp), tint = MaterialTheme.colorScheme.primary)
-            }
             @Suppress("DEPRECATION")
             Text(
                 text = item.title,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = if (item.type == NewsType.GRADE) FontWeight.ExtraBold else FontWeight.SemiBold,
+                fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                color = if (item.type == NewsType.GRADE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }

@@ -112,6 +112,7 @@ private fun NextClassHero(entry: TimetableEntry, today: Int, size: DpSize, actio
     val context = LocalContext.current
     val accentColor: ColorProvider = TimetableWidgetUtils.widgetTypeToColor(entry.courseType.toShortLabel())
     val useFullName = size.width > 250.dp
+    val showRoom = size.height > 200.dp
     
     val currentTime = TimetableWidgetUtils.getCurrentTime()
     val isNow = entry.dayOfWeek == today && currentTime >= entry.startTime && currentTime < entry.endTime
@@ -126,9 +127,9 @@ private fun NextClassHero(entry: TimetableEntry, today: Int, size: DpSize, actio
             context.getString(R.string.day_sat),
             context.getString(R.string.day_sun)
         )
-        when {
-            entry.dayOfWeek == today -> entry.startTime
-            entry.dayOfWeek == (today % 7) + 1 -> context.getString(R.string.tomorrow_at, entry.startTime)
+        when (entry.dayOfWeek) {
+            today -> entry.startTime
+            (today % 7) + 1 -> context.getString(R.string.tomorrow_at, entry.startTime)
             else -> context.getString(R.string.on_day_at, days[entry.dayOfWeek - 1], entry.startTime)
         }
     }
@@ -171,9 +172,9 @@ private fun NextClassHero(entry: TimetableEntry, today: Int, size: DpSize, actio
                 )
             )
         }
-        
-        Spacer(modifier = GlanceModifier.height(8.dp))
-        
+
+        Spacer(modifier = GlanceModifier.height(if (showRoom) 8.dp else 4.dp))
+
         Text(
             text = if (useFullName) entry.courseName else entry.courseNameShort,
             style = TextStyle(
@@ -185,14 +186,16 @@ private fun NextClassHero(entry: TimetableEntry, today: Int, size: DpSize, actio
         )
         
         Spacer(modifier = GlanceModifier.height(4.dp))
-        
-        Text(
-            text = entry.displayLocation,
-            style = TextStyle(
-                color = GlanceTheme.colors.onPrimary,
-                fontSize = 12.sp
+
+        if (showRoom) {
+            Text(
+                text = entry.displayLocation,
+                style = TextStyle(
+                    color = GlanceTheme.colors.onPrimary,
+                    fontSize = 12.sp
+                )
             )
-        )
+        }
 
         Spacer(modifier = GlanceModifier.defaultWeight())
         

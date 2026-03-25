@@ -114,7 +114,7 @@
     <string name="news_type_class">Zajęcia</string>
     <string name="news_type_deans_office">Dziekanat</string>
     <string name="news_type_wrs">WRS</string>
-    <string name="news_type_timetable">Zmiana planu</string>
+    <string name="news_type_timetable">Zapisy na zajęcia</string>
     <string name="news_type_other">Inne</string>
 
     <string name="week_number">Tydzień %1$d</string>

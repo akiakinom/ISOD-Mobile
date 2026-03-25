@@ -22,7 +22,7 @@ fun typeToColor(type: ClassType): Color {
     val blue = Color(0xFF2196F3)
     val green = Color(0xFF4CAF50)
     val orange = Color(0xFFFF9800)
-    val yellow = Color(0xFFFFEB3B)
+    val yellow = Color(0xFFFF0051)
     val red = Color(0xFFF44336)
     val gray = Color(0xFF9E9E9E)
 

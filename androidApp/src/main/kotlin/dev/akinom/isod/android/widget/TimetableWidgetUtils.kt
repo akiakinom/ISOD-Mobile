@@ -39,7 +39,7 @@ object TimetableWidgetUtils {
         return TimetableWidgetLogic.getDashboardSchedule(
             entries = entries,
             todayDayOfWeek = getTodayDayOfWeek(),
-            currentTime = getCurrentTime(),
+            currentTime = "00:00", // TODO CHANGE VIA SETTINGS
             currentWeek = currentWeek,
             todayDate = AcademicCalendar.getToday()
         )
