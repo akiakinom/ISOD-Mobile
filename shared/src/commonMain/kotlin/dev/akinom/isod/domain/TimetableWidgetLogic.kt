@@ -81,16 +81,17 @@ object TimetableWidgetLogic {
             val tomorrowWeek = if (todayDayOfWeek == 7) (currentWeek?.plus(1) ?: 1) else currentWeek
             entries.filter { it.dayOfWeek == effectiveTomorrowDayOfWeek && it.isActive(tomorrowWeek) }.sortedBy { it.startTime }
         } else {
-            todayClasses.filter { it.startTime >= (firstNext?.startTime ?: "00:00") }
+            // Include current class if it exists
+            val currentClass = todayClasses.find { it.startTime <= currentTime && it.endTime > currentTime }
+            if (currentClass != null) {
+                todayClasses.filter { it.startTime >= currentClass.startTime }
+            } else {
+                todayClasses.filter { it.startTime >= (firstNext?.startTime ?: "00:00") }
+            }
         }
 
-        // Return all classes after the one displayed in the "Next Class" card
-        val resultList = if (firstNext != null) {
-            baseList.filter { it.dedupeKey != firstNext.dedupeKey && (it.dayOfWeek > firstNext.dayOfWeek || (it.dayOfWeek == firstNext.dayOfWeek && it.startTime >= firstNext.endTime)) }
-        } else {
-            baseList
-        }
-
-        return isAfterLessons to resultList
+        // Return the full base list.
+        // In the "Today's Schedule" widget, it's preferred to show the current class as well.
+        return isAfterLessons to baseList
     }
 }

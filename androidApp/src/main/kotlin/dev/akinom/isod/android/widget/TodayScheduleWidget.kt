@@ -38,6 +38,7 @@ import androidx.glance.unit.ColorProvider
 import dev.akinom.isod.MainTab
 import dev.akinom.isod.android.MainActivity
 import dev.akinom.isod.android.R
+import dev.akinom.isod.auth.CredentialsStorage
 import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.auth.currentWeekMonday
 import dev.akinom.isod.data.repository.TimetableRepository
@@ -51,6 +52,7 @@ import org.koin.core.component.inject
 
 class TodayScheduleWidget : GlanceAppWidget(), KoinComponent {
     private val timetableRepo: TimetableRepository by inject()
+    private val storage: CredentialsStorage by inject()
 
     override val sizeMode: SizeMode = SizeMode.Exact
 
@@ -61,7 +63,8 @@ class TodayScheduleWidget : GlanceAppWidget(), KoinComponent {
                 val semester = currentSemester()
                 val timetable by timetableRepo.getTimetable(semester, monday).collectAsState(emptyList())
                 val currentWeek = AcademicCalendar.getCurrentWeek(semester)
-                val (isAfterLessons, dashboardEntries) = TimetableWidgetUtils.getDashboardSchedule(timetable, currentWeek)
+                val showAllDay = remember { storage.shouldShowAllDayInWidget() }
+                val (isAfterLessons, dashboardEntries) = TimetableWidgetUtils.getDashboardSchedule(timetable, currentWeek, showAllDay)
                 val size = LocalSize.current
                 val context = LocalContext.current
 

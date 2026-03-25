@@ -23,10 +23,7 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import dev.akinom.isod.auth.AppThemeSetting
-import dev.akinom.isod.auth.CredentialsStorage
-import dev.akinom.isod.auth.createSettings
-import dev.akinom.isod.auth.getAppVersion
+import dev.akinom.isod.auth.*
 import dev.akinom.isod.onboarding.isod.ISODLinkScreen
 import dev.akinom.isod.onboarding.usos.USOSLinkScreen
 import org.jetbrains.compose.resources.stringResource
@@ -43,6 +40,8 @@ class SettingsScreen : Screen {
 
         val themeSetting = remember { mutableStateOf(storage.getTheme()) }
         val updateTheme = LocalThemeSetting.current
+        
+        var showAllDayInWidget by remember { mutableStateOf(storage.shouldShowAllDayInWidget()) }
 
         var showThemeDialog by remember { mutableStateOf(false) }
 
@@ -83,6 +82,34 @@ class SettingsScreen : Screen {
                         },
                         leadingContent = { Icon(Icons.Default.Palette, null) },
                         modifier = Modifier.clickable { showThemeDialog = true }
+                    )
+                }
+
+                item {
+                    Spacer(Modifier.height(8.dp))
+                    SectionHeader(stringResource(Res.string.section_widget))
+                }
+
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(Res.string.widget_show_all_day)) },
+                        supportingContent = { Text(stringResource(Res.string.widget_show_all_day_desc)) },
+                        leadingContent = { Icon(Icons.Default.Widgets, null) },
+                        trailingContent = {
+                            Switch(
+                                checked = showAllDayInWidget,
+                                onCheckedChange = {
+                                    showAllDayInWidget = it
+                                    storage.setShowAllDayInWidget(it)
+                                    TimetableWidgetUpdater.update()
+                                }
+                            )
+                        },
+                        modifier = Modifier.clickable {
+                            showAllDayInWidget = !showAllDayInWidget
+                            storage.setShowAllDayInWidget(showAllDayInWidget)
+                            TimetableWidgetUpdater.update()
+                        }
                     )
                 }
 

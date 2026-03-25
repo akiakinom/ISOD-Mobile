@@ -35,11 +35,15 @@ object TimetableWidgetUtils {
         return TimetableWidgetLogic.filterToday(entries, getTodayDayOfWeek())
     }
 
-    fun getDashboardSchedule(entries: List<TimetableEntry>, currentWeek: Int?): Pair<Boolean, List<TimetableEntry>> {
+    fun getDashboardSchedule(
+        entries: List<TimetableEntry>,
+        currentWeek: Int?,
+        showAllDay: Boolean = false
+    ): Pair<Boolean, List<TimetableEntry>> {
         return TimetableWidgetLogic.getDashboardSchedule(
             entries = entries,
             todayDayOfWeek = getTodayDayOfWeek(),
-            currentTime = "00:00", // TODO CHANGE VIA SETTINGS
+            currentTime = if (showAllDay) "00:00" else getCurrentTime(),
             currentWeek = currentWeek,
             todayDate = AcademicCalendar.getToday()
         )

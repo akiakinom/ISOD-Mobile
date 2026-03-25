@@ -79,6 +79,9 @@
     <string name="theme_system">System Default</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="section_widget">Widget</string>
+    <string name="widget_show_all_day">Show full day schedule</string>
+    <string name="widget_show_all_day_desc">Display all classes for today instead of only upcoming ones</string>
     <string name="section_account">Account</string>
     <string name="isod_user">ISOD User</string>
     <string name="not_linked">Not linked</string>

@@ -79,6 +79,9 @@
     <string name="theme_system">Domyślny systemu</string>
     <string name="theme_light">Jasny</string>
     <string name="theme_dark">Ciemny</string>
+    <string name="section_widget">Widget</string>
+    <string name="widget_show_all_day">Pokaż plan na cały dzień</string>
+    <string name="widget_show_all_day_desc">Wyświetlaj wszystkie dzisiejsze zajęcia zamiast tylko nadchodzących</string>
     <string name="section_account">Konto</string>
     <string name="isod_user">Konto ISOD</string>
     <string name="not_linked">Niepołączone</string>

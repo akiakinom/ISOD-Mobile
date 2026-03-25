@@ -8,6 +8,7 @@ private const val KEY_ISOD_API_KEY      = "isod_api_key"
 private const val KEY_USOS_TOKEN        = "usos_token"
 private const val KEY_USOS_TOKEN_SECRET = "usos_token_secret"
 private const val KEY_THEME             = "app_theme"
+private const val KEY_WIDGET_SHOW_ALL_DAY = "widget_show_all_day"
 
 enum class AppThemeSetting {
     SYSTEM, LIGHT, DARK
@@ -59,6 +60,12 @@ class CredentialsStorage(
 
     fun setTheme(theme: AppThemeSetting) {
         settings[KEY_THEME] = theme.name
+    }
+
+    fun shouldShowAllDayInWidget(): Boolean = settings.getBoolean(KEY_WIDGET_SHOW_ALL_DAY, false)
+
+    fun setShowAllDayInWidget(showAllDay: Boolean) {
+        settings[KEY_WIDGET_SHOW_ALL_DAY] = showAllDay
     }
 
     fun isFullyLinked(): Boolean = hasIsodCredentials() && hasUsosTokens()
