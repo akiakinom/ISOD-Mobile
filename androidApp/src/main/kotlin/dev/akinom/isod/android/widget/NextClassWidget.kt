@@ -112,7 +112,7 @@ private fun NextClassHero(entry: TimetableEntry, today: Int, size: DpSize, actio
     val context = LocalContext.current
     val accentColor: ColorProvider = TimetableWidgetUtils.widgetTypeToColor(entry.courseType.toShortLabel())
     val useFullName = size.width > 250.dp
-    val showRoom = size.height > 200.dp
+    val showRoom = size.height > 150.dp
     
     val currentTime = TimetableWidgetUtils.getCurrentTime()
     val isNow = entry.dayOfWeek == today && currentTime >= entry.startTime && currentTime < entry.endTime
