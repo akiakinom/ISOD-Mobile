@@ -536,7 +536,7 @@ private fun TimelineGroup(
                 )
             } else {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    group.forEach { entry ->
+                    group.sortedBy { it.courseName }.forEach { entry ->
                         ScheduleItemV2(
                             entry = entry,
                             modifier = Modifier.weight(1f),
@@ -646,7 +646,7 @@ private fun ScheduleItemV2(
                     text = entry.courseName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    maxLines = 2
+                    maxLines = 3
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -665,10 +665,10 @@ private fun ScheduleItemV2(
                         Icon(Icons.Default.Person, null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            text = entry.lecturerNames.firstOrNull() ?: "",
+                            text = entry.lecturerNames.joinToString("\n"),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1
+                            maxLines = 2
                         )
                     }
                 }

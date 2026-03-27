@@ -24,33 +24,35 @@ object TimetableWidgetLogic {
         currentWeek: Int? = null,
         todayDate: LocalDate? = null
     ): List<TimetableEntry> {
-        val effectiveDayOfWeek = todayDate?.let { AcademicCalendar.getEffectiveDayOfWeek(it) } ?: todayDayOfWeek
-        
-        val sortedEntries = entries.sortedWith(compareBy({ it.dayOfWeek }, { it.startTime }))
+
+        var effectiveWeek = currentWeek
+        var effectiveDayOfWeek = todayDate?.let { AcademicCalendar.getEffectiveDayOfWeek(it) } ?: todayDayOfWeek
+
+        if (todayDayOfWeek > 5) {
+            effectiveWeek = effectiveWeek!! + 1
+            effectiveDayOfWeek = 1
+        }
+
+        val sortedEntries = entries.sortedWith(compareBy({ it.dayOfWeek }, { it.startTime })).filter { it.isActive(effectiveWeek) }
         val currentMinutes = timeToMinutes(currentTime)
 
         val current = sortedEntries.find {
-            it.dayOfWeek == effectiveDayOfWeek && it.startTime <= currentTime && it.endTime > currentTime && it.isActive(currentWeek)
+            it.dayOfWeek == effectiveDayOfWeek && it.startTime <= currentTime && it.endTime > currentTime
         }
 
         val futureThisWeek = sortedEntries.filter {
-            ((it.dayOfWeek == effectiveDayOfWeek && it.startTime > currentTime) || (it.dayOfWeek > effectiveDayOfWeek)) && it.isActive(currentWeek)
+            ((it.dayOfWeek == effectiveDayOfWeek && it.startTime > currentTime) || (it.dayOfWeek > effectiveDayOfWeek))
         }
-        
-        val nextWeek = currentWeek?.plus(1)
-        val futureNextWeek = sortedEntries.filter { it.isActive(nextWeek) }
-        
-        val allFuture = futureThisWeek + futureNextWeek
 
         val isEndingSoon = current?.let {
             val endMinutes = timeToMinutes(it.endTime)
-            endMinutes - currentMinutes <= 20 && allFuture.isNotEmpty()
+            endMinutes - currentMinutes <= 20 && futureThisWeek.isNotEmpty()
         } ?: false
 
         return if (current != null && !isEndingSoon) {
-            listOfNotNull(current) + allFuture.take(1)
+            listOfNotNull(current) + futureThisWeek.take(1)
         } else {
-            allFuture.take(2)
+            futureThisWeek.take(2)
         }
     }
 

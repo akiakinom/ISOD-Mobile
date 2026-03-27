@@ -51,8 +51,8 @@ data class TimetableEntry(
 
         return when (activeCycle.uppercase()) {
             "SEM" -> true
-            "1PS" -> currentWeek <= 7
-            "2PS" -> currentWeek >= 7 // For middle its undefined, assume both
+            "1PS" -> currentWeek <= 8
+            "2PS" -> currentWeek >= 8
             "PA" -> currentWeek % 2 == 0
             "NP" -> currentWeek % 2 != 0
             else -> true
