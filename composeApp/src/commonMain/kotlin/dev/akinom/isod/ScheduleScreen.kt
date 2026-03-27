@@ -195,7 +195,7 @@ class ScheduleScreen(
                 )
             },
             floatingActionButton = {
-                val showJumpToToday = !isViewingCurrentWeek || (pagerState.currentPage != (currentDayOfWeek() - 1).coerceIn(0, 4))
+                val showJumpToToday = !isViewingCurrentWeek
                 AnimatedVisibility(
                     visible = showJumpToToday,
                     enter = scaleIn() + fadeIn(),
@@ -204,11 +204,7 @@ class ScheduleScreen(
                     ExtendedFloatingActionButton(
                         onClick = {
                             scope.launch {
-                                if (!isViewingCurrentWeek) {
-                                    screenModel.actualCurrentWeek?.let { screenModel.selectWeek(it) }
-                                }
-                                val todayIdx = (currentDayOfWeek() - 1).coerceIn(0, 4)
-                                pagerState.animateScrollToPage(todayIdx)
+                                screenModel.actualCurrentWeek?.let { screenModel.selectWeek(it) }
                             }
                         },
                         icon = { Icon(Icons.Default.Today, null) },
