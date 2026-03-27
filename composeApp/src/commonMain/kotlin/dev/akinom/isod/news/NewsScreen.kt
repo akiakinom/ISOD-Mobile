@@ -7,11 +7,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Attachment
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.NotificationsNone
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +27,7 @@ import dev.akinom.isod.domain.NewsType
 import dev.akinom.isod.HomeScreenModel
 import dev.akinom.isod.Res
 import dev.akinom.isod.*
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 class NewsScreen(val semester: String = currentSemester()) : Screen {
@@ -38,7 +38,9 @@ class NewsScreen(val semester: String = currentSemester()) : Screen {
         val screenModel = rememberScreenModel { HomeScreenModel(semester) }
         val news by screenModel.news.collectAsState()
         val navigator = LocalNavigator.currentOrThrow
+        val scope = rememberCoroutineScope()
         
+        var isRefreshing by remember { mutableStateOf(false) }
         var selectedFilters by remember { mutableStateOf(setOf("All")) }
         
         val filters = remember(news) {
@@ -100,73 +102,83 @@ class NewsScreen(val semester: String = currentSemester()) : Screen {
                 )
             }
         ) { paddingValues ->
-            Column(
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    scope.launch {
+                        isRefreshing = true
+                        screenModel.refresh()
+                        isRefreshing = false
+                    }
+                },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
                     .background(MaterialTheme.colorScheme.surface)
             ) {
-                if (filters.size > 1) {
-                    FlowRow(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(0.dp)
-                    ) {
-                        filters.forEach { filter ->
-                            val isSelected = filter in selectedFilters
-                            val label = when {
-                                filter == "All" -> stringResource(Res.string.filter_all)
-                                filter in NewsType.entries.map { it.name } -> {
-                                    NewsType.valueOf(filter).toLabel()
-                                }
-                                else -> filter
-                            }
-                            
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = { onFilterToggle(filter) },
-                                label = { Text(label) },
-                                leadingIcon = if (isSelected) {
-                                    {
-                                        Icon(
-                                            imageVector = Icons.Filled.Done,
-                                            contentDescription = stringResource(Res.string.selected),
-                                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                                        )
+                Column(modifier = Modifier.fillMaxSize()) {
+                    if (filters.size > 1) {
+                        FlowRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(0.dp)
+                        ) {
+                            filters.forEach { filter ->
+                                val isSelected = filter in selectedFilters
+                                val label = when {
+                                    filter == "All" -> stringResource(Res.string.filter_all)
+                                    filter in NewsType.entries.map { it.name } -> {
+                                        NewsType.valueOf(filter).toLabel()
                                     }
-                                } else null,
-                                shape = MaterialTheme.shapes.medium
-                            )
+                                    else -> filter
+                                }
+                                
+                                FilterChip(
+                                    selected = isSelected,
+                                    onClick = { onFilterToggle(filter) },
+                                    label = { Text(label) },
+                                    leadingIcon = if (isSelected) {
+                                        {
+                                            Icon(
+                                                imageVector = Icons.Filled.Done,
+                                                contentDescription = stringResource(Res.string.selected),
+                                                modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                            )
+                                        }
+                                    } else null,
+                                    shape = MaterialTheme.shapes.medium
+                                )
+                            }
                         }
                     }
-                }
 
-                if (filteredNews.isEmpty()) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                Icons.Default.NotificationsNone,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                            )
-                            Spacer(Modifier.height(16.dp))
-                            val emptyText = if (news.isEmpty()) stringResource(Res.string.no_news_yet) else stringResource(Res.string.no_matching_news)
-                            @Suppress("DEPRECATION")
-                            Text(emptyText, color = MaterialTheme.colorScheme.outline)
+                    if (filteredNews.isEmpty()) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    Icons.Default.NotificationsNone,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(64.dp),
+                                    tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                )
+                                Spacer(Modifier.height(16.dp))
+                                val emptyText = if (news.isEmpty()) stringResource(Res.string.no_news_yet) else stringResource(Res.string.no_matching_news)
+                                @Suppress("DEPRECATION")
+                                Text(emptyText, color = MaterialTheme.colorScheme.outline)
+                            }
                         }
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(filteredNews) { item ->
-                            NewsCard(item) {
-                                navigator.push(NewsDetailScreen(item.id))
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(filteredNews) { item ->
+                                NewsCard(item) {
+                                    navigator.push(NewsDetailScreen(item.id))
+                                }
                             }
                         }
                     }

@@ -138,4 +138,7 @@
     <string name="cycle_none">Always Inactive</string>
 
     <string name="day_substitution_label">Using %1$s\'s schedule today</string>
+    <string name="ok">OK</string>
+    <string name="summary_label">Summary</string>
+    <string name="weight_label">Weight: %1$s</string>
 </resources>

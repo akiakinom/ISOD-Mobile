@@ -47,6 +47,7 @@ data class NewsAttachment(
     val size: Long,
 )
 
+@Serializable
 enum class NewsType {
     IMPORTANT,
     GRADE,
@@ -57,6 +58,7 @@ enum class NewsType {
     OTHER
 }
 
+@Serializable
 enum class ClassType {
     LECTURE,
     LABORATORY,
@@ -109,10 +111,17 @@ data class ClassDetail(
     val credit: String?,
     val creditModifiedBy: String?,
     val semester: String,
+    val studentNo: String?,
+    val usosId: String?,
+    val username: String?,
+    val firstname: String?,
+    val lastname: String?,
+    val summaryModifiedBy: String?,
 )
 
 @Serializable
 data class ClassHeader(
+    val id: String,
     val courseNumber: String,
     val courseName: String,
     val type: ClassType,
@@ -141,8 +150,12 @@ data class ClassColumn(
     val name: String?,
     val type: String,
     val value: String?,
+    val valueNote: String?,
     val weight: Double,
     val accounted: Boolean,
     val date: String?,
+    val dateModified: String?,
     val personModifying: String?,
+    val personModifyingTitle: String?,
+    val indexOrder: Int,
 )

@@ -10,11 +10,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +25,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
 import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.data.repository.GradesRepository
+import dev.akinom.isod.domain.ClassAnnouncement
 import dev.akinom.isod.domain.ClassGrade
 import dev.akinom.isod.domain.CourseGrade
 import dev.akinom.isod.news.toLabel
@@ -58,6 +57,9 @@ class GradesScreenModel : ScreenModel, KoinComponent {
     private val _loadingCourseDetails = MutableStateFlow<Set<String>>(emptySet())
     val loadingCourseDetails: StateFlow<Set<String>> = _loadingCourseDetails
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing
+
     init {
         observeGrades()
     }
@@ -79,8 +81,21 @@ class GradesScreenModel : ScreenModel, KoinComponent {
         _semester.value = newSemester
     }
 
+    fun refresh() {
+        screenModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                repo.refreshGrades(_semester.value, _semester.value, forceDetails = true)
+            } catch (e: Exception) {
+                // error will be handled by flow catch if it affects the data
+            } finally {
+                _isRefreshing.value = false
+            }
+        }
+    }
+
     fun loadCourseDetails(course: CourseGrade) {
-        if (course.classGrades.any { it.columns.isNotEmpty() }) return
+        if (course.classGrades.any { it.columns.isNotEmpty() || it.announcements.isNotEmpty() }) return
         
         screenModelScope.launch {
             _loadingCourseDetails.update { it + course.courseId }
@@ -123,6 +138,7 @@ class GradesScreen : Screen {
         val state by screenModel.state.collectAsState()
         val selectedSemester by screenModel.semester.collectAsState()
         val loadingDetails by screenModel.loadingCourseDetails.collectAsState()
+        val isRefreshing by screenModel.isRefreshing.collectAsState()
 
         var showSemesterPicker by remember { mutableStateOf(false) }
 
@@ -167,7 +183,9 @@ class GradesScreen : Screen {
                 )
             }
         ) { paddingValues ->
-            Box(
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = { screenModel.refresh() },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
@@ -395,7 +413,7 @@ private fun ClassDetailSection(cls: ClassGrade) {
                 }
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text =  cls.classType.toLabel(),
+                    text = cls.classType.toLabel(),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -417,7 +435,24 @@ private fun ClassDetailSection(cls: ClassGrade) {
             }
         }
 
+        if (cls.teachers != null) {
+            Text(
+                text = cls.teachers!!,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp, start = 32.dp)
+            )
+        }
+
         Spacer(Modifier.height(12.dp))
+
+        if (cls.announcements.isNotEmpty()) {
+            cls.announcements.forEach { ann ->
+                AnnouncementItem(ann)
+                Spacer(Modifier.height(8.dp))
+            }
+            Spacer(Modifier.height(4.dp))
+        }
 
         if (cls.columns.isEmpty()) {
             Text(
@@ -434,10 +469,18 @@ private fun ClassDetailSection(cls: ClassGrade) {
             ) {
                 cls.columns.forEach { col ->
                     val value = col.value?.ifBlank { null }
+                    val note = col.valueNote
+                    var showDetails by remember { mutableStateOf(false) }
+
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
                         shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                        border = BorderStroke(
+                            0.5.dp, 
+                            if (note?.isNotBlank() == true) accentColor.copy(alpha = 0.5f)
+                            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                        ),
+                        onClick = { showDetails = true }
                     ) {
                         Column(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -449,17 +492,157 @@ private fun ClassDetailSection(cls: ClassGrade) {
                                 fontSize = 10.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Text(
-                                text = value ?: "∅",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Bold,
-                                color = if (value == null) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f) 
-                                        else MaterialTheme.colorScheme.onSurface
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = value ?: "∅",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (value == null) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f) 
+                                            else MaterialTheme.colorScheme.onSurface
+                                )
+                                if (note?.isNotBlank() == true) {
+                                    Icon(
+                                        Icons.Default.Info, 
+                                        null, 
+                                        Modifier.size(10.dp).padding(start = 2.dp),
+                                        tint = accentColor
+                                    )
+                                }
+                            }
                         }
+                    }
+
+                    if (showDetails) {
+                        AlertDialog(
+                            onDismissRequest = { showDetails = false },
+                            confirmButton = { TextButton(onClick = { showDetails = false }) { Text(stringResource(Res.string.ok)) } },
+                            title = { Text(col.name ?: stringResource(Res.string.grade_value_label)) },
+                            text = { 
+                                Column {
+                                    if (col.weight != 1.0) {
+                                        Text(
+                                            text = stringResource(Res.string.weight_label, col.weight.toString()),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = accentColor
+                                        )
+                                        Spacer(Modifier.height(8.dp))
+                                    }
+                                    
+                                    if (note?.isNotBlank() == true) {
+                                        Text(note!!)
+                                        Spacer(Modifier.height(12.dp))
+                                    }
+                                    
+                                    if (col.personModifying?.isNotBlank() == true) {
+                                        Text(
+                                            text = "${col.personModifyingTitle ?: ""} ${col.personModifying}".trim(),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    if (col.dateModified?.isNotBlank() == true) {
+                                        Text(
+                                            text = col.dateModified!!,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                        )
+                                    } else if (col.date?.isNotBlank() == true) {
+                                        Text(
+                                            text = col.date!!,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                        )
+                                    }
+                                }
+                            }
+                        )
                     }
                 }
             }
+        }
+
+        if (cls.summary?.isNotBlank() == true) {
+            Spacer(Modifier.height(12.dp))
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+            ) {
+                Column(Modifier.padding(12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Edit, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            stringResource(Res.string.summary_label),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = cls.summary!!,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    if (cls.summaryNotes?.isNotBlank() == true) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = cls.summaryNotes!!,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    if (cls.summaryModifiedBy?.isNotBlank() == true) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = cls.summaryModifiedBy!!,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AnnouncementItem(ann: ClassAnnouncement) {
+    Surface(
+        color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f))
+    ) {
+        Column(Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.Info, 
+                    null, 
+                    Modifier.size(14.dp), 
+                    tint = MaterialTheme.colorScheme.tertiary
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    ann.title,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                ann.content,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "${ann.author} • ${ann.dateModified}",
+                style = MaterialTheme.typography.labelSmall,
+                fontSize = 10.sp,
+                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.5f)
+            )
         }
     }
 }

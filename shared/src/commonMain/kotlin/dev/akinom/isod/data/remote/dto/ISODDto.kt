@@ -6,14 +6,17 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 fun String.removeTitles(): String {
-    val titles = listOf("dr.", "prof.", "mgr.", "inz.", "mgr", "hab.", "dr")
+    val titles = listOf(
+        "prof. dr hab. inż.", "prof. dr hab.", "dr hab. inż.", "dr hab.", "dr inż.", 
+        "mgr inż.", "dr.", "prof.", "mgr.", "inz.", "inż.", "mgr", "hab.", "dr"
+    )
+    var result = this
     titles.forEach { title ->
-        if (contains(title)) {
-            replace(title, "").trim()
+        if (result.contains(title, ignoreCase = true)) {
+            result = result.replace(title, "", ignoreCase = true).trim()
         }
     }
-
-    return this
+    return result
 }
 
 @Serializable
@@ -266,6 +269,12 @@ data class ClassDetailDto(
     val credit: String? = null,
     val creditModifiedBy: String? = null,
     val semester: String = "",
+    val studentNo: String? = null,
+    val usosId: String? = null,
+    val username: String? = null,
+    val firstname: String? = null,
+    val lastname: String? = null,
+    val summaryModifiedBy: String? = null,
 ) {
     fun toDomain() = ClassDetail(
         id              = id,
@@ -277,11 +286,18 @@ data class ClassDetailDto(
         credit          = credit,
         creditModifiedBy = creditModifiedBy,
         semester        = semester,
+        studentNo       = studentNo,
+        usosId          = usosId,
+        username        = username,
+        firstname       = firstname,
+        lastname        = lastname,
+        summaryModifiedBy = summaryModifiedBy,
     )
 }
 
 @Serializable
 data class ClassHeaderDto(
+    val id: String = "",
     val courseNumber: String,
     val courseName: String,
     val type: String = "",
@@ -296,6 +312,7 @@ data class ClassHeaderDto(
     val academicSemester: String = "",
 ) {
     fun toDomain() = ClassHeader(
+        id               = id,
         courseNumber     = courseNumber,
         courseName       = courseName,
         type             = type.toClassType(),
@@ -333,18 +350,26 @@ data class ClassColumnDto(
     val name: String? = null,
     val type: String = "",
     val value: String? = null,
+    val valueNote: String? = null,
     val weight: Double = 1.0,
     val accounted: Boolean = false,
     val date: String? = null,
+    val dateModified: String? = null,
     val personModifying: String? = null,
+    val personModifyingTitle: String? = null,
+    val indexOrder: Int = 0,
 ) {
     fun toDomain() = ClassColumn(
         name            = name,
         type            = type,
         value           = value,
+        valueNote       = valueNote,
         weight          = weight,
         accounted       = accounted,
         date            = date,
+        dateModified    = dateModified,
         personModifying = personModifying,
+        personModifyingTitle = personModifyingTitle,
+        indexOrder      = indexOrder,
     )
 }
