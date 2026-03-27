@@ -134,4 +134,8 @@
     <string name="cycle_none">Zawsze nieaktywne</string>
 
     <string name="day_substitution_label">Obowiązuje plan z: %1$s</string>
+    <string name="ok">OK</string>
+    <string name="summary_label">Podsumowanie</string>
+    <string name="weight_label">Waga: %1$s</string>
+    <string name="date_at_format">%1$s o %2$s</string>
 </resources>

@@ -102,18 +102,8 @@ class HomeScreen(
         val today = currentDayOfWeek()
         val now = currentTimeHHmm()
         
-        val (_, dashboardClasses) = remember(timetable, today, now, screenModel.currentWeek) {
-            TimetableWidgetLogic.getDashboardSchedule(
-                entries = timetable,
-                todayDayOfWeek = today,
-                currentTime = now,
-                currentWeek = screenModel.currentWeek,
-                todayDate = AcademicCalendar.getToday()
-            )
-        }
-
-        val nextClasses = remember(timetable, today, now, screenModel.currentWeek) {
-            TimetableWidgetLogic.getNextClasses(
+        val remainingClasses = remember(timetable, today, now, screenModel.currentWeek) {
+            TimetableWidgetLogic.getRemainingClasses(
                 entries = timetable,
                 todayDayOfWeek = today,
                 currentTime = now,
@@ -175,14 +165,15 @@ class HomeScreen(
                 }
 
                 // Next Class Card
-                val nextClass = nextClasses.firstOrNull()
+                val nextClass = remainingClasses.firstOrNull()
                 if (nextClass != null) {
                     NextClassCard(nextClass, today, now) {
                         onMoveToTab(MainTab.Schedule, nextClass.dayOfWeek)
                     }
                 }
 
-                dashboardClasses.forEach { entry ->
+                // Remaining classes of the day
+                remainingClasses.drop(1).forEach { entry ->
                     CompactTimetableItem(entry) {
                         onMoveToTab(MainTab.Schedule, entry.dayOfWeek)
                     }

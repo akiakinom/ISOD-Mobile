@@ -2,6 +2,7 @@ package dev.akinom.isod.data.remote.dto
 
 import dev.akinom.isod.domain.*
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -124,9 +125,11 @@ fun String.toNewsTitle(): String {
     }.replaceFirstChar { it.uppercase() }
 }
 
-fun String.toLocalDate(): LocalDate? = runCatching {
-    val parts = split(".")
-    LocalDate(parts[2].split(" ")[0].toInt(), parts[1].toInt(), parts[0].toInt())
+fun String.toLocalDateTime(): LocalDateTime? = runCatching {
+    val (datePart, timePart) = split(" ")
+    val (day, month, year) = datePart.split(".").map { it.toInt() }
+    val (hour, minute) = timePart.split(":").map { it.toInt() }
+    LocalDateTime(year, month, day, hour, minute)
 }.getOrNull()
 
 @Serializable
@@ -142,7 +145,7 @@ data class NewsHeaderDto(
     fun toDomain() = NewsHeader(
         id = hash,
         title = subject.toNewsTitle(),
-        date = modifiedDate.toLocalDate(),
+        date = modifiedDate.toLocalDateTime(),
         author = modifiedBy,
         type = subject.toNewsType(type),
         label = subject.toNewsLabel()
@@ -171,7 +174,7 @@ data class NewsItemDto(
         id = hash,
         title = subject.toNewsTitle(),
         content = content,
-        date = modifiedDate.toLocalDate(),
+        date = modifiedDate.toLocalDateTime(),
         author = modifiedBy,
         type = subject.toNewsType(type),
         label = subject.toNewsLabel()

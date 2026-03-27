@@ -1,6 +1,7 @@
 package dev.akinom.isod.domain
 
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
 data class PlanItem(
@@ -25,7 +26,7 @@ data class PlanItem(
 data class NewsHeader(
     val id: String,
     val title: String,
-    val date: LocalDate?,
+    val date: LocalDateTime?,
     val author: String,
     val type: NewsType,
     val label: String,
@@ -35,7 +36,7 @@ data class NewsItem(
     val id: String,
     val title: String,
     val content: String,
-    val date: LocalDate?,
+    val date: LocalDateTime?,
     val author: String,
     val type: NewsType,
     val label: String,

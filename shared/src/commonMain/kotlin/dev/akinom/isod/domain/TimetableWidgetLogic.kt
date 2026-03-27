@@ -54,6 +54,31 @@ object TimetableWidgetLogic {
         }
     }
 
+    fun getRemainingClasses(
+        entries: List<TimetableEntry>,
+        todayDayOfWeek: Int,
+        currentTime: String,
+        currentWeek: Int? = null,
+        todayDate: LocalDate? = null
+    ): List<TimetableEntry> {
+        val nextClasses = getNextClasses(entries, todayDayOfWeek, currentTime, currentWeek, todayDate)
+        if (nextClasses.isEmpty()) return emptyList()
+
+        val firstNext = nextClasses.first()
+        val effectiveDayOfWeek = todayDate?.let { AcademicCalendar.getEffectiveDayOfWeek(it) } ?: todayDayOfWeek
+
+        val isFirstNextToday = firstNext.dayOfWeek == effectiveDayOfWeek
+        val targetWeek = if (isFirstNextToday) {
+            currentWeek
+        } else {
+            if (firstNext.dayOfWeek <= effectiveDayOfWeek) (currentWeek?.plus(1) ?: 1) else currentWeek
+        }
+
+        return entries.filter { it.dayOfWeek == firstNext.dayOfWeek && it.isActive(targetWeek) }
+            .sortedBy { it.startTime }
+            .filter { it.startTime >= firstNext.startTime }
+    }
+
     fun getDashboardSchedule(
         entries: List<TimetableEntry>,
         todayDayOfWeek: Int,
@@ -90,8 +115,6 @@ object TimetableWidgetLogic {
             }
         }
 
-        // Return the full base list.
-        // In the "Today's Schedule" widget, it's preferred to show the current class as well.
         return isAfterLessons to baseList
     }
 }

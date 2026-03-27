@@ -15,6 +15,8 @@ import dev.akinom.isod.*
 import dev.akinom.isod.domain.ClassType
 import dev.akinom.isod.domain.NewsHeader
 import dev.akinom.isod.domain.NewsItem
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.number
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -136,4 +138,12 @@ fun NewsType.toLabel(): String {
 
 fun NewsHeader.parseDateToSortable(): String {
     return date?.toString() ?: ""
+}
+
+@Composable
+fun LocalDateTime.formatFriendly(): String {
+    val datePart = "${day.toString().padStart(2, '0')}.${month.number.toString().padStart(2, '0')}.${year}"
+    val timePart = "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
+    
+    return stringResource(Res.string.date_at_format, datePart, timePart)
 }

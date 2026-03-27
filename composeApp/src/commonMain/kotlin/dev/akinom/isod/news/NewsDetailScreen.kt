@@ -153,8 +153,10 @@ data class NewsDetailScreen(val id: String) : Screen {
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(20.dp)
                             ) {
-                                MetaItem(Icons.Default.Person, data.author)
-                                MetaItem(Icons.Default.Schedule, data.date?.toString() ?: "")
+                                if (data.author.isNotEmpty()) {
+                                    MetaItem(Icons.Default.Person, data.author)
+                                }
+                                MetaItem(Icons.Default.Schedule, data.date?.formatFriendly() ?: "")
                             }
                         }
                     }
