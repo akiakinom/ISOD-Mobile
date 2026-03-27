@@ -115,7 +115,7 @@
 
     <string name="news_type_grade">Grades</string>
     <string name="news_type_class">Classes</string>
-    <string name="news_type_deans_office">Dean\'s Office</string>
+    <string name="news_type_deans_office">Dean's Office</string>
     <string name="news_type_wrs">Student Council</string>
     <string name="news_type_timetable">Timetable update</string>
     <string name="news_type_other">Other</string>
@@ -125,6 +125,7 @@
     <string name="error_server">Could not reach ISOD. Try again later.</string>
 
     <string name="week_number">Week %1$d</string>
+    <string name="current_week">Current week</string>
     <string name="override_cycle_title">Override Cycle</string>
     <string name="reset_to_default">Reset to default</string>
     <string name="cancel">Cancel</string>

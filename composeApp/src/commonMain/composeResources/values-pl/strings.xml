@@ -121,6 +121,7 @@
     <string name="news_type_other">Inne</string>
 
     <string name="week_number">Tydzień %1$d</string>
+    <string name="current_week">Obecny tydzień</string>
     <string name="override_cycle_title">Nadpisz cykl</string>
     <string name="reset_to_default">Przywróć domyślne</string>
     <string name="cancel">Anuluj</string>
