@@ -142,4 +142,8 @@
     <string name="summary_label">Summary</string>
     <string name="weight_label">Weight: %1$s</string>
     <string name="date_at_format">%1$s at %2$s</string>
+
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="other_date">Older</string>
 </resources>

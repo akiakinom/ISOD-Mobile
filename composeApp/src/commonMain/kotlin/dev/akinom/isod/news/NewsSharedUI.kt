@@ -14,10 +14,11 @@ import dev.akinom.isod.Res
 import dev.akinom.isod.*
 import dev.akinom.isod.domain.ClassType
 import dev.akinom.isod.domain.NewsHeader
-import dev.akinom.isod.domain.NewsItem
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.number
+import kotlinx.datetime.*
+import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.vectorResource
+import kotlin.time.Clock
 
 @Composable
 fun typeToColor(type: ClassType): Color {
@@ -78,31 +79,26 @@ fun ClassType.toShortLabel(): String {
 
 @Composable
 fun getTagColors(tag: String): Pair<Color, Color> {
-    val projectYellow = Color(0xFFF9A825)
     if (tag == "WRS") {
-        return projectYellow.copy(alpha = 0.2f) to projectYellow
+        return MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f) to MaterialTheme.colorScheme.tertiary
     }
-    
-    // Consistent "random" colors based on tag hash
-    val palette = listOf(
-        Color(0xFFE3F2FD) to Color(0xFF1565C0), // Blue
-        Color(0xFFF3E5F5) to Color(0xFF7B1FA2), // Purple
-        Color(0xFFE8F5E9) to Color(0xFF2E7D32), // Green
-        Color(0xFFFFF3E0) to Color(0xFFEF6C00), // Orange
-        Color(0xFFFCE4EC) to Color(0xFFC2185B), // Pink
-        Color(0xFFE0F2F1) to Color(0xFF00695C), // Teal
-        Color(0xFFE8EAF6) to Color(0xFF283593), // Indigo
-        Color(0xFFFFFDE7) to Color(0xFFFBC02D), // Yellow
+
+    val palettes = listOf(
+        MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.primary,
+        MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.secondary,
+        MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.tertiary,
+        MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant,
     )
     
-    val index = (tag.hashCode().let { if (it < 0) -it else it }) % palette.size
-    return palette[index]
+    val index = (tag.hashCode().let { if (it < 0) -it else it }) % palettes.size
+    return palettes[index]
 }
 
+@Composable
 fun NewsType.toIcon(): ImageVector {
     return when (this) {
         NewsType.DEANS_OFFICE -> Icons.Default.Campaign
-        NewsType.FACULTY_STUDENT_COUNCIL -> Icons.Default.Bolt
+        NewsType.FACULTY_STUDENT_COUNCIL -> vectorResource(Res.drawable.wrs_logo)
         NewsType.IMPORTANT -> Icons.Default.Report
         NewsType.GRADE -> Icons.Default.Star
         NewsType.CLASS -> Icons.AutoMirrored.Filled.Comment
@@ -142,8 +138,26 @@ fun NewsHeader.parseDateToSortable(): String {
 
 @Composable
 fun LocalDateTime.formatFriendly(): String {
-    val datePart = "${day.toString().padStart(2, '0')}.${month.number.toString().padStart(2, '0')}.${year}"
+    val datePart = "${dayOfMonth.toString().padStart(2, '0')}.${month.number.toString().padStart(2, '0')}.${year}"
     val timePart = "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
     
     return stringResource(Res.string.date_at_format, datePart, timePart)
+}
+
+@Composable
+fun LocalDate.formatHeader(): String {
+    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+    return when (this) {
+        now -> stringResource(Res.string.today)
+        now.minus(1, DateTimeUnit.DAY) -> stringResource(Res.string.yesterday)
+        LocalDate(1970, 1, 1) -> stringResource(Res.string.other_date)
+        else -> {
+            val datePart = "${day.toString().padStart(2, '0')}.${month.number.toString().padStart(2, '0')}.${year}"
+            datePart
+        }
+    }
+}
+
+fun LocalDateTime.formatTimeOnly(): String {
+    return "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
 }
