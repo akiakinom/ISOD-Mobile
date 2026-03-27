@@ -101,7 +101,6 @@ sqldelight {
     databases {
         create("IsodDatabase") {
             packageName.set("dev.akinom.isod")
-            version = 2
             deriveSchemaFromMigrations.set(false)
         }
     }
