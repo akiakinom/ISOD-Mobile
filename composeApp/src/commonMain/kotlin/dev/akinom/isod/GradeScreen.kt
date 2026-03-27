@@ -530,7 +530,7 @@ private fun ClassDetailSection(cls: ClassGrade) {
                                     }
                                     
                                     if (note?.isNotBlank() == true) {
-                                        Text(note!!)
+                                        Text(note)
                                         Spacer(Modifier.height(12.dp))
                                     }
                                     

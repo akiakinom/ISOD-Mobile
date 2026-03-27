@@ -77,8 +77,8 @@ class USOSLinkScreen : Screen {
                                 style = MaterialTheme.typography.titleLarge
                             )
                         },
-                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.background
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.background,
                         )
                     )
                 }

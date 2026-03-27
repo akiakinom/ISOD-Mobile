@@ -138,7 +138,7 @@ fun NewsHeader.parseDateToSortable(): String {
 
 @Composable
 fun LocalDateTime.formatFriendly(): String {
-    val datePart = "${dayOfMonth.toString().padStart(2, '0')}.${month.number.toString().padStart(2, '0')}.${year}"
+    val datePart = "${day.toString().padStart(2, '0')}.${month.number.toString().padStart(2, '0')}.${year}"
     val timePart = "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
     
     return stringResource(Res.string.date_at_format, datePart, timePart)
