@@ -53,7 +53,16 @@ val sharedModule = module {
         }
     }
 
-    single { get<DatabaseDriverFactory>().createDriver() }
+    single {
+        val factory = get<DatabaseDriverFactory>()
+        try {
+            factory.createDriver()
+        } catch (e: Exception) {
+            println("❌ Database error, deleting and recreating: ${e.message}")
+            factory.deleteDatabase()
+            factory.createDriver()
+        }
+    }
     single { IsodDatabase(get()) }
 
     single<CoroutineScope> { CoroutineScope(Dispatchers.Default + SupervisorJob()) }
