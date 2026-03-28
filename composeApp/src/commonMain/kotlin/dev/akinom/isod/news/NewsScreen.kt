@@ -211,7 +211,7 @@ private fun NewsDateHeader(date: LocalDate) {
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         HorizontalDivider(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.width(32.dp - 4.dp),
             color = MaterialTheme.colorScheme.outlineVariant
         )
         Text(
@@ -292,7 +292,7 @@ private fun NewsLogItem(item: NewsHeader, onClick: () -> Unit) {
             }
             
             Spacer(Modifier.height(2.dp))
-            
+
             Text(
                 text = item.title,
                 style = MaterialTheme.typography.titleSmall,
