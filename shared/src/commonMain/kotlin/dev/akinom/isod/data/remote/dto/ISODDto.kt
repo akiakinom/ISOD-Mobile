@@ -146,7 +146,7 @@ data class NewsHeaderDto(
         id = hash,
         title = subject.toNewsTitle(),
         date = modifiedDate.toLocalDateTime(),
-        author = modifiedBy,
+        author = modifiedBy.removeTitles(),
         type = subject.toNewsType(type),
         label = subject.toNewsLabel()
     )
@@ -175,7 +175,7 @@ data class NewsItemDto(
         title = subject.toNewsTitle(),
         content = content,
         date = modifiedDate.toLocalDateTime(),
-        author = modifiedBy,
+        author = modifiedBy.removeTitles(),
         type = subject.toNewsType(type),
         label = subject.toNewsLabel()
     )
