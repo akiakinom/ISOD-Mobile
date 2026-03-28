@@ -293,7 +293,7 @@ class ScheduleScreen(
                                         color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Text(
-                                        text = date.dayOfMonth.toString(),
+                                        text = date.day.toString(),
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = if (pagerState.currentPage == index) FontWeight.ExtraBold else FontWeight.Medium,
                                         color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface

@@ -627,21 +627,21 @@ private fun AnnouncementItem(ann: ClassAnnouncement) {
                     ann.title,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                    color = MaterialTheme.colorScheme.tertiary
                 )
             }
             Spacer(Modifier.height(4.dp))
             Text(
                 ann.content,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f)
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = "${ann.author} • ${ann.dateModified}",
                 style = MaterialTheme.typography.labelSmall,
                 fontSize = 10.sp,
-                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.5f)
+                color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f)
             )
         }
     }
