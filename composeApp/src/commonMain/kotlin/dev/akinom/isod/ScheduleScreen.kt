@@ -362,9 +362,9 @@ class ScheduleScreen(
                 )
             }
 
-            // Override Dialog
+            // Override Bottom Sheet
             if (selectedEntryForOverride != null) {
-                OverrideDialog(
+                OverrideBottomSheet(
                     entry = selectedEntryForOverride!!,
                     onDismiss = { selectedEntryForOverride = null },
                     onOverride = { entryId, code ->
@@ -655,12 +655,22 @@ private fun ScheduleItemV2(
                         contentColor = accentColor,
                         shape = RoundedCornerShape(6.dp)
                     ) {
-                        Text(
-                            text = entry.shortType,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.ExtraBold
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Icon(
+                                imageVector = typeToIcon(entry.courseType),
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = entry.shortType,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        }
                     }
 
                     if (isHappeningNow) {
@@ -766,46 +776,35 @@ private fun TimelineNowIndicator() {
 }
 
 @Composable
-private fun TimelineGapSeparator(
-    gapMinutes: Int,
-    isNow: Boolean,
-) {
-    val color = if (isNow) Color.Red else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+private fun TimelineNowMergedIndicator(gapMinutes: Int) {
     val infiniteTransition = rememberInfiniteTransition()
-    val glowAlpha by if (isNow) {
-        infiniteTransition.animateFloat(
-            initialValue = 0.3f,
-            targetValue = 0.8f,
-            animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse)
-        )
-    } else {
-        remember { mutableStateOf(1f) }
-    }
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 0.8f,
+        animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse)
+    )
+    val color = Color.Red
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
     ) {
-        if (isNow) {
-            Box(
-                modifier = Modifier
-                    .padding(start = 36.dp)
-                    .size(8.dp)
-                    .drawBehind {
-                        drawCircle(color = Color.Red, radius = size.minDimension / 2, alpha = glowAlpha)
-                        drawCircle(color = Color.Red.copy(alpha = 0.2f), radius = (size.minDimension / 2) * 2.5f * glowAlpha)
-                    }
-            )
-            Spacer(Modifier.width(28.dp))
-        } else {
-            Spacer(Modifier.width(72.dp))
-        }
+        Box(
+            modifier = Modifier
+                .padding(start = 36.dp)
+                .size(8.dp)
+                .drawBehind {
+                    drawCircle(color = color, radius = size.minDimension / 2, alpha = glowAlpha)
+                    drawCircle(color = color.copy(alpha = 0.2f), radius = (size.minDimension / 2) * 2.5f * glowAlpha)
+                }
+        )
+        Spacer(Modifier.width(28.dp))
 
         Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
             WavyLine(
                 modifier = Modifier.fillMaxWidth(),
                 color = color,
-                thickness = if (isNow) 1.5.dp else 1.dp
+                thickness = 1.5.dp
             )
 
             val gapText = if (gapMinutes >= 60) {
@@ -814,7 +813,7 @@ private fun TimelineGapSeparator(
                 stringResource(Res.string.gap_label_mins, gapMinutes)
             }
 
-            val displayText = if (isNow) "${stringResource(Res.string.now)} • $gapText" else gapText
+            val displayText = "${stringResource(Res.string.now)} • $gapText"
 
             Surface(
                 color = MaterialTheme.colorScheme.surface,
@@ -824,7 +823,54 @@ private fun TimelineGapSeparator(
                     text = displayText,
                     style = MaterialTheme.typography.labelSmall,
                     color = color,
-                    fontWeight = if (isNow) FontWeight.Black else FontWeight.Medium,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TimelineGapSeparator(
+    gapMinutes: Int,
+    isNow: Boolean,
+) {
+    if (isNow) {
+        TimelineNowMergedIndicator(gapMinutes)
+        return
+    }
+
+    val color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+    ) {
+        Spacer(Modifier.width(72.dp))
+
+        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            WavyLine(
+                modifier = Modifier.fillMaxWidth(),
+                color = color,
+                thickness = 1.dp
+            )
+
+            val gapText = if (gapMinutes >= 60) {
+                stringResource(Res.string.gap_label_hours_mins, gapMinutes / 60, gapMinutes % 60)
+            } else {
+                stringResource(Res.string.gap_label_mins, gapMinutes)
+            }
+
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            ) {
+                Text(
+                    text = gapText,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = color,
+                    fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(horizontal = 4.dp)
                 )
             }
@@ -967,7 +1013,7 @@ private fun WeekGridItem(
                     Text(
                         text = dateRange,
                         style = MaterialTheme.typography.labelSmall,
-                        fontSize = 12.sp,
+                        fontSize = 9.sp,
                         color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                         else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
@@ -977,9 +1023,9 @@ private fun WeekGridItem(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun OverrideDialog(
+private fun OverrideBottomSheet(
     entry: TimetableEntry,
     onDismiss: () -> Unit,
     onOverride: (String, String) -> Unit,
@@ -1021,147 +1067,237 @@ private fun OverrideDialog(
         CycleOption("NP", Res.string.cycle_np, Icons.Default.RepeatOne)
     )
 
-    AlertDialog(
+    ModalBottomSheet(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.override_cycle_title)) },
-        text = {
-            Column {
-                Text(
-                    text = "${entry.courseName} [${entry.courseType.toLabel()}]",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(Modifier.height(16.dp))
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        dragHandle = { BottomSheetDefaults.DragHandle() }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 48.dp)
+        ) {
+            Text(
+                text = stringResource(Res.string.override_cycle_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
 
-                // Standard options in a grid
-                options.chunked(2).forEach { rowOptions ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        rowOptions.forEach { option ->
-                            val isSelected = !tempOverrideCode.startsWith("W:") && tempOverrideCode == option.code
-                            Surface(
-                                onClick = {
-                                    tempOverrideCode = option.code
-                                    selectedWeeks = getWeeksForCode(option.code)
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                                border = BorderStroke(
-                                    1.dp,
-                                    if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                ),
-                                modifier = Modifier.weight(1f).height(48.dp)
+            Text(
+                text = entry.courseName,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+            
+            Surface(
+                color = typeToColor(entry.courseType).copy(alpha = 0.1f),
+                contentColor = typeToColor(entry.courseType),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Icon(
+                        imageVector = typeToIcon(entry.courseType),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = entry.courseType.toLabel(),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            if (entry.lecturerNames.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Person,
+                        null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = entry.lecturerNames.joinToString(", "),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
+                Icon(
+                    Icons.Default.Place,
+                    null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = entry.displayLocation,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.width(16.dp))
+                Icon(
+                    Icons.Default.Schedule,
+                    null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = "${entry.startTime} - ${entry.endTime}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            Spacer(Modifier.height(24.dp))
+
+            // Standard options in a grid
+            options.chunked(2).forEach { rowOptions ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    rowOptions.forEach { option ->
+                        val isSelected = !tempOverrideCode.startsWith("W:") && tempOverrideCode == option.code
+                        Surface(
+                            onClick = {
+                                tempOverrideCode = option.code
+                                selectedWeeks = getWeeksForCode(option.code)
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            border = BorderStroke(
+                                1.dp,
+                                if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            ),
+                            modifier = Modifier.weight(1f).height(56.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Start
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Icon(
-                                        imageVector = option.icon,
-                                        contentDescription = null,
-                                        tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(
-                                        text = stringResource(option.label),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
+                                Icon(
+                                    imageVector = option.icon,
+                                    contentDescription = null,
+                                    tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Text(
+                                    text = stringResource(option.label),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         }
                     }
-                    Spacer(Modifier.height(8.dp))
                 }
-
-                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
-
-                Text(
-                    text = stringResource(Res.string.cycle_custom),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                // Custom weeks grid (5 items per row for alignment)
-                (1..15).chunked(5).forEach { rowWeeks ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        rowWeeks.forEach { week ->
-                            val isSelected = selectedWeeks.contains(week)
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = {
-                                    val newWeeks = if (isSelected) {
-                                        selectedWeeks - week
-                                    } else {
-                                        selectedWeeks + week
-                                    }
-                                    selectedWeeks = newWeeks
-                                    tempOverrideCode = "W:" + newWeeks.sorted().joinToString(",")
-                                },
-                                label = {
-                                    Text(
-                                        week.toString(),
-                                        fontSize = 11.sp,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                },
-                                modifier = Modifier.weight(1f).height(32.dp)
-                            )
-                        }
-                    }
-                    Spacer(Modifier.height(4.dp))
-                }
-
                 Spacer(Modifier.height(12.dp))
+            }
 
-                TextButton(
+            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+
+            Text(
+                text = stringResource(Res.string.cycle_custom),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+
+            // Custom weeks grid (use same 3x5 logic as week picker)
+            (1..15).chunked(5).forEach { rowWeeks ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    rowWeeks.forEach { week ->
+                        val isSelected = selectedWeeks.contains(week)
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                val newWeeks = if (isSelected) {
+                                    selectedWeeks - week
+                                } else {
+                                    selectedWeeks + week
+                                }
+                                selectedWeeks = newWeeks
+                                tempOverrideCode = "W:" + newWeeks.sorted().joinToString(",")
+                            },
+                            label = {
+                                Text(
+                                    week.toString(),
+                                    fontSize = 11.sp,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            },
+                            modifier = Modifier.weight(1f).height(36.dp)
+                        )
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedButton(
                     onClick = {
                         tempOverrideCode = entry.cycle
                         selectedWeeks = getWeeksForCode(entry.cycle)
+                        if (entry.userCycleOverride != null) {
+                            onReset(entry.id)
+                        } else {
+                            onDismiss()
+                        }
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
                 ) {
                     Icon(Icons.Default.Refresh, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(Res.string.reset_to_default))
                 }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (tempOverrideCode == entry.cycle && entry.userCycleOverride != null) {
-                        onReset(entry.id)
-                    } else {
-                        onOverride(entry.id, tempOverrideCode)
-                    }
-                },
-                enabled = !tempOverrideCode.startsWith("W:") || selectedWeeks.isNotEmpty()
-            ) {
-                Text(stringResource(Res.string.save))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(Res.string.cancel))
+
+                Button(
+                    onClick = {
+                        if (tempOverrideCode == entry.cycle && entry.userCycleOverride != null) {
+                            onReset(entry.id)
+                        } else {
+                            onOverride(entry.id, tempOverrideCode)
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = !tempOverrideCode.startsWith("W:") || selectedWeeks.isNotEmpty()
+                ) {
+                    Icon(Icons.Default.Save, null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(Res.string.save))
+                }
             }
         }
-    )
+    }
 }
 
 private data class CycleOption(val code: String, val label: StringResource, val icon: ImageVector)
