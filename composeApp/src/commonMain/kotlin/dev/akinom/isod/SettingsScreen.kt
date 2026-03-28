@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -37,6 +39,7 @@ class SettingsScreen : Screen {
         val hasUsos = storage.hasUsosTokens()
         val version = remember { getAppVersion() }
         val isBeta = remember(version) { version.startsWith("0.") }
+        val uriHandler = LocalUriHandler.current
 
         val themeSetting = remember { mutableStateOf(storage.getTheme()) }
         val updateTheme = LocalThemeSetting.current
@@ -155,6 +158,15 @@ class SettingsScreen : Screen {
 
                 item {
                     AppInfoCard(version, isBeta)
+                }
+
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(Res.string.contribute)) },
+                        leadingContent = { Icon(Icons.Default.Code, null) },
+                        trailingContent = { Icon(Icons.AutoMirrored.Filled.OpenInNew, null, modifier = Modifier.size(18.dp)) },
+                        modifier = Modifier.clickable { uriHandler.openUri("https://github.com/akiakinom/ISOD-Mobile") }
+                    )
                 }
 
                 item {

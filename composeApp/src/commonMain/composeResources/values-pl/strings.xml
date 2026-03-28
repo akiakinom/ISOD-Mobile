@@ -7,6 +7,7 @@
     <string name="hide">Ukryj</string>
     <string name="show">Pokaż</string>
     <string name="isod_api_key_hint">Znajdź swój klucz API w portalu ISOD na dole strony swojego konta.</string>
+    <string name="open_isod_portal">Otwórz portal ISOD</string>
     <string name="continue_btn">Kontynuuj</string>
 
     <string name="usos_title">USOS</string>
@@ -90,6 +91,7 @@
     <string name="unlink">Odłącz</string>
     <string name="link">Połącz</string>
     <string name="section_about">O aplikacji</string>
+    <string name="contribute">Dodaj cegiełkę na GitHubie</string>
     <string name="log_out">Wyloguj się</string>
     <string name="version_format">Wersja %1$s</string>
     <string name="beta_suffix"> (BETA)</string>
