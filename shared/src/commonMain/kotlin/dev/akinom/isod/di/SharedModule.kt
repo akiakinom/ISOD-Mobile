@@ -1,5 +1,6 @@
 package dev.akinom.isod.di
 
+import app.cash.sqldelight.db.SqlDriver
 import dev.akinom.isod.IsodDatabase
 import dev.akinom.isod.Secrets
 import dev.akinom.isod.auth.CredentialsStorage
@@ -53,16 +54,27 @@ val sharedModule = module {
         }
     }
 
-    single {
+    single<SqlDriver> {
         val factory = get<DatabaseDriverFactory>()
-        try {
+        val driver = try {
             factory.createDriver()
         } catch (e: Exception) {
-            println("❌ Database error, deleting and recreating: ${e.message}")
+            println("❌ Database driver creation failed, deleting and recreating: ${e.message}")
+            factory.deleteDatabase()
+            factory.createDriver()
+        }
+
+        try {
+            IsodDatabase(driver).newsQueries.selectAllHeaders("").executeAsList()
+            driver
+        } catch (e: Exception) {
+            println("❌ Database schema validation failed, deleting and recreating: ${e.message}")
+            try { driver.close() } catch (_: Exception) {}
             factory.deleteDatabase()
             factory.createDriver()
         }
     }
+
     single { IsodDatabase(get()) }
 
     single<CoroutineScope> { CoroutineScope(Dispatchers.Default + SupervisorJob()) }
