@@ -202,20 +202,6 @@ class ScheduleScreen(
                                 Icon(Icons.AutoMirrored.Filled.NavigateNext, null)
                             }
                         }
-
-                        if (showWeekPicker) {
-                            WeekDropdown(
-                                weeks = screenModel.availableWeeks,
-                                currentWeek = selectedWeek,
-                                actualCurrentWeek = screenModel.actualCurrentWeek,
-                                semesterId = semester,
-                                onSelected = {
-                                    screenModel.selectWeek(it)
-                                    showWeekPicker = false
-                                },
-                                onDismiss = { showWeekPicker = false }
-                            )
-                        }
                     }
                 )
             },
@@ -359,6 +345,21 @@ class ScheduleScreen(
                         )
                     }
                 }
+            }
+
+            // Week Picker Bottom Sheet
+            if (showWeekPicker) {
+                WeekBottomSheet(
+                    weeks = screenModel.availableWeeks,
+                    currentWeek = selectedWeek,
+                    actualCurrentWeek = screenModel.actualCurrentWeek,
+                    semesterId = semester,
+                    onSelected = {
+                        screenModel.selectWeek(it)
+                        showWeekPicker = false
+                    },
+                    onDismiss = { showWeekPicker = false }
+                )
             }
 
             // Override Dialog
@@ -860,8 +861,9 @@ fun WavyLine(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun WeekDropdown(
+private fun WeekBottomSheet(
     weeks: List<Int>,
     currentWeek: Int,
     actualCurrentWeek: Int?,
@@ -869,40 +871,108 @@ private fun WeekDropdown(
     onSelected: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
-    DropdownMenu(
-        expanded = true,
+    ModalBottomSheet(
         onDismissRequest = onDismiss,
-        modifier = Modifier.heightIn(max = 400.dp)
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        dragHandle = { BottomSheetDefaults.DragHandle() }
     ) {
-        weeks.forEach { week ->
-            val monday = AcademicCalendar.getMondayOfWeek(semesterId, week)
-            val range = monday?.let { AcademicCalendar.getWeekRangeString(it) } ?: ""
-            val isActual = week == actualCurrentWeek
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 48.dp)
+        ) {
+            Text(
+                text = stringResource(Res.string.weekly_schedule),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
 
-            DropdownMenuItem(
-                text = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            stringResource(Res.string.week_number, week),
-                            fontWeight = if (week == currentWeek) FontWeight.Bold else FontWeight.Normal,
-                            color = if (week == currentWeek) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+            // 3x5 Grid
+            weeks.chunked(3).forEach { rowWeeks ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    rowWeeks.forEach { week ->
+                        val monday = AcademicCalendar.getMondayOfWeek(semesterId, week)
+                        val range = monday?.let { AcademicCalendar.getWeekRangeString(it) } ?: ""
+                        val isActual = week == actualCurrentWeek
+                        val isSelected = week == currentWeek
+
+                        WeekGridItem(
+                            week = week,
+                            isSelected = isSelected,
+                            isActual = isActual,
+                            dateRange = range,
+                            onClick = { onSelected(week) },
+                            modifier = Modifier.weight(1f)
                         )
-                        if (isActual) {
-                            Badge(modifier = Modifier.padding(start = 8.dp)) {
-                                Text(stringResource(Res.string.current_week))
-                            }
-                        }
-                        if (range.isNotEmpty()) {
-                            Text(
-                                " ($range)",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                            )
+                    }
+                    // Fill empty spaces if last row is not full
+                    if (rowWeeks.size < 3) {
+                        repeat(3 - rowWeeks.size) {
+                            Spacer(Modifier.weight(1f))
                         }
                     }
-                },
-                onClick = { onSelected(week) }
-            )
+                }
+                Spacer(Modifier.height(12.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun WeekGridItem(
+    week: Int,
+    isSelected: Boolean,
+    isActual: Boolean,
+    dateRange: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        border = BorderStroke(
+            width = if (isActual) 2.dp else 1.dp,
+            color = if (isActual) MaterialTheme.colorScheme.primary
+            else if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+        ),
+        modifier = modifier.height(72.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            if (isActual) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .size(6.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                )
+            }
+
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = week.toString(),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = if (isSelected || isActual) FontWeight.ExtraBold else FontWeight.Bold,
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                )
+                if (dateRange.isNotEmpty()) {
+                    Text(
+                        text = dateRange,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 12.sp,
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                }
+            }
         }
     }
 }
