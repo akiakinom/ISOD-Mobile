@@ -143,9 +143,12 @@
     <string name="cycle_sem">Cały semestr</string>
     <string name="cycle_1ps">Pierwsza połowa</string>
     <string name="cycle_2ps">Druga połowa</string>
-    <string name="cycle_pa">Tygodnie parzyste</string>
-    <string name="cycle_np">Tygodnie nieparzyste</string>
-    <string name="cycle_none">Zawsze nieaktywne</string>
+    <string name="cycle_pa">Parzyste</string>
+    <string name="cycle_np">Nieparzyste</string>
+    <string name="cycle_none">Nigdy</string>
+    <string name="cycle_custom">Własne wyjątki</string>
+    <string name="cycle_custom_hint">np. SEM!1-3 (oprócz tyg. 1-3) lub W:1,3,5 (tylko tyg. 1,3,5)</string>
+    <string name="save">Zapisz</string>
 
     <string name="day_substitution_label">Obowiązuje plan z: %1$s</string>
     <string name="ok">OK</string>

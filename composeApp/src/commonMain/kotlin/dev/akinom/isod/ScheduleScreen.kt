@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -47,6 +48,8 @@ import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.data.repository.TimetableRepository
 import dev.akinom.isod.domain.AcademicCalendar
 import dev.akinom.isod.domain.TimetableEntry
+import dev.akinom.isod.news.toLabel
+import dev.akinom.isod.news.toShortLabel
 import dev.akinom.isod.news.typeToColor
 import dev.akinom.isod.news.typeToIcon
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -336,7 +339,7 @@ class ScheduleScreen(
                 }
             }
 
-            // Override Dialog (unchanged logic, minor styling)
+            // Override Dialog
             if (selectedEntryForOverride != null) {
                 OverrideDialog(
                     entry = selectedEntryForOverride!!,
@@ -440,7 +443,6 @@ private fun ScheduleTimeline(
 
             groups.forEachIndexed { index, group ->
                 val groupStart = group.minOf { it.startTime.toMinutes() }
-                group.maxOf { it.endTime.toMinutes() }
 
                 // Indicator BEFORE group
                 if (isToday && !indicatorShown && !isDuringAnyClass && currentMinutes < groupStart) {
@@ -768,7 +770,7 @@ private fun WeekDropdown(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun OverrideDialog(
     entry: TimetableEntry,
@@ -776,59 +778,156 @@ private fun OverrideDialog(
     onOverride: (String, String) -> Unit,
     onReset: (String) -> Unit
 ) {
+    var tempOverrideCode by remember { mutableStateOf(entry.userCycleOverride ?: entry.cycle) }
+    
+    // helper to get active weeks for a standard code
+    fun getWeeksForCode(code: String): Set<Int> {
+        return (1..15).filter { week ->
+            when (code.uppercase()) {
+                "SEM" -> true
+                "1PS" -> week <= 8
+                "2PS" -> week >= 8
+                "PA" -> week % 2 == 0
+                "NP" -> week % 2 != 0
+                else -> false
+            }
+        }.toSet()
+    }
+
+    var selectedWeeks by remember { 
+        val isCustom = tempOverrideCode.startsWith("W:")
+        mutableStateOf(
+            if (isCustom) {
+                tempOverrideCode.removePrefix("W:").split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
+            } else {
+                getWeeksForCode(tempOverrideCode)
+            }
+        )
+    }
+
+    val options = listOf(
+        CycleOption("SEM", Res.string.cycle_sem, Icons.Default.DateRange),
+        CycleOption("NONE", Res.string.cycle_none, Icons.Default.VisibilityOff),
+        CycleOption("1PS", Res.string.cycle_1ps, Icons.Default.LooksOne),
+        CycleOption("2PS", Res.string.cycle_2ps, Icons.Default.LooksTwo),
+        CycleOption("PA", Res.string.cycle_pa, Icons.Default.Repeat),
+        CycleOption("NP", Res.string.cycle_np, Icons.Default.RepeatOne)
+    )
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(Res.string.override_cycle_title)) },
         text = {
             Column {
                 Text(
-                    text = entry.courseName,
+                    text = "${entry.courseName} [${entry.courseType.toLabel()}]",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(Modifier.height(16.dp))
 
-                val options = listOf(
-                    CycleOption("SEM", Res.string.cycle_sem, Icons.Default.DateRange),
-                    CycleOption("1PS", Res.string.cycle_1ps, Icons.Default.ArrowUpward),
-                    CycleOption("2PS", Res.string.cycle_2ps, Icons.Default.ArrowDownward),
-                    CycleOption("PA", Res.string.cycle_pa, Icons.Default.Repeat),
-                    CycleOption("NP", Res.string.cycle_np, Icons.Default.RepeatOne),
-                    CycleOption("NONE", Res.string.cycle_none, Icons.Default.VisibilityOff)
-                )
-
-                options.forEach { option ->
-                    val isSelected = (entry.userCycleOverride ?: entry.cycle) == option.code
+                // Standard options in a grid
+                options.chunked(2).forEach { rowOptions ->
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { onOverride(entry.id, option.code) }
-                            .padding(vertical = 8.dp, horizontal = 4.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = option.icon,
-                            contentDescription = null,
-                            tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Text(
-                            text = stringResource(option.label),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.weight(1f)
-                        )
-                        RadioButton(selected = isSelected, onClick = null)
+                        rowOptions.forEach { option ->
+                            val isSelected = !tempOverrideCode.startsWith("W:") && tempOverrideCode == option.code
+                            Surface(
+                                onClick = {
+                                    tempOverrideCode = option.code
+                                    selectedWeeks = getWeeksForCode(option.code)
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                border = BorderStroke(
+                                    1.dp,
+                                    if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                ),
+                                modifier = Modifier.weight(1f).height(48.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = option.icon,
+                                        contentDescription = null,
+                                        tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        text = stringResource(option.label),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
                     }
+                    Spacer(Modifier.height(8.dp))
                 }
 
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+
+                Text(
+                    text = stringResource(Res.string.cycle_custom),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                // Custom weeks grid (5 items per row for alignment)
+                (1..15).chunked(5).forEach { rowWeeks ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        rowWeeks.forEach { week ->
+                            val isSelected = selectedWeeks.contains(week)
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = {
+                                    val newWeeks = if (isSelected) {
+                                        selectedWeeks - week
+                                    } else {
+                                        selectedWeeks + week
+                                    }
+                                    selectedWeeks = newWeeks
+                                    tempOverrideCode = "W:" + newWeeks.sorted().joinToString(",")
+                                },
+                                label = {
+                                    Text(
+                                        week.toString(),
+                                        fontSize = 11.sp,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                },
+                                modifier = Modifier.weight(1f).height(32.dp)
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                }
+
+                Spacer(Modifier.height(12.dp))
 
                 TextButton(
-                    onClick = { onReset(entry.id) },
-                    modifier = Modifier.fillMaxWidth()
+                    onClick = {
+                        tempOverrideCode = entry.cycle
+                        selectedWeeks = getWeeksForCode(entry.cycle)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
                     Icon(Icons.Default.Refresh, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
@@ -837,7 +936,23 @@ private fun OverrideDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) }
+            Button(
+                onClick = {
+                    if (tempOverrideCode == entry.cycle && entry.userCycleOverride != null) {
+                        onReset(entry.id)
+                    } else {
+                        onOverride(entry.id, tempOverrideCode)
+                    }
+                },
+                enabled = !tempOverrideCode.startsWith("W:") || selectedWeeks.isNotEmpty()
+            ) {
+                Text(stringResource(Res.string.save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(Res.string.cancel))
+            }
         }
     )
 }
