@@ -17,8 +17,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -85,7 +87,7 @@ class NewsScreen(val semester: String = currentSemester()) : Screen {
             }
         }
 
-        val groupedNews = remember(news, selectedFilters) {
+        val (groupedNews, displayedCount) = remember(news, selectedFilters) {
             val filtered = if ("All" in selectedFilters) {
                 news
             } else {
@@ -95,8 +97,10 @@ class NewsScreen(val semester: String = currentSemester()) : Screen {
                 }
             }
             
-            filtered.sortedByDescending { it.parseDateToSortable() }
+            val grouped = filtered.sortedByDescending { it.parseDateToSortable() }
                 .groupBy { it.date?.date ?: LocalDate(1970, 1, 1) }
+            
+            grouped to filtered.size
         }
 
         Scaffold(
@@ -191,6 +195,18 @@ class NewsScreen(val semester: String = currentSemester()) : Screen {
                                     NewsLogItem(item) {
                                         navigator.push(NewsDetailScreen(item.id))
                                     }
+                                }
+                            }
+                            
+                            if (displayedCount > 20) {
+                                item {
+                                    Text(
+                                        text = "🥚",
+                                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                        style = MaterialTheme.typography.displayLarge,
+                                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                                        textAlign = TextAlign.Center
+                                    )
                                 }
                             }
                         }

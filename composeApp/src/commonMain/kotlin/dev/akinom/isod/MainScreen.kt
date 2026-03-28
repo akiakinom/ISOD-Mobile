@@ -4,9 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.filled.EventNote
 import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.EventNote
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
@@ -23,6 +23,7 @@ enum class MainTab(val titleRes: StringResource, val icon: ImageVector) {
     Dashboard(Res.string.tab_home, Icons.Default.Dashboard),
     Schedule(Res.string.tab_schedule, Icons.AutoMirrored.Filled.EventNote),
     Grades(Res.string.tab_grades, Icons.Default.School),
+    Exams(Res.string.tab_exams, Icons.AutoMirrored.Filled.Assignment),
     News(Res.string.tab_news, Icons.Default.Newspaper)
 }
 
@@ -77,6 +78,7 @@ data class MainScreen(
                     }).Content()
                     MainTab.Schedule -> ScheduleScreen(initialDayOfWeek = scheduleDayOverride).Content()
                     MainTab.Grades -> GradesScreen().Content()
+                    MainTab.Exams -> ExamsScreen().Content()
                     MainTab.News -> NewsScreen().Content()
                 }
             }

@@ -144,7 +144,7 @@ class HomeScreen(
                         Text(
                             if (screenModel.isBuchmanp) "Szalom!" else stringResource(Res.string.hello),
                             style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Black,
+                            fontWeight = FontWeight.W700,
                             color = MaterialTheme.colorScheme.onBackground
                         )
                     }
