@@ -19,6 +19,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.NavigateBefore
+import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -37,6 +39,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -91,7 +94,7 @@ class ScheduleScreenModel(val semester: String) : ScreenModel, KoinComponent {
         }.stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun selectWeek(week: Int) {
-        _selectedWeek.value = week
+        _selectedWeek.value = week.coerceIn(1, 15)
     }
 
     val availableWeeks = (1..15).toList()
@@ -158,26 +161,45 @@ class ScheduleScreen(
             topBar = {
                 CenterAlignedTopAppBar(
                     title = {
-                        Column(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable { showWeekPicker = true }
-                                .padding(horizontal = 12.dp, vertical = 4.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
                         ) {
-                            Text(stringResource(Res.string.weekly_schedule), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    stringResource(Res.string.week_number, selectedWeek),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Icon(
-                                    Icons.Default.ArrowDropDown,
-                                    null,
-                                    modifier = Modifier.size(16.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
+                            IconButton(
+                                onClick = { screenModel.selectWeek(selectedWeek - 1) },
+                                enabled = selectedWeek > 1
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.NavigateBefore, null)
+                            }
+
+                            Column(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { showWeekPicker = true }
+                                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(stringResource(Res.string.weekly_schedule), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        stringResource(Res.string.week_number, selectedWeek),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Icon(
+                                        Icons.Default.ArrowDropDown,
+                                        null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+
+                            IconButton(
+                                onClick = { screenModel.selectWeek(selectedWeek + 1) },
+                                enabled = selectedWeek < 15
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.NavigateNext, null)
                             }
                         }
 
@@ -406,7 +428,11 @@ private fun ScheduleTimeline(
                 currentMinutes in start..end
             }
             if (currentGroupIdx != -1) {
-                listState.animateScrollToItem(currentGroupIdx)
+                // Adjust scroll index slightly to account for potential separators
+                // Since separators are inserted between items, we just scroll to the group index * 2 roughly
+                // But LazyColumn index is literal.
+                // A better way is to find the index in the LazyColumn, but for now we'll just scroll.
+                listState.animateScrollToItem(currentGroupIdx.coerceAtLeast(0))
             }
         }
     }
@@ -437,23 +463,33 @@ private fun ScheduleTimeline(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             var indicatorShown = false
-            val isDuringAnyClass = isToday && groups.any { group ->
-                currentMinutes in group.minOf { it.startTime.toMinutes() }..group.maxOf { it.endTime.toMinutes() }
+
+            // Initial NOW indicator if before first class
+            val firstStart = groups.firstOrNull()?.minOf { it.startTime.toMinutes() } ?: 0
+            if (isToday && currentMinutes < firstStart) {
+                item { TimelineNowIndicator() }
+                indicatorShown = true
             }
 
             groups.forEachIndexed { index, group ->
                 val groupStart = group.minOf { it.startTime.toMinutes() }
+                val groupEnd = group.maxOf { it.endTime.toMinutes() }
 
-                // Indicator BEFORE group
-                if (isToday && !indicatorShown && !isDuringAnyClass && currentMinutes < groupStart) {
-                    item { TimelineNowIndicator() }
-                    indicatorShown = true
-                }
-
-                // Gap indicator
+                // Gap or NOW separator between classes
                 if (index > 0) {
                     val prevEnd = groups[index - 1].maxOf { it.endTime.toMinutes() }
-                    if (isToday && !indicatorShown && !isDuringAnyClass && currentMinutes in prevEnd until groupStart) {
+                    val gap = groupStart - prevEnd
+                    val isNowInGap = isToday && currentMinutes in prevEnd until groupStart
+
+                    if (gap > 45) {
+                        item {
+                            TimelineGapSeparator(
+                                gapMinutes = gap,
+                                isNow = isNowInGap
+                            )
+                        }
+                        if (isNowInGap) indicatorShown = true
+                    } else if (isNowInGap) {
                         item { TimelineNowIndicator() }
                         indicatorShown = true
                     }
@@ -468,10 +504,15 @@ private fun ScheduleTimeline(
                         onLongClick = onLongClick
                     )
                 }
+
+                if (isToday && currentMinutes in groupStart..groupEnd) {
+                    indicatorShown = true
+                }
             }
 
             // Indicator AFTER all
-            if (isToday && !indicatorShown && !isDuringAnyClass && groups.isNotEmpty() && currentMinutes > groups.last().maxOf { it.endTime.toMinutes() }) {
+            val lastEnd = groups.lastOrNull()?.maxOf { it.endTime.toMinutes() } ?: 0
+            if (isToday && !indicatorShown && groups.isNotEmpty() && currentMinutes > lastEnd) {
                 item { TimelineNowIndicator() }
                 indicatorShown = true
             }
@@ -724,6 +765,102 @@ private fun TimelineNowIndicator() {
 }
 
 @Composable
+private fun TimelineGapSeparator(
+    gapMinutes: Int,
+    isNow: Boolean,
+) {
+    val color = if (isNow) Color.Red else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+    val infiniteTransition = rememberInfiniteTransition()
+    val glowAlpha by if (isNow) {
+        infiniteTransition.animateFloat(
+            initialValue = 0.3f,
+            targetValue = 0.8f,
+            animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse)
+        )
+    } else {
+        remember { mutableStateOf(1f) }
+    }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+    ) {
+        if (isNow) {
+            Box(
+                modifier = Modifier
+                    .padding(start = 36.dp)
+                    .size(8.dp)
+                    .drawBehind {
+                        drawCircle(color = Color.Red, radius = size.minDimension / 2, alpha = glowAlpha)
+                        drawCircle(color = Color.Red.copy(alpha = 0.2f), radius = (size.minDimension / 2) * 2.5f * glowAlpha)
+                    }
+            )
+            Spacer(Modifier.width(28.dp))
+        } else {
+            Spacer(Modifier.width(72.dp))
+        }
+
+        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            WavyLine(
+                modifier = Modifier.fillMaxWidth(),
+                color = color,
+                thickness = if (isNow) 1.5.dp else 1.dp
+            )
+
+            val gapText = if (gapMinutes >= 60) {
+                stringResource(Res.string.gap_label_hours_mins, gapMinutes / 60, gapMinutes % 60)
+            } else {
+                stringResource(Res.string.gap_label_mins, gapMinutes)
+            }
+
+            val displayText = if (isNow) "${stringResource(Res.string.now)} • $gapText" else gapText
+
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            ) {
+                Text(
+                    text = displayText,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = color,
+                    fontWeight = if (isNow) FontWeight.Black else FontWeight.Medium,
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun WavyLine(
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.outlineVariant,
+    waveLength: Float = 32f,
+    waveHeight: Float = 8f,
+    thickness: Dp = 1.dp
+) {
+    Canvas(modifier = modifier.height(waveHeight.dp * 2)) {
+        val path = Path()
+        val width = size.width
+        val height = size.height
+
+        path.moveTo(0f, height / 2)
+        var x = 0f
+        while (x < width) {
+            path.relativeQuadraticTo(waveLength / 4, -waveHeight, waveLength / 2, 0f)
+            path.relativeQuadraticTo(waveLength / 4, waveHeight, waveLength / 2, 0f)
+            x += waveLength
+        }
+
+        drawPath(
+            path = path,
+            color = color,
+            style = Stroke(width = thickness.toPx(), cap = StrokeCap.Round)
+        )
+    }
+}
+
+@Composable
 private fun WeekDropdown(
     weeks: List<Int>,
     currentWeek: Int,
@@ -751,8 +888,8 @@ private fun WeekDropdown(
                             color = if (week == currentWeek) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                         )
                         if (isActual) {
-                            Badge(modifier = Modifier.padding(start = 8.dp)) { 
-                                Text(stringResource(Res.string.current_week)) 
+                            Badge(modifier = Modifier.padding(start = 8.dp)) {
+                                Text(stringResource(Res.string.current_week))
                             }
                         }
                         if (range.isNotEmpty()) {
@@ -779,7 +916,7 @@ private fun OverrideDialog(
     onReset: (String) -> Unit
 ) {
     var tempOverrideCode by remember { mutableStateOf(entry.userCycleOverride ?: entry.cycle) }
-    
+
     // helper to get active weeks for a standard code
     fun getWeeksForCode(code: String): Set<Int> {
         return (1..15).filter { week ->
@@ -794,7 +931,7 @@ private fun OverrideDialog(
         }.toSet()
     }
 
-    var selectedWeeks by remember { 
+    var selectedWeeks by remember {
         val isCustom = tempOverrideCode.startsWith("W:")
         mutableStateOf(
             if (isCustom) {
