@@ -9,6 +9,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import dev.akinom.isod.IsodDatabase
+import dev.akinom.isod.auth.CredentialsStorage
 import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.data.remote.IsodApiClient
 import dev.akinom.isod.notifications.NewsNotificationChecker
@@ -24,14 +25,16 @@ class NewsNotificationWorker(
     params: WorkerParameters,
 ) : CoroutineWorker(context, params), KoinComponent {
 
-    private val db: IsodDatabase     by inject()
-    private val isodApi: IsodApiClient by inject()
+    private val db: IsodDatabase           by inject()
+    private val isodApi: IsodApiClient     by inject()
+    private val storage: CredentialsStorage by inject()
 
     override suspend fun doWork(): Result {
         return try {
             val checker = NewsNotificationChecker(
                 db                  = db,
                 isodApi             = isodApi,
+                storage             = storage,
                 notificationService = NotificationService(applicationContext),
                 semester            = currentSemester(),
             )

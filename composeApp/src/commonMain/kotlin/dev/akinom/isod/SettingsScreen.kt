@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -26,8 +27,12 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.akinom.isod.auth.*
+import dev.akinom.isod.domain.NewsType
+import dev.akinom.isod.news.toIcon
+import dev.akinom.isod.news.toLabel
 import dev.akinom.isod.onboarding.isod.ISODLinkScreen
 import dev.akinom.isod.onboarding.usos.USOSLinkScreen
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 class SettingsScreen : Screen {
@@ -47,6 +52,7 @@ class SettingsScreen : Screen {
         var showAllDayInWidget by remember { mutableStateOf(storage.shouldShowAllDayInWidget()) }
 
         var showThemeDialog by remember { mutableStateOf(false) }
+        var showNotificationsDialog by remember { mutableStateOf(false) }
 
         Scaffold(
             topBar = {
@@ -85,6 +91,15 @@ class SettingsScreen : Screen {
                         },
                         leadingContent = { Icon(Icons.Default.Palette, null) },
                         modifier = Modifier.clickable { showThemeDialog = true }
+                    )
+                }
+
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(Res.string.section_notifications)) },
+                        supportingContent = { Text(stringResource(Res.string.notifications_desc)) },
+                        leadingContent = { Icon(Icons.Default.Notifications, null) },
+                        modifier = Modifier.clickable { showNotificationsDialog = true }
                     )
                 }
 
@@ -246,6 +261,92 @@ class SettingsScreen : Screen {
                 }
             )
         }
+
+        if (showNotificationsDialog) {
+            AlertDialog(
+                onDismissRequest = { showNotificationsDialog = false },
+                title = { Text(stringResource(Res.string.section_notifications)) },
+                text = {
+                    Column {
+                        Text(
+                            text = stringResource(Res.string.notif_section_university),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                        
+                        listOf(
+                            NewsType.DEANS_OFFICE,
+                            NewsType.TIMETABLE_UPDATE,
+                            NewsType.FACULTY_STUDENT_COUNCIL,
+                            NewsType.STUDENT_EVENT
+                        ).forEach { type ->
+                            NotificationToggle(type, storage)
+                        }
+
+                        Spacer(Modifier.height(16.dp))
+                        
+                        Text(
+                            text = stringResource(Res.string.notif_section_academic),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+
+                        listOf(
+                            NewsType.IMPORTANT,
+                            NewsType.GRADE,
+                            NewsType.CLASS,
+                            NewsType.EXAM,
+                            NewsType.DEADLINE,
+                        ).forEach { type ->
+                            NotificationToggle(type, storage)
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showNotificationsDialog = false }) {
+                        Text(stringResource(Res.string.ok))
+                    }
+                }
+            )
+        }
+    }
+
+    @Composable
+    private fun NotificationToggle(type: NewsType, storage: CredentialsStorage) {
+        var enabled by remember { mutableStateOf(storage.isNotificationEnabled(type)) }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    enabled = !enabled
+                    storage.setNotificationEnabled(type, enabled)
+                }
+                .padding(vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = type.toIcon(),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = type.toLabel(),
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Switch(
+                checked = enabled,
+                onCheckedChange = {
+                    enabled = it
+                    storage.setNotificationEnabled(type, it)
+                },
+                scale = 0.8f
+            )
+        }
     }
 }
 
@@ -334,3 +435,32 @@ private fun AppInfoCard(version: String, isBeta: Boolean) {
         }
     }
 }
+
+// Add Switch scale extension or just use a Box wrapper
+@Composable
+fun Switch(
+    checked: Boolean,
+    onCheckedChange: ((Boolean) -> Unit)?,
+    modifier: Modifier = Modifier,
+    scale: Float = 1f,
+    enabled: Boolean = true,
+) {
+    androidx.compose.material3.Switch(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = modifier.scale(scale),
+        enabled = enabled
+    )
+}
+
+fun Modifier.scale(scale: Float): Modifier = this.then(
+    Modifier.layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints)
+        layout(
+            (placeable.width * scale).toInt(),
+            (placeable.height * scale).toInt()
+        ) {
+            placeable.placeRelative(0, 0)
+        }
+    }
+)

@@ -103,6 +103,9 @@ fun NewsType.toIcon(): ImageVector {
         NewsType.GRADE -> Icons.Default.Star
         NewsType.CLASS -> Icons.AutoMirrored.Filled.Comment
         NewsType.TIMETABLE_UPDATE -> Icons.Default.Schedule
+        NewsType.EXAM -> Icons.Default.HistoryEdu
+        NewsType.DEADLINE -> Icons.Default.Timer
+        NewsType.STUDENT_EVENT -> Icons.Default.Event
         else -> Icons.Default.Notifications
     }
 }
@@ -115,6 +118,9 @@ fun NewsType.toColor(): Color {
         NewsType.DEANS_OFFICE -> Color(0xFFFF9800)
         NewsType.FACULTY_STUDENT_COUNCIL -> Color(0xFFFFC107)
         NewsType.TIMETABLE_UPDATE -> Color(0xFF9C27B0)
+        NewsType.EXAM -> Color(0xFFE91E63)
+        NewsType.DEADLINE -> Color(0xFF795548)
+        NewsType.STUDENT_EVENT -> Color(0xFF00BCD4)
         NewsType.OTHER -> Color(0xFF9E9E9E)
     }
 }
@@ -128,6 +134,9 @@ fun NewsType.toLabel(): String {
         NewsType.DEANS_OFFICE -> stringResource(Res.string.news_type_deans_office)
         NewsType.FACULTY_STUDENT_COUNCIL -> stringResource(Res.string.news_type_wrs)
         NewsType.TIMETABLE_UPDATE -> stringResource(Res.string.news_type_timetable)
+        NewsType.EXAM -> stringResource(Res.string.news_type_exam)
+        NewsType.DEADLINE -> stringResource(Res.string.news_type_deadline)
+        NewsType.STUDENT_EVENT -> stringResource(Res.string.news_type_student_event)
         NewsType.OTHER -> ""
     }
 }

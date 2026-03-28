@@ -101,6 +101,7 @@ val notificationModule = module {
         NewsNotificationChecker(
             db = get(),
             isodApi = get(),
+            storage = get(),
             notificationService = get(),
             semester = currentSemester()
         )

@@ -37,6 +37,7 @@
     <string name="tab_home">Home</string>
     <string name="tab_schedule">Schedule</string>
     <string name="tab_grades">Grades</string>
+    <string name="tab_exams">Exams</string>
     <string name="tab_news">News</string>
 
     <string name="weekly_schedule">Weekly Schedule</string>
@@ -62,6 +63,7 @@
     <string name="full_day_sun">Sunday</string>
 
     <string name="grades_title">Grades</string>
+    <string name="exams_title">Exams</string>
     <string name="back">Back</string>
     <string name="no_detailed_grades">No detailed grades available for this course.</string>
     <string name="grade_value_label">Value</string>
@@ -80,6 +82,8 @@
     <string name="theme_system">System Default</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="section_notifications">Notifications</string>
+    <string name="notifications_desc">Select which announcements should trigger a push notification</string>
     <string name="section_widget">Widget</string>
     <string name="widget_show_all_day">Show full day schedule</string>
     <string name="widget_show_all_day_desc">Display all classes for today instead of only upcoming ones</string>
@@ -117,10 +121,17 @@
 
     <string name="news_type_grade">Grades</string>
     <string name="news_type_class">Classes</string>
-    <string name="news_type_deans_office">Dean's Office</string>
+    <string name="news_type_deans_office">Dean\'s Office</string>
     <string name="news_type_wrs">Student Council</string>
     <string name="news_type_timetable">Timetable update</string>
     <string name="news_type_other">Other</string>
+
+    <string name="news_type_exam">Exams</string>
+    <string name="news_type_deadline">Deadlines</string>
+    <string name="news_type_student_event">Student Events</string>
+
+    <string name="notif_section_university">Student</string>
+    <string name="notif_section_academic">Academic</string>
 
     <string name="error_invalid_credentials">Invalid username or API key.</string>
     <string name="error_network">No internet connection.</string>
@@ -149,4 +160,5 @@
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
     <string name="other_date">Older</string>
+    <string name="work_in_progress">Work in progress</string>
 </resources>

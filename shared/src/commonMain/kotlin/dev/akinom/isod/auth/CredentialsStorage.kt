@@ -2,6 +2,7 @@ package dev.akinom.isod.auth
 
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.set
+import dev.akinom.isod.domain.NewsType
 
 private const val KEY_ISOD_USERNAME     = "isod_username"
 private const val KEY_ISOD_API_KEY      = "isod_api_key"
@@ -9,6 +10,7 @@ private const val KEY_USOS_TOKEN        = "usos_token"
 private const val KEY_USOS_TOKEN_SECRET = "usos_token_secret"
 private const val KEY_THEME             = "app_theme"
 private const val KEY_WIDGET_SHOW_ALL_DAY = "widget_show_all_day"
+private const val KEY_NOTIF_PREFIX      = "notif_enabled_"
 
 enum class AppThemeSetting {
     SYSTEM, LIGHT, DARK
@@ -66,6 +68,14 @@ class CredentialsStorage(
 
     fun setShowAllDayInWidget(showAllDay: Boolean) {
         settings[KEY_WIDGET_SHOW_ALL_DAY] = showAllDay
+    }
+
+    fun isNotificationEnabled(type: NewsType): Boolean {
+        return settings.getBoolean(KEY_NOTIF_PREFIX + type.name, true)
+    }
+
+    fun setNotificationEnabled(type: NewsType, enabled: Boolean) {
+        settings[KEY_NOTIF_PREFIX + type.name] = enabled
     }
 
     fun isFullyLinked(): Boolean = hasIsodCredentials() && hasUsosTokens()

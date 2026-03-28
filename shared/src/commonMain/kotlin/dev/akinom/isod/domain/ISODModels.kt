@@ -56,6 +56,9 @@ enum class NewsType {
     DEANS_OFFICE,
     FACULTY_STUDENT_COUNCIL,
     TIMETABLE_UPDATE,
+    EXAM,
+    DEADLINE,
+    STUDENT_EVENT,
     OTHER
 }
 

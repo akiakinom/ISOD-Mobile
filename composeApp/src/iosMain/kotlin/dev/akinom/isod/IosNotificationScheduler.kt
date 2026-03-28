@@ -1,6 +1,7 @@
 package dev.akinom.isod
 
 import dev.akinom.isod.IsodDatabase
+import dev.akinom.isod.auth.CredentialsStorage
 import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.data.remote.IsodApiClient
 import dev.akinom.isod.notifications.NewsNotificationChecker
@@ -21,8 +22,9 @@ private const val BG_TASK_ID = "dev.akinom.isod.news_check"
 
 object IosNotificationScheduler : KoinComponent {
 
-    private val db: IsodDatabase       by inject()
-    private val isodApi: IsodApiClient by inject()
+    private val db: IsodDatabase           by inject()
+    private val isodApi: IsodApiClient     by inject()
+    private val storage: CredentialsStorage by inject()
 
     fun register() {
         BGTaskScheduler.sharedScheduler.registerForTaskWithIdentifier(
@@ -53,6 +55,7 @@ object IosNotificationScheduler : KoinComponent {
                 val checker = NewsNotificationChecker(
                     db                  = db,
                     isodApi             = isodApi,
+                    storage             = storage,
                     notificationService = NotificationService(),
                     semester            = currentSemester(),
                 )

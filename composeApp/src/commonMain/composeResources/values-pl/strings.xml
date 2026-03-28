@@ -37,6 +37,7 @@
     <string name="tab_home">Panel</string>
     <string name="tab_schedule">Plan</string>
     <string name="tab_grades">Oceny</string>
+    <string name="tab_exams">Egzaminy</string>
     <string name="tab_news">Aktualności</string>
 
     <string name="weekly_schedule">Plan tygodniowy</string>
@@ -62,6 +63,7 @@
     <string name="full_day_sun">Niedziela</string>
 
     <string name="grades_title">Oceny</string>
+    <string name="exams_title">Egzaminy</string>
     <string name="back">Wstecz</string>
     <string name="no_detailed_grades">Brak szczegółowych ocen dla tego przedmiotu.</string>
     <string name="grade_value_label">Wartość</string>
@@ -80,6 +82,8 @@
     <string name="theme_system">Domyślny systemu</string>
     <string name="theme_light">Jasny</string>
     <string name="theme_dark">Ciemny</string>
+    <string name="section_notifications">Powiadomienia</string>
+    <string name="notifications_desc">Wybierz, które ogłoszenia mają wywoływać powiadomienie push</string>
     <string name="section_widget">Widget</string>
     <string name="widget_show_all_day">Pokaż plan na cały dzień</string>
     <string name="widget_show_all_day_desc">Wyświetlaj wszystkie dzisiejsze zajęcia zamiast tylko nadchodzących</string>
@@ -122,6 +126,13 @@
     <string name="news_type_timetable">Zapisy na zajęcia</string>
     <string name="news_type_other">Inne</string>
 
+    <string name="news_type_exam">Egzaminy</string>
+    <string name="news_type_deadline">Terminy oddania</string>
+    <string name="news_type_student_event">Wydarzenia studenckie</string>
+
+    <string name="notif_section_university">Studenckie</string>
+    <string name="notif_section_academic">Akademickie</string>
+
     <string name="week_number">Tydzień %1$d</string>
     <string name="current_week">Obecny tydzień</string>
     <string name="override_cycle_title">Nadpisz cykl</string>
@@ -145,4 +156,5 @@
     <string name="today">Dzisiaj</string>
     <string name="yesterday">Wczoraj</string>
     <string name="other_date">Starsze</string>
+    <string name="work_in_progress">Prace w toku</string>
 </resources>
