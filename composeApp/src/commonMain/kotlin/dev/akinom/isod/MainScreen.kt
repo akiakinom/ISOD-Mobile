@@ -98,7 +98,7 @@ data class MainScreen(
                     }).Content()
                     MainTab.Schedule -> ScheduleScreen(initialDayOfWeek = scheduleDayOverride).Content()
                     MainTab.Grades -> GradesScreen().Content()
-                    MainTab.Exams -> ExamsScreen().Content()
+                    // MainTab.Exams -> ExamsScreen().Content()
                     MainTab.News -> NewsScreen().Content()
                     MainTab.Skibidi -> {
                         val isVisible = pagerState.currentPage == page

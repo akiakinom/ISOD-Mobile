@@ -13,9 +13,8 @@ fun String.removeTitles(): String {
     )
     var result = this
     titles.forEach { title ->
-        if (result.contains(title, ignoreCase = true)) {
-            result = result.replace(title, "", ignoreCase = true).trim()
-        }
+        val pattern = "(?i)^$title\\s+".toRegex()
+        result = result.replace(pattern, "").trim()
     }
     return result
 }
