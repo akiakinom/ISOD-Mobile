@@ -23,7 +23,6 @@ enum class MainTab(val titleRes: StringResource, val icon: ImageVector) {
     Dashboard(Res.string.tab_home, Icons.Default.Dashboard),
     Schedule(Res.string.tab_schedule, Icons.AutoMirrored.Filled.EventNote),
     Grades(Res.string.tab_grades, Icons.Default.School),
-    Exams(Res.string.tab_exams, Icons.AutoMirrored.Filled.Assignment),
     News(Res.string.tab_news, Icons.Default.Newspaper)
 }
 
@@ -78,7 +77,6 @@ data class MainScreen(
                     }).Content()
                     MainTab.Schedule -> ScheduleScreen(initialDayOfWeek = scheduleDayOverride).Content()
                     MainTab.Grades -> GradesScreen().Content()
-                    // MainTab.Exams -> ExamsScreen().Content()
                     MainTab.News -> NewsScreen().Content()
                 }
             }
