@@ -1,6 +1,7 @@
 package dev.akinom.isod.domain
 
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
 data class PlanItem(
@@ -25,7 +26,7 @@ data class PlanItem(
 data class NewsHeader(
     val id: String,
     val title: String,
-    val date: LocalDate?,
+    val date: LocalDateTime?,
     val author: String,
     val type: NewsType,
     val label: String,
@@ -35,7 +36,7 @@ data class NewsItem(
     val id: String,
     val title: String,
     val content: String,
-    val date: LocalDate?,
+    val date: LocalDateTime?,
     val author: String,
     val type: NewsType,
     val label: String,
@@ -47,6 +48,7 @@ data class NewsAttachment(
     val size: Long,
 )
 
+@Serializable
 enum class NewsType {
     IMPORTANT,
     GRADE,
@@ -54,9 +56,13 @@ enum class NewsType {
     DEANS_OFFICE,
     FACULTY_STUDENT_COUNCIL,
     TIMETABLE_UPDATE,
+    EXAM,
+    DEADLINE,
+    STUDENT_EVENT,
     OTHER
 }
 
+@Serializable
 enum class ClassType {
     LECTURE,
     LABORATORY,
@@ -109,10 +115,17 @@ data class ClassDetail(
     val credit: String?,
     val creditModifiedBy: String?,
     val semester: String,
+    val studentNo: String?,
+    val usosId: String?,
+    val username: String?,
+    val firstname: String?,
+    val lastname: String?,
+    val summaryModifiedBy: String?,
 )
 
 @Serializable
 data class ClassHeader(
+    val id: String,
     val courseNumber: String,
     val courseName: String,
     val type: ClassType,
@@ -141,8 +154,12 @@ data class ClassColumn(
     val name: String?,
     val type: String,
     val value: String?,
+    val valueNote: String?,
     val weight: Double,
     val accounted: Boolean,
     val date: String?,
+    val dateModified: String?,
     val personModifying: String?,
+    val personModifyingTitle: String?,
+    val indexOrder: Int,
 )

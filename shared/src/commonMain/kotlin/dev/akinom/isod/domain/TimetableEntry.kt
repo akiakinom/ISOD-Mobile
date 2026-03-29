@@ -49,10 +49,50 @@ data class TimetableEntry(
         if (activeCycle.uppercase() == "NONE") return false
         if (currentWeek == null) return true
 
-        return when (activeCycle.uppercase()) {
+        val upperCycle = activeCycle.uppercase()
+        
+        // Handle custom ranges/exceptions
+        if (upperCycle.contains("!") || upperCycle.startsWith("W:")) {
+            val (base, exception) = if (upperCycle.startsWith("W:")) {
+                "NONE" to upperCycle.substring(2) // NONE base because we'll treat W: as inclusion
+            } else {
+                val parts = upperCycle.split("!")
+                parts[0].ifEmpty { "SEM" } to parts.getOrElse(1) { "" }
+            }
+
+            val isInBase = if (upperCycle.startsWith("W:")) {
+                false // We use the range as inclusion
+            } else {
+                when (base) {
+                    "SEM" -> true
+                    "1PS" -> currentWeek <= 8
+                    "2PS" -> currentWeek >= 8
+                    "PA" -> currentWeek % 2 == 0
+                    "NP" -> currentWeek % 2 != 0
+                    else -> true
+                }
+            }
+
+            val inRanges = exception.split(",").any { range ->
+                val r = range.trim()
+                if (r.isEmpty()) return@any false
+                if (r.contains("-")) {
+                    val rangeParts = r.split("-")
+                    val start = rangeParts[0].toIntOrNull() ?: 0
+                    val end = rangeParts.getOrNull(1)?.toIntOrNull() ?: 99
+                    currentWeek in start..end
+                } else {
+                    r.toIntOrNull() == currentWeek
+                }
+            }
+
+            return if (upperCycle.startsWith("W:")) inRanges else (isInBase && !inRanges)
+        }
+
+        return when (upperCycle) {
             "SEM" -> true
-            "1PS" -> currentWeek <= 7
-            "2PS" -> currentWeek >= 7 // For middle its undefined, assume both
+            "1PS" -> currentWeek <= 8
+            "2PS" -> currentWeek >= 8
             "PA" -> currentWeek % 2 == 0
             "NP" -> currentWeek % 2 != 0
             else -> true

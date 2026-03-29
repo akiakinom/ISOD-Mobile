@@ -7,6 +7,7 @@
     <string name="hide">Hide</string>
     <string name="show">Show</string>
     <string name="isod_api_key_hint">Find your API key in the ISOD portal at the bottom of your account page.</string>
+    <string name="open_isod_portal">Open ISOD Portal</string>
     <string name="continue_btn">Continue</string>
 
     <string name="usos_title">USOS</string>
@@ -36,6 +37,7 @@
     <string name="tab_home">Home</string>
     <string name="tab_schedule">Schedule</string>
     <string name="tab_grades">Grades</string>
+    <string name="tab_exams">Exams</string>
     <string name="tab_news">News</string>
 
     <string name="weekly_schedule">Weekly Schedule</string>
@@ -61,6 +63,7 @@
     <string name="full_day_sun">Sunday</string>
 
     <string name="grades_title">Grades</string>
+    <string name="exams_title">Exams</string>
     <string name="back">Back</string>
     <string name="no_detailed_grades">No detailed grades available for this course.</string>
     <string name="grade_value_label">Value</string>
@@ -79,6 +82,8 @@
     <string name="theme_system">System Default</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="section_notifications">Notifications</string>
+    <string name="notifications_desc">Select which announcements should trigger a push notification</string>
     <string name="section_widget">Widget</string>
     <string name="widget_show_all_day">Show full day schedule</string>
     <string name="widget_show_all_day_desc">Display all classes for today instead of only upcoming ones</string>
@@ -90,6 +95,7 @@
     <string name="unlink">Unlink</string>
     <string name="link">Link</string>
     <string name="section_about">About App</string>
+    <string name="contribute">Contribute on GitHub</string>
     <string name="log_out">Log Out</string>
     <string name="version_format">Version %1$s</string>
     <string name="beta_suffix"> (BETA)</string>
@@ -120,11 +126,19 @@
     <string name="news_type_timetable">Timetable update</string>
     <string name="news_type_other">Other</string>
 
+    <string name="news_type_exam">Exams</string>
+    <string name="news_type_deadline">Deadlines</string>
+    <string name="news_type_student_event">Student Events</string>
+
+    <string name="notif_section_university">Student</string>
+    <string name="notif_section_academic">Academic</string>
+
     <string name="error_invalid_credentials">Invalid username or API key.</string>
     <string name="error_network">No internet connection.</string>
     <string name="error_server">Could not reach ISOD. Try again later.</string>
 
     <string name="week_number">Week %1$d</string>
+    <string name="current_week">Current week</string>
     <string name="override_cycle_title">Override Cycle</string>
     <string name="reset_to_default">Reset to default</string>
     <string name="cancel">Cancel</string>
@@ -136,6 +150,18 @@
     <string name="cycle_pa">Even Weeks</string>
     <string name="cycle_np">Odd Weeks</string>
     <string name="cycle_none">Always Inactive</string>
+    <string name="cycle_custom">Custom Exceptions</string>
+    <string name="cycle_custom_hint">e.g. SEM!1-3 (except weeks 1-3) or W:1,3,5 (only weeks 1,3,5)</string>
+    <string name="save">Save</string>
 
     <string name="day_substitution_label">Using %1$s\'s schedule today</string>
+    <string name="ok">OK</string>
+    <string name="summary_label">Summary</string>
+    <string name="weight_label">Weight: %1$s</string>
+    <string name="date_at_format">%1$s at %2$s</string>
+
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="other_date">Older</string>
+    <string name="work_in_progress">Work in progress</string>
 </resources>

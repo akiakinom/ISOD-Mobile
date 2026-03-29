@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 
 class NewsRepository(
     private val db: IsodDatabase,
@@ -100,7 +101,7 @@ class NewsRepository(
 private fun NewsHeaderEntity.toDomain() = NewsHeader(
     id = id,
     title = title,
-    date = date?.let { LocalDate.parse(it) },
+    date = date?.parseLocalDateTime(),
     author = author,
     type = try { NewsType.valueOf(type) } catch (e: Exception) { NewsType.OTHER },
     label = label,
@@ -126,7 +127,7 @@ private fun NewsItemEntity.toDomain() = NewsItem(
     id = id,
     title = title,
     content = content,
-    date = date?.let { LocalDate.parse(it) },
+    date = date?.parseLocalDateTime(),
     author = author,
     type = try { NewsType.valueOf(type) } catch (e: Exception) { NewsType.OTHER },
     label = label,
@@ -143,3 +144,14 @@ private fun NewsItem.toEntity(now: Long) = NewsItemEntity(
     label = label,
     lastUpdated = now,
 )
+
+private fun String.parseLocalDateTime(): LocalDateTime? = try {
+    LocalDateTime.parse(this)
+} catch (e: Exception) {
+    try {
+        val date = LocalDate.parse(this)
+        LocalDateTime(date.year, date.month, date.day, 0, 0)
+    } catch (e2: Exception) {
+        null
+    }
+}

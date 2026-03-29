@@ -25,7 +25,11 @@ val usosConsumerSecret: String = providers
     ?.trim() ?: ""
 
 kotlin {
-    androidLibrary {
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
+    android {
         namespace = "dev.akinom.isod.shared"
         compileSdk = 36
         minSdk = 24

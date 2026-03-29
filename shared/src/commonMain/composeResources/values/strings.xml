@@ -68,4 +68,7 @@
     <string name="no_detailed_grades">No detailed grades available.</string>
     <string name="no_partial_grades">No partial grades yet.</string>
     <string name="grade_value_label">Value</string>
+    <string name="ok">OK</string>
+    <string name="summary_label">Summary</string>
+    <string name="weight_label">Weight: %s</string>
 </resources>

@@ -143,6 +143,12 @@ private fun ClassDetailEntity.toDomain() = ClassDetail(
     credit           = credit,
     creditModifiedBy = creditModifiedBy,
     semester         = semester,
+    studentNo        = studentNo,
+    usosId           = usosId,
+    username         = username,
+    firstname        = firstname,
+    lastname         = lastname,
+    summaryModifiedBy = summaryModifiedBy,
 )
 
 private fun ClassDetail.toEntity(now: Long) = ClassDetailEntity(
@@ -155,5 +161,11 @@ private fun ClassDetail.toEntity(now: Long) = ClassDetailEntity(
     credit            = credit,
     creditModifiedBy  = creditModifiedBy,
     semester          = semester,
+    studentNo         = studentNo,
+    usosId            = usosId,
+    username          = username,
+    firstname         = firstname,
+    lastname          = lastname,
+    summaryModifiedBy = summaryModifiedBy,
     lastUpdated       = now,
 )

@@ -24,6 +24,12 @@ CREATE TABLE IF NOT EXISTS ClassDetailEntity (
     credit           TEXT,
     creditModifiedBy TEXT,
     semester         TEXT    NOT NULL,
+    studentNo        TEXT,
+    usosId           TEXT,
+    username         TEXT,
+    firstname        TEXT,
+    lastname         TEXT,
+    summaryModifiedBy TEXT,
     lastUpdated      INTEGER NOT NULL
 );
 

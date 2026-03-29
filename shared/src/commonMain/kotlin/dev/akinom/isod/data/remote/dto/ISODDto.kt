@@ -2,18 +2,21 @@ package dev.akinom.isod.data.remote.dto
 
 import dev.akinom.isod.domain.*
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 fun String.removeTitles(): String {
-    val titles = listOf("dr.", "prof.", "mgr.", "inz.", "mgr", "hab.", "dr")
+    val titles = listOf(
+        "prof. dr hab. inż.", "prof. dr hab.", "dr hab. inż.", "dr hab.", "dr inż.", 
+        "mgr inż.", "dr.", "prof.", "mgr.", "inz.", "inż.", "mgr", "hab.", "dr"
+    )
+    var result = this
     titles.forEach { title ->
-        if (contains(title)) {
-            replace(title, "").trim()
-        }
+        val pattern = "(?i)^$title\\s+".toRegex()
+        result = result.replace(pattern, "").trim()
     }
-
-    return this
+    return result
 }
 
 @Serializable
@@ -121,9 +124,11 @@ fun String.toNewsTitle(): String {
     }.replaceFirstChar { it.uppercase() }
 }
 
-fun String.toLocalDate(): LocalDate? = runCatching {
-    val parts = split(".")
-    LocalDate(parts[2].split(" ")[0].toInt(), parts[1].toInt(), parts[0].toInt())
+fun String.toLocalDateTime(): LocalDateTime? = runCatching {
+    val (datePart, timePart) = split(" ")
+    val (day, month, year) = datePart.split(".").map { it.toInt() }
+    val (hour, minute) = timePart.split(":").map { it.toInt() }
+    LocalDateTime(year, month, day, hour, minute)
 }.getOrNull()
 
 @Serializable
@@ -139,8 +144,8 @@ data class NewsHeaderDto(
     fun toDomain() = NewsHeader(
         id = hash,
         title = subject.toNewsTitle(),
-        date = modifiedDate.toLocalDate(),
-        author = modifiedBy,
+        date = modifiedDate.toLocalDateTime(),
+        author = modifiedBy.removeTitles(),
         type = subject.toNewsType(type),
         label = subject.toNewsLabel()
     )
@@ -168,8 +173,8 @@ data class NewsItemDto(
         id = hash,
         title = subject.toNewsTitle(),
         content = content,
-        date = modifiedDate.toLocalDate(),
-        author = modifiedBy,
+        date = modifiedDate.toLocalDateTime(),
+        author = modifiedBy.removeTitles(),
         type = subject.toNewsType(type),
         label = subject.toNewsLabel()
     )
@@ -266,6 +271,12 @@ data class ClassDetailDto(
     val credit: String? = null,
     val creditModifiedBy: String? = null,
     val semester: String = "",
+    val studentNo: String? = null,
+    val usosId: String? = null,
+    val username: String? = null,
+    val firstname: String? = null,
+    val lastname: String? = null,
+    val summaryModifiedBy: String? = null,
 ) {
     fun toDomain() = ClassDetail(
         id              = id,
@@ -277,11 +288,18 @@ data class ClassDetailDto(
         credit          = credit,
         creditModifiedBy = creditModifiedBy,
         semester        = semester,
+        studentNo       = studentNo,
+        usosId          = usosId,
+        username        = username,
+        firstname       = firstname,
+        lastname        = lastname,
+        summaryModifiedBy = summaryModifiedBy,
     )
 }
 
 @Serializable
 data class ClassHeaderDto(
+    val id: String = "",
     val courseNumber: String,
     val courseName: String,
     val type: String = "",
@@ -296,6 +314,7 @@ data class ClassHeaderDto(
     val academicSemester: String = "",
 ) {
     fun toDomain() = ClassHeader(
+        id               = id,
         courseNumber     = courseNumber,
         courseName       = courseName,
         type             = type.toClassType(),
@@ -333,18 +352,26 @@ data class ClassColumnDto(
     val name: String? = null,
     val type: String = "",
     val value: String? = null,
+    val valueNote: String? = null,
     val weight: Double = 1.0,
     val accounted: Boolean = false,
     val date: String? = null,
+    val dateModified: String? = null,
     val personModifying: String? = null,
+    val personModifyingTitle: String? = null,
+    val indexOrder: Int = 0,
 ) {
     fun toDomain() = ClassColumn(
         name            = name,
         type            = type,
         value           = value,
+        valueNote       = valueNote,
         weight          = weight,
         accounted       = accounted,
         date            = date,
+        dateModified    = dateModified,
         personModifying = personModifying,
+        personModifyingTitle = personModifyingTitle,
+        indexOrder      = indexOrder,
     )
 }

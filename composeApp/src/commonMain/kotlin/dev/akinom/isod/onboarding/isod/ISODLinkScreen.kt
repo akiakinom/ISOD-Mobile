@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -31,6 +32,7 @@ class ISODLinkScreen : Screen {
         val screenModel = rememberScreenModel { ISODLinkScreenModel() }
         val state by screenModel.state.collectAsState()
         val navigator = LocalNavigator.currentOrThrow
+        val uriHandler = LocalUriHandler.current
 
         var username by remember { mutableStateOf("") }
         var apiKey by remember { mutableStateOf("") }
@@ -120,7 +122,13 @@ class ISODLinkScreen : Screen {
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
 
-                Spacer(Modifier.height(32.dp))
+                TextButton(
+                    onClick = { uriHandler.openUri("https://isod.ee.pw.edu.pl/isod-stud/person") }
+                ) {
+                    Text(stringResource(Res.string.open_isod_portal))
+                }
+
+                Spacer(Modifier.height(24.dp))
 
                 if (state is ISODLinkState.Error) {
                     Text(

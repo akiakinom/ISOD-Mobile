@@ -10,6 +10,7 @@ import dev.akinom.isod.data.remote.IsodApiClient
 import dev.akinom.isod.data.remote.IsodResult
 import dev.akinom.isod.data.remote.UsosApiClient
 import dev.akinom.isod.data.remote.UsosResult
+import dev.akinom.isod.data.remote.dto.removeTitles
 import dev.akinom.isod.data.remote.dto.toClassType
 import dev.akinom.isod.domain.ClassGrade
 import dev.akinom.isod.domain.CourseGrade
@@ -51,9 +52,11 @@ class GradesRepository(
         }
     }
 
-    suspend fun refreshGrades(semester: String, usosTermId: String) {
+    suspend fun refreshGrades(semester: String, usosTermId: String, forceDetails: Boolean = false) {
         val fresh = fetchFresh(semester, usosTermId)
-        persist(semester, fresh)
+        if (fresh.isNotEmpty()) {
+            persist(semester, fresh, forceDetails)
+        }
     }
 
     suspend fun refreshCourseDetails(course: CourseGrade, semester: String): CourseGrade {
@@ -62,11 +65,22 @@ class GradesRepository(
                 is IsodResult.Success -> r.data
                 else -> null
             }
-            cls.copy(
-                credit = detail?.credit ?: cls.credit,
-                columns = detail?.columns ?: cls.columns,
-                summary = detail?.summary ?: cls.summary
-            )
+            if (detail != null) {
+                cls.copy(
+                    credit = detail.credit ?: cls.credit,
+                    columns = detail.columns,
+                    summary = detail.summary ?: cls.summary,
+                    summaryNotes = detail.summaryNotes ?: cls.summaryNotes,
+                    summaryModifiedBy = detail.summaryModifiedBy ?: cls.summaryModifiedBy,
+                    announcements = detail.announcements,
+                    teachers = detail.header.teachers.removeTitles(),
+                    place = detail.header.place,
+                    day = detail.header.day,
+                    time = "${detail.header.timeFrom} - ${detail.header.timeTo}"
+                )
+            } else {
+                cls
+            }
         }
         val updatedCourse = course.copy(classGrades = updatedClasses)
         
@@ -101,6 +115,9 @@ class GradesRepository(
                     credit    = null,
                     columns   = emptyList(),
                     summary   = null,
+                    summaryNotes = null,
+                    summaryModifiedBy = null,
+                    announcements = emptyList()
                 )
             }
 
@@ -124,10 +141,10 @@ class GradesRepository(
         }
     }
 
-    private fun persist(semester: String, grades: List<CourseGrade>) {
+    private fun persist(semester: String, grades: List<CourseGrade>, forceDetails: Boolean = false) {
         val now = currentTimeMillis()
         db.transaction {
-            val existing = queryCached(semester).associateBy { it.courseId }
+            val existing = if (forceDetails) emptyMap() else queryCached(semester).associateBy { it.courseId }
             
             queries.deleteBySemester(semester)
             grades.forEach { g ->

@@ -1,6 +1,7 @@
 package dev.akinom.isod.domain
 
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.isoDayNumber
 
 object TimetableWidgetLogic {
     fun filterToday(entries: List<TimetableEntry>, todayDayOfWeek: Int): List<TimetableEntry> {
@@ -17,6 +18,10 @@ object TimetableWidgetLogic {
         }
     }
 
+    /**
+     * Finds the next 1 or 2 classes starting from the current time.
+     * Correctly handles weekend transitions and week cycles.
+     */
     fun getNextClasses(
         entries: List<TimetableEntry>,
         todayDayOfWeek: Int,
@@ -24,36 +29,89 @@ object TimetableWidgetLogic {
         currentWeek: Int? = null,
         todayDate: LocalDate? = null
     ): List<TimetableEntry> {
-        val effectiveDayOfWeek = todayDate?.let { AcademicCalendar.getEffectiveDayOfWeek(it) } ?: todayDayOfWeek
+        val today = todayDate ?: AcademicCalendar.getToday()
+        val physicalDayOfWeek = today.dayOfWeek.isoDayNumber
         
-        val sortedEntries = entries.sortedWith(compareBy({ it.dayOfWeek }, { it.startTime }))
-        val currentMinutes = timeToMinutes(currentTime)
+        val baseWeek = currentWeek ?: 1
+        val baseDay = AcademicCalendar.getEffectiveDayOfWeek(today)
+        val baseTime = currentTime
 
-        val current = sortedEntries.find {
-            it.dayOfWeek == effectiveDayOfWeek && it.startTime <= currentTime && it.endTime > currentTime && it.isActive(currentWeek)
-        }
-
-        val futureThisWeek = sortedEntries.filter {
-            ((it.dayOfWeek == effectiveDayOfWeek && it.startTime > currentTime) || (it.dayOfWeek > effectiveDayOfWeek)) && it.isActive(currentWeek)
-        }
-        
-        val nextWeek = currentWeek?.plus(1)
-        val futureNextWeek = sortedEntries.filter { it.isActive(nextWeek) }
-        
-        val allFuture = futureThisWeek + futureNextWeek
-
-        val isEndingSoon = current?.let {
-            val endMinutes = timeToMinutes(it.endTime)
-            endMinutes - currentMinutes <= 20 && allFuture.isNotEmpty()
-        } ?: false
-
-        return if (current != null && !isEndingSoon) {
-            listOfNotNull(current) + allFuture.take(1)
+        // If it's the weekend, AcademicCalendar.getCurrentWeek already adjusted to the next week.
+        // We start searching from Monday of that adjusted week.
+        val (startWeek, startDay, startTime) = if (physicalDayOfWeek > 5) {
+            Triple(baseWeek, 1, "00:00")
         } else {
-            allFuture.take(2)
+            Triple(baseWeek, baseDay, baseTime)
         }
+
+        // Search through current (possibly adjusted) week and the next one
+        for (wOffset in 0..1) {
+            val w = startWeek + wOffset
+            for (d in 1..7) {
+                // Skip days that are already in the past for the first week we check
+                if (wOffset == 0 && d < startDay) continue
+                
+                val t = if (wOffset == 0 && d == startDay) startTime else "00:00"
+                
+                val dayEntries = entries.filter { it.dayOfWeek == d && it.isActive(w) }
+                    .sortedBy { it.startTime }
+                
+                val currentClass = if (wOffset == 0 && d == startDay) {
+                    dayEntries.find { it.startTime <= t && it.endTime > t }
+                } else null
+                
+                val futureClasses = dayEntries.filter { it.startTime > t }
+                
+                if (currentClass != null || futureClasses.isNotEmpty()) {
+                    val isEndingSoon = currentClass?.let {
+                        timeToMinutes(it.endTime) - timeToMinutes(t) <= 20 && futureClasses.isNotEmpty()
+                    } ?: false
+
+                    return if (currentClass != null && !isEndingSoon) {
+                        (listOf(currentClass) + futureClasses.take(1)).take(2)
+                    } else {
+                        futureClasses.take(2)
+                    }
+                }
+            }
+        }
+
+        return emptyList()
     }
 
+    /**
+     * Gets all remaining classes for the day of the next scheduled class.
+     */
+    fun getRemainingClasses(
+        entries: List<TimetableEntry>,
+        todayDayOfWeek: Int,
+        currentTime: String,
+        currentWeek: Int? = null,
+        todayDate: LocalDate? = null
+    ): List<TimetableEntry> {
+        val nextOnes = getNextClasses(entries, todayDayOfWeek, currentTime, currentWeek, todayDate)
+        if (nextOnes.isEmpty()) return emptyList()
+        
+        val firstNext = nextOnes.first()
+        val today = todayDate ?: AcademicCalendar.getToday()
+        val physicalDayOfWeek = today.dayOfWeek.isoDayNumber
+        val effectiveTodayDay = AcademicCalendar.getEffectiveDayOfWeek(today)
+        
+        var targetWeek = currentWeek ?: 1
+        
+        // If it's weekday and we wrapped around to a lower day number, it must be the next week.
+        if (physicalDayOfWeek <= 5 && firstNext.dayOfWeek < effectiveTodayDay) {
+            targetWeek += 1
+        }
+        
+        return entries.filter { it.dayOfWeek == firstNext.dayOfWeek && it.isActive(targetWeek) }
+            .sortedBy { it.startTime }
+            .filter { it.startTime >= firstNext.startTime }
+    }
+
+    /**
+     * Gets the schedule for the dashboard (Today or Tomorrow).
+     */
     fun getDashboardSchedule(
         entries: List<TimetableEntry>,
         todayDayOfWeek: Int,
@@ -61,37 +119,32 @@ object TimetableWidgetLogic {
         currentWeek: Int? = null,
         todayDate: LocalDate? = null
     ): Pair<Boolean, List<TimetableEntry>> {
-        val nextClasses = getNextClasses(entries, todayDayOfWeek, currentTime, currentWeek, todayDate)
-        val firstNext = nextClasses.firstOrNull()
+        val today = todayDate ?: AcademicCalendar.getToday()
+        val physicalDayOfWeek = today.dayOfWeek.isoDayNumber
+        val effectiveTodayDay = AcademicCalendar.getEffectiveDayOfWeek(today)
+        val week = currentWeek ?: 1
         
-        val effectiveTodayDayOfWeek = todayDate?.let { AcademicCalendar.getEffectiveDayOfWeek(it) } ?: todayDayOfWeek
-        
-        val todayClasses = entries.filter { it.dayOfWeek == effectiveTodayDayOfWeek && it.isActive(currentWeek) }
+        val todayClasses = entries.filter { it.dayOfWeek == effectiveTodayDay && it.isActive(week) }
             .sortedBy { it.startTime }
 
         val isAfterLessons = if (todayClasses.isEmpty()) {
-            currentTime > "18:00"
+            currentTime > "18:00" || physicalDayOfWeek > 5
         } else {
             currentTime > todayClasses.last().endTime
         }
 
-        val baseList = if (isAfterLessons) {
-            val tomorrowDate = todayDate?.let { LocalDate.fromEpochDays(it.toEpochDays() + 1) }
-            val effectiveTomorrowDayOfWeek = tomorrowDate?.let { AcademicCalendar.getEffectiveDayOfWeek(it) } ?: ((todayDayOfWeek % 7) + 1)
-            val tomorrowWeek = if (todayDayOfWeek == 7) (currentWeek?.plus(1) ?: 1) else currentWeek
-            entries.filter { it.dayOfWeek == effectiveTomorrowDayOfWeek && it.isActive(tomorrowWeek) }.sortedBy { it.startTime }
+        return if (isAfterLessons) {
+            val tomorrowDate = LocalDate.fromEpochDays(today.toEpochDays() + 1)
+            val tomorrowDay = AcademicCalendar.getEffectiveDayOfWeek(tomorrowDate)
+            // Due to AcademicCalendar.getCurrentWeek behavior, 'week' is already correct for tomorrow
+            // when it's Saturday, Sunday, or a normal weekday transition.
+            val list = entries.filter { it.dayOfWeek == tomorrowDay && it.isActive(week) }.sortedBy { it.startTime }
+            true to list
         } else {
-            // Include current class if it exists
             val currentClass = todayClasses.find { it.startTime <= currentTime && it.endTime > currentTime }
-            if (currentClass != null) {
-                todayClasses.filter { it.startTime >= currentClass.startTime }
-            } else {
-                todayClasses.filter { it.startTime >= (firstNext?.startTime ?: "00:00") }
-            }
+            val baseTime = currentClass?.startTime ?: currentTime
+            val list = todayClasses.filter { it.startTime >= baseTime }
+            false to list
         }
-
-        // Return the full base list.
-        // In the "Today's Schedule" widget, it's preferred to show the current class as well.
-        return isAfterLessons to baseList
     }
 }

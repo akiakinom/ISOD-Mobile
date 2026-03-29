@@ -22,17 +22,15 @@ actual fun createHttpClient(): HttpClient {
     return HttpClient(Android) {
         engine {
             sslManager = { connection ->
-                if (connection is HttpsURLConnection) {
-                    val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
-                        override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
-                        override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
-                        override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-                    })
-                    val sslContext = SSLContext.getInstance("SSL")
-                    sslContext.init(null, trustAllCerts, java.security.SecureRandom())
-                    connection.sslSocketFactory = sslContext.socketFactory
-                    connection.hostnameVerifier = HostnameVerifier { _, _ -> true }
-                }
+                val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
+                    override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
+                    override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
+                    override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+                })
+                val sslContext = SSLContext.getInstance("SSL")
+                sslContext.init(null, trustAllCerts, java.security.SecureRandom())
+                connection.sslSocketFactory = sslContext.socketFactory
+                connection.hostnameVerifier = HostnameVerifier { _, _ -> true }
             }
         }
     }

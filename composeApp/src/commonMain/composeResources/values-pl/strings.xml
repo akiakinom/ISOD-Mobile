@@ -7,6 +7,7 @@
     <string name="hide">Ukryj</string>
     <string name="show">Pokaż</string>
     <string name="isod_api_key_hint">Znajdź swój klucz API w portalu ISOD na dole strony swojego konta.</string>
+    <string name="open_isod_portal">Otwórz portal ISOD</string>
     <string name="continue_btn">Kontynuuj</string>
 
     <string name="usos_title">USOS</string>
@@ -36,6 +37,7 @@
     <string name="tab_home">Panel</string>
     <string name="tab_schedule">Plan</string>
     <string name="tab_grades">Oceny</string>
+    <string name="tab_exams">Egzaminy</string>
     <string name="tab_news">Aktualności</string>
 
     <string name="weekly_schedule">Plan tygodniowy</string>
@@ -61,6 +63,7 @@
     <string name="full_day_sun">Niedziela</string>
 
     <string name="grades_title">Oceny</string>
+    <string name="exams_title">Egzaminy</string>
     <string name="back">Wstecz</string>
     <string name="no_detailed_grades">Brak szczegółowych ocen dla tego przedmiotu.</string>
     <string name="grade_value_label">Wartość</string>
@@ -79,6 +82,8 @@
     <string name="theme_system">Domyślny systemu</string>
     <string name="theme_light">Jasny</string>
     <string name="theme_dark">Ciemny</string>
+    <string name="section_notifications">Powiadomienia</string>
+    <string name="notifications_desc">Wybierz, które ogłoszenia mają wywoływać powiadomienie push</string>
     <string name="section_widget">Widget</string>
     <string name="widget_show_all_day">Pokaż plan na cały dzień</string>
     <string name="widget_show_all_day_desc">Wyświetlaj wszystkie dzisiejsze zajęcia zamiast tylko nadchodzących</string>
@@ -90,6 +95,7 @@
     <string name="unlink">Odłącz</string>
     <string name="link">Połącz</string>
     <string name="section_about">O aplikacji</string>
+    <string name="contribute">Dodaj cegiełkę na GitHubie</string>
     <string name="log_out">Wyloguj się</string>
     <string name="version_format">Wersja %1$s</string>
     <string name="beta_suffix"> (BETA)</string>
@@ -120,18 +126,38 @@
     <string name="news_type_timetable">Zapisy na zajęcia</string>
     <string name="news_type_other">Inne</string>
 
+    <string name="news_type_exam">Egzaminy</string>
+    <string name="news_type_deadline">Terminy oddania</string>
+    <string name="news_type_student_event">Wydarzenia studenckie</string>
+
+    <string name="notif_section_university">Studenckie</string>
+    <string name="notif_section_academic">Akademickie</string>
+
     <string name="week_number">Tydzień %1$d</string>
+    <string name="current_week">Obecny tydzień</string>
     <string name="override_cycle_title">Nadpisz cykl</string>
-    <string name="reset_to_default">Przywróć domyślne</string>
+    <string name="reset_to_default">Przywróć</string>
     <string name="cancel">Anuluj</string>
     <string name="inactive_this_week">Nieaktywne w tym tygodniu</string>
 
     <string name="cycle_sem">Cały semestr</string>
     <string name="cycle_1ps">Pierwsza połowa</string>
     <string name="cycle_2ps">Druga połowa</string>
-    <string name="cycle_pa">Tygodnie parzyste</string>
-    <string name="cycle_np">Tygodnie nieparzyste</string>
-    <string name="cycle_none">Zawsze nieaktywne</string>
+    <string name="cycle_pa">Parzyste</string>
+    <string name="cycle_np">Nieparzyste</string>
+    <string name="cycle_none">Nigdy</string>
+    <string name="cycle_custom">Własne wyjątki</string>
+    <string name="cycle_custom_hint">np. SEM!1-3 (oprócz tyg. 1-3) lub W:1,3,5 (tylko tyg. 1,3,5)</string>
+    <string name="save">Zapisz</string>
 
     <string name="day_substitution_label">Obowiązuje plan z: %1$s</string>
+    <string name="ok">OK</string>
+    <string name="summary_label">Podsumowanie</string>
+    <string name="weight_label">Waga: %1$s</string>
+    <string name="date_at_format">%1$s o %2$s</string>
+
+    <string name="today">Dzisiaj</string>
+    <string name="yesterday">Wczoraj</string>
+    <string name="other_date">Starsze</string>
+    <string name="work_in_progress">Prace w toku</string>
 </resources>
