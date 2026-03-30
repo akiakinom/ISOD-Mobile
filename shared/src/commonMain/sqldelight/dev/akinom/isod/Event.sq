@@ -1,0 +1,22 @@
+CREATE TABLE EventEntity (
+    id INTEGER NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    location TEXT,
+    eventDate TEXT NOT NULL,
+    description TEXT,
+    imageUrl TEXT,
+    lastUpdated INTEGER NOT NULL
+);
+
+selectAll:
+SELECT * FROM EventEntity ORDER BY eventDate ASC;
+
+upsert:
+INSERT OR REPLACE INTO EventEntity(id, title, location, eventDate, description, imageUrl, lastUpdated)
+VALUES ?;
+
+deleteAll:
+DELETE FROM EventEntity;
+
+lastUpdated:
+SELECT lastUpdated FROM EventEntity LIMIT 1;

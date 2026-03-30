@@ -2,6 +2,7 @@
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">isod.ee.pw.edu.pl</domain>
+        <domain includeSubdomains="true">57.128.253.159</domain>
         <trust-anchors>
             <certificates src="system" />
             <certificates src="user" />

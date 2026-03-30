@@ -8,9 +8,12 @@ import dev.akinom.isod.auth.IsodAuthRepository
 import dev.akinom.isod.auth.createSettings
 import dev.akinom.isod.auth.currentSemester
 import dev.akinom.isod.data.cache.DatabaseDriverFactory
+import dev.akinom.isod.data.remote.AkinomApiClient
 import dev.akinom.isod.data.remote.IsodApiClient
 import dev.akinom.isod.data.remote.UsosApiClient
+import dev.akinom.isod.data.repository.AcademicCalendarRepository
 import dev.akinom.isod.data.repository.CourseRepository
+import dev.akinom.isod.data.repository.EventRepository
 import dev.akinom.isod.data.repository.GradesRepository
 import dev.akinom.isod.data.repository.NewsRepository
 import dev.akinom.isod.data.repository.PlanRepository
@@ -65,10 +68,13 @@ val sharedModule = module {
         }
 
         try {
-            IsodDatabase(driver).newsQueries.selectAllHeaders("").executeAsList()
+            val db = IsodDatabase(driver)
+            db.newsQueries.selectAllHeaders("").executeAsList()
+            db.eventQueries.selectAll().executeAsList()
+            db.academicCalendarQueries.selectAllExams().executeAsList()
             driver
         } catch (e: Exception) {
-            println("❌ Database schema validation failed, deleting and recreating: ${e.message}")
+            println("❌ Database schema validation failed (likely new tables), deleting and recreating: ${e.message}")
             try { driver.close() } catch (_: Exception) {}
             factory.deleteDatabase()
             factory.createDriver()
@@ -88,9 +94,13 @@ val sharedModule = module {
         )
     }
 
+    single { AkinomApiClient(get()) }
+
     single { PlanRepository(get(), get(), get()) }
     single { NewsRepository(get(), get(), get()) }
     single { CourseRepository(get(), get(), get()) }
+    single { AcademicCalendarRepository(get(), get(), get()) }
+    single { EventRepository(get(), get(), get()) }
 
     single {
         UsosApiClient(
@@ -102,7 +112,7 @@ val sharedModule = module {
     }
 
     single { UsosRepository(get(), get(), get()) }
-    single { TimetableRepository(get(), get(), get(), get()) }
+    single { TimetableRepository(get(), get(), get(), get(), get()) }
     single { GradesRepository(get(), get(), get(), get()) }
 }
 
