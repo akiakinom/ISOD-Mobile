@@ -765,7 +765,7 @@ private fun TimelineNowIndicator() {
     ) {
         Box(
             modifier = Modifier
-                .padding(start = 36.dp) // Aligned with the 40dp axis (40 - 8/2 = 36)
+                .padding(start = 29.dp) // Aligned with the 40dp axis (40 - 8/2 = 36)
                 .size(8.dp)
                 .drawBehind {
                     drawCircle(
@@ -814,7 +814,7 @@ private fun TimelineNowMergedIndicator(gapMinutes: Int) {
     ) {
         Box(
             modifier = Modifier
-                .padding(start = 36.dp)
+                .padding(start = 29.dp)
                 .size(8.dp)
                 .drawBehind {
                     drawCircle(color = color, radius = size.minDimension / 2, alpha = glowAlpha)
