@@ -53,6 +53,9 @@ kotlin {
             implementation(libs.voyager.koin)
             
             implementation(libs.kotlinx.datetime)
+
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor)
         }
     }
 }

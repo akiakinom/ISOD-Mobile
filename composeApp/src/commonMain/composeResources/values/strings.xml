@@ -39,6 +39,7 @@
     <string name="tab_grades">Grades</string>
     <string name="tab_exams">Exams</string>
     <string name="tab_news">News</string>
+    <string name="tab_events">Events</string>
 
     <string name="weekly_schedule">Weekly Schedule</string>
     <string name="no_classes_scheduled">No classes scheduled</string>
@@ -164,4 +165,7 @@
     <string name="yesterday">Yesterday</string>
     <string name="other_date">Older</string>
     <string name="work_in_progress">Work in progress</string>
+
+    <string name="events_title">Upcoming Events</string>
+    <string name="no_events_yet">No upcoming events found</string>
 </resources>

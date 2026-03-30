@@ -23,6 +23,8 @@ import androidx.compose.material.icons.automirrored.filled.NavigateBefore
 import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,6 +62,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -81,6 +84,9 @@ class ScheduleScreenModel(val semester: String) : ScreenModel, KoinComponent {
     private val _selectedWeek = MutableStateFlow(AcademicCalendar.getCurrentWeek(semester) ?: 1)
     val selectedWeek: StateFlow<Int> = _selectedWeek
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing = _isRefreshing.asStateFlow()
+
     val actualCurrentWeek = AcademicCalendar.getCurrentWeek(semester)
 
     val weekMonday: StateFlow<LocalDate> = _selectedWeek
@@ -92,6 +98,17 @@ class ScheduleScreenModel(val semester: String) : ScreenModel, KoinComponent {
         weekMonday.flatMapLatest { monday ->
             timetableRepo.getTimetable(semester, monday.toString())
         }.stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun refresh() {
+        screenModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                timetableRepo.refresh(semester, weekMonday.value.toString())
+            } finally {
+                _isRefreshing.value = false
+            }
+        }
+    }
 
     fun selectWeek(week: Int) {
         _selectedWeek.value = week.coerceIn(1, 15)
@@ -113,6 +130,7 @@ class ScheduleScreen(
         val timetable by screenModel.timetable.collectAsState()
         val selectedWeek by screenModel.selectedWeek.collectAsState()
         val weekMonday by screenModel.weekMonday.collectAsState()
+        val isRefreshing by screenModel.isRefreshing.collectAsState()
 
         val dayNames = listOf(
             stringResource(Res.string.day_mon),
@@ -245,9 +263,10 @@ class ScheduleScreen(
                         else -> ""
                     }
 
+                    val containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
-                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                        color = containerColor
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -266,83 +285,87 @@ class ScheduleScreen(
                 }
             }
         ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = { screenModel.refresh() },
+                modifier = Modifier.fillMaxSize().padding(paddingValues)
             ) {
-                // Modern Date Ribbon
-                SecondaryTabRow(
-                    selectedTabIndex = pagerState.currentPage,
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    divider = {},
-                    indicator = {
-                        TabRowDefaults.SecondaryIndicator(
-                            Modifier.tabIndicatorOffset(pagerState.currentPage, true),
-                            color = MaterialTheme.colorScheme.primary,
-                            height = 3.dp
-                        )
-                    }
+                Column(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    dayNames.forEachIndexed { index, name ->
-                        val date = remember(weekMonday, index) {
-                            LocalDate.fromEpochDays(weekMonday.toEpochDays() + index)
+                    // Modern Date Ribbon
+                    SecondaryTabRow(
+                        selectedTabIndex = pagerState.currentPage,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        divider = {},
+                        indicator = {
+                            TabRowDefaults.SecondaryIndicator(
+                                Modifier.tabIndicatorOffset(pagerState.currentPage, true),
+                                color = MaterialTheme.colorScheme.primary,
+                                height = 3.dp
+                            )
                         }
-                        val isToday = date == todayDate
-
-                        Tab(
-                            selected = pagerState.currentPage == index,
-                            onClick = {
-                                scope.launch { pagerState.animateScrollToPage(index) }
-                            },
-                            text = {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(
-                                        text = name,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = if (pagerState.currentPage == index) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Text(
-                                        text = date.day.toString(),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = if (pagerState.currentPage == index) FontWeight.ExtraBold else FontWeight.Medium,
-                                        color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
+                    ) {
+                        dayNames.forEachIndexed { index, name ->
+                            val date = remember(weekMonday, index) {
+                                LocalDate.fromEpochDays(weekMonday.toEpochDays() + index)
                             }
-                        )
+                            val isToday = date == todayDate
+
+                            Tab(
+                                selected = pagerState.currentPage == index,
+                                onClick = {
+                                    scope.launch { pagerState.animateScrollToPage(index) }
+                                },
+                                text = {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = name,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = if (pagerState.currentPage == index) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = date.day.toString(),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = if (pagerState.currentPage == index) FontWeight.ExtraBold else FontWeight.Medium,
+                                            color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                            )
+                        }
                     }
-                }
 
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxSize(),
-                    verticalAlignment = Alignment.Top
-                ) { page ->
-                    val currentDayDate = remember(page, weekMonday) {
-                        LocalDate.fromEpochDays(weekMonday.toEpochDays() + page)
-                    }
-                    val effectiveDayOfWeek = remember(currentDayDate) {
-                        AcademicCalendar.getEffectiveDayOfWeek(currentDayDate)
-                    }
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize(),
+                        verticalAlignment = Alignment.Top
+                    ) { page ->
+                        val currentDayDate = remember(page, weekMonday) {
+                            LocalDate.fromEpochDays(weekMonday.toEpochDays() + page)
+                        }
+                        val effectiveDayOfWeek = remember(currentDayDate) {
+                            AcademicCalendar.getEffectiveDayOfWeek(currentDayDate)
+                        }
 
-                    val filteredEntries = timetable.filter { it.dayOfWeek == effectiveDayOfWeek }
+                        val filteredEntries = timetable.filter { it.dayOfWeek == effectiveDayOfWeek }
 
-                    if (filteredEntries.isEmpty()) {
-                        EmptyDayView()
-                    } else {
-                        val groupedEntries = groupOverlapping(filteredEntries)
-                        val sortedGroups = groupedEntries.sortedBy { it.minOf { e -> e.startTime.toMinutes() } }
-                        val isToday = currentDayDate == todayDate
+                        if (filteredEntries.isEmpty()) {
+                            EmptyDayView()
+                        } else {
+                            val groupedEntries = groupOverlapping(filteredEntries)
+                            val sortedGroups = groupedEntries.sortedBy { it.minOf { e -> e.startTime.toMinutes() } }
+                            val isToday = currentDayDate == todayDate
 
-                        ScheduleTimeline(
-                            groups = sortedGroups,
-                            isToday = isToday,
-                            currentTime = currentTime,
-                            selectedWeek = selectedWeek,
-                            onLongClick = { selectedEntryForOverride = it }
-                        )
+                            ScheduleTimeline(
+                                groups = sortedGroups,
+                                isToday = isToday,
+                                currentTime = currentTime,
+                                selectedWeek = selectedWeek,
+                                onLongClick = { selectedEntryForOverride = it }
+                            )
+                        }
                     }
                 }
             }
@@ -742,7 +765,7 @@ private fun TimelineNowIndicator() {
     ) {
         Box(
             modifier = Modifier
-                .padding(start = 36.dp) // Aligned with the 40dp axis (40 - 8/2 = 36)
+                .padding(start = 29.dp) // Aligned with the 40dp axis (40 - 8/2 = 36)
                 .size(8.dp)
                 .drawBehind {
                     drawCircle(
@@ -791,7 +814,7 @@ private fun TimelineNowMergedIndicator(gapMinutes: Int) {
     ) {
         Box(
             modifier = Modifier
-                .padding(start = 36.dp)
+                .padding(start = 29.dp)
                 .size(8.dp)
                 .drawBehind {
                     drawCircle(color = color, radius = size.minDimension / 2, alpha = glowAlpha)

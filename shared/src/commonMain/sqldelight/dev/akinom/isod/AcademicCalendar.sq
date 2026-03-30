@@ -1,0 +1,90 @@
+CREATE TABLE SemesterEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    startDate TEXT NOT NULL
+);
+
+CREATE TABLE SubstitutionEntity (
+    originalDate TEXT NOT NULL PRIMARY KEY,
+    dayOfWeek INTEGER NOT NULL
+);
+
+CREATE TABLE BreakEntity (
+    id INTEGER NOT NULL PRIMARY KEY,
+    type TEXT NOT NULL,
+    dateFrom TEXT NOT NULL,
+    dateTo TEXT NOT NULL
+);
+
+CREATE TABLE ExamEntity (
+    id INTEGER NOT NULL PRIMARY KEY,
+    dateFrom TEXT NOT NULL,
+    dateTo TEXT NOT NULL
+);
+
+CREATE TABLE DeanEntity (
+    id INTEGER NOT NULL PRIMARY KEY,
+    date TEXT NOT NULL,
+    timeFrom TEXT NOT NULL,
+    timeTo TEXT NOT NULL
+);
+
+CREATE TABLE CalendarMetadata (
+    key TEXT NOT NULL PRIMARY KEY,
+    lastUpdated INTEGER NOT NULL
+);
+
+selectAllSemesters:
+SELECT * FROM SemesterEntity;
+
+selectAllSubstitutions:
+SELECT * FROM SubstitutionEntity;
+
+selectAllBreaks:
+SELECT * FROM BreakEntity;
+
+selectAllExams:
+SELECT * FROM ExamEntity;
+
+selectAllDeans:
+SELECT * FROM DeanEntity;
+
+upsertSemester:
+INSERT OR REPLACE INTO SemesterEntity(id, startDate)
+VALUES ?;
+
+upsertSubstitution:
+INSERT OR REPLACE INTO SubstitutionEntity(originalDate, dayOfWeek)
+VALUES ?;
+
+upsertBreak:
+INSERT OR REPLACE INTO BreakEntity(id, type, dateFrom, dateTo)
+VALUES ?;
+
+upsertExam:
+INSERT OR REPLACE INTO ExamEntity(id, dateFrom, dateTo)
+VALUES ?;
+
+upsertDean:
+INSERT OR REPLACE INTO DeanEntity(id, date, timeFrom, timeTo)
+VALUES ?;
+
+deleteAllSemesters:
+DELETE FROM SemesterEntity;
+
+deleteAllSubstitutions:
+DELETE FROM SubstitutionEntity;
+
+deleteAllBreaks:
+DELETE FROM BreakEntity;
+
+deleteAllExams:
+DELETE FROM ExamEntity;
+
+deleteAllDeans:
+DELETE FROM DeanEntity;
+
+getMetadata:
+SELECT lastUpdated FROM CalendarMetadata WHERE key = 'calendar' LIMIT 1;
+
+insertMetadata:
+INSERT OR REPLACE INTO CalendarMetadata(key, lastUpdated) VALUES ('calendar', ?);

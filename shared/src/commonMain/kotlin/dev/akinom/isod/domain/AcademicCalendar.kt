@@ -11,23 +11,59 @@ data class SemesterConfig(
     val start: LocalDate
 )
 
-object AcademicCalendar {
-    private val configurations = listOf(
-        SemesterConfig("2026L", LocalDate(2026, 2, 23))
-    )
+data class AcademicBreak(
+    val id: Int,
+    val type: String,
+    val dateFrom: LocalDate,
+    val dateTo: LocalDate
+)
 
-    private val daySubstitutions = listOf(
-        LocalDate(2026, 4, 27) to 5,
-        LocalDate(2026, 5, 12) to 5,
-        LocalDate(2026, 6, 3) to 5
-    )
+data class AcademicExam(
+    val id: Int,
+    val dateFrom: LocalDate,
+    val dateTo: LocalDate
+)
+
+data class AcademicDean(
+    val id: Int,
+    val date: LocalDate,
+    val timeFrom: String,
+    val timeTo: String
+)
+
+object AcademicCalendar {
+    private var configurations = listOf<SemesterConfig>()
+    private var daySubstitutions = mapOf<LocalDate, Int>()
+    private var breaks = listOf<AcademicBreak>()
+    private var exams = listOf<AcademicExam>()
+    private var deans = listOf<AcademicDean>()
+
+    fun updateSemesters(newConfigs: List<SemesterConfig>) {
+        configurations = newConfigs
+    }
+
+    fun updateSubstitutions(newSubstitutions: Map<LocalDate, Int>) {
+        daySubstitutions = newSubstitutions
+    }
+
+    fun updateBreaks(newBreaks: List<AcademicBreak>) {
+        breaks = newBreaks
+    }
+
+    fun updateExams(newExams: List<AcademicExam>) {
+        exams = newExams
+    }
+
+    fun updateDeans(newDeans: List<AcademicDean>) {
+        deans = newDeans
+    }
 
     fun getConfiguration(semesterId: String): SemesterConfig? {
         return configurations.find { it.id == semesterId }
     }
 
     fun getDaySubstitution(date: LocalDate): Int? {
-        return daySubstitutions.find { it.first == date }?.second
+        return daySubstitutions[date]
     }
 
     fun getEffectiveDayOfWeek(date: LocalDate): Int {
@@ -56,7 +92,9 @@ object AcademicCalendar {
         
         val week = ((todayMonday - startMonday) / 7) + 1
         
-        if (adjustedToday < config.start || week > 15) return null
+        // We allow weeks slightly outside 1-15 range if they are close, 
+        // but typically 15 is the limit for a semester.
+        if (adjustedToday < config.start || week > 16) return null
         
         return week.toInt()
     }
@@ -72,4 +110,20 @@ object AcademicCalendar {
         fun format(d: LocalDate) = "${d.day.toString().padStart(2, '0')}.${d.month.number.toString().padStart(2, '0')}"
         return "${format(monday)} - ${format(sunday)}"
     }
+
+    fun isBreak(date: LocalDate): Boolean {
+        return breaks.any { date >= it.dateFrom && date <= it.dateTo }
+    }
+
+    fun isExam(date: LocalDate): Boolean {
+        return exams.any { date >= it.dateFrom && date <= it.dateTo }
+    }
+
+    fun getDeanHours(date: LocalDate): AcademicDean? {
+        return deans.find { it.date == date }
+    }
+
+    fun getBreaks(): List<AcademicBreak> = breaks
+    fun getExams(): List<AcademicExam> = exams
+    fun getDeans(): List<AcademicDean> = deans
 }

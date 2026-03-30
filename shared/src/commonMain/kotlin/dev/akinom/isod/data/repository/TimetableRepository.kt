@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.update
 class TimetableRepository(
     private val planRepo: PlanRepository,
     private val usosRepo: UsosRepository,
+    private val academicCalendarRepo: AcademicCalendarRepository,
     private val usosApi: UsosApiClient,
     private val settings: Settings
 ) {
@@ -76,6 +77,12 @@ class TimetableRepository(
                 updatedEntry.copy(userCycleOverride = currentOverrides[entry.id])
             }
         }
+
+    suspend fun refresh(semester: String, weekStart: String) {
+        planRepo.refresh(semester)
+        usosRepo.refresh(weekStart)
+        academicCalendarRepo.refresh()
+    }
 
     fun setCycleOverride(entryId: String, cycle: String?) {
         _overrides.update { current ->
