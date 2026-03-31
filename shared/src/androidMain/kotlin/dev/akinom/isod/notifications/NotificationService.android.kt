@@ -20,6 +20,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import dev.akinom.isod.domain.NewsType
+import androidx.core.graphics.createBitmap
 
 actual class NotificationService(private val context: Context) {
 
@@ -57,10 +58,11 @@ actual class NotificationService(private val context: Context) {
             .setContentTitle(payload.title)
             .setContentText(payload.body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(payload.body))
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_LOW) // Silent
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setColor(accentColor)
+            .setSilent(true)
 
         if (largeIcon != null) {
             builder.setLargeIcon(largeIcon)
@@ -83,7 +85,7 @@ actual class NotificationService(private val context: Context) {
 
         return ContextCompat.getDrawable(context, iconRes)?.let { drawable ->
             val size = 192
-            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            val bitmap = createBitmap(size, size)
             val canvas = Canvas(bitmap)
             drawable.setBounds(0, 0, size, size)
             drawable.draw(canvas)
@@ -99,7 +101,7 @@ actual class NotificationService(private val context: Context) {
 
     private fun createSubjectBitmap(text: String, typeString: String): Bitmap {
         val size = 192
-        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val bitmap = createBitmap(size, size)
         val canvas = Canvas(bitmap)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
@@ -143,7 +145,14 @@ actual class NotificationService(private val context: Context) {
     private fun createChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val channel = NotificationChannel("isod_news", "ISOD News", NotificationManager.IMPORTANCE_DEFAULT)
+            val channel = NotificationChannel(
+                "isod_news", 
+                "ISOD News", 
+                NotificationManager.IMPORTANCE_LOW // Silent
+            )
+            channel.enableLights(false)
+            channel.enableVibration(false)
+            channel.setSound(null, null)
             manager.createNotificationChannel(channel)
         }
     }

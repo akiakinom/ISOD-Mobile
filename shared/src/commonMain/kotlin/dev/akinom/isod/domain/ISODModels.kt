@@ -23,15 +23,6 @@ data class PlanItem(
     val typeOfClasses: ClassType,
 )
 
-data class NewsHeader(
-    val id: String,
-    val title: String,
-    val date: LocalDateTime?,
-    val author: String,
-    val type: NewsType,
-    val label: String,
-)
-
 data class NewsItem(
     val id: String,
     val title: String,

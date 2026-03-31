@@ -147,7 +147,8 @@ data class NewsHeaderDto(
         date = modifiedDate.toLocalDateTime(),
         author = modifiedBy.removeTitles(),
         type = subject.toNewsType(type),
-        label = subject.toNewsLabel()
+        label = subject.toNewsLabel(),
+        isNew = false
     )
 }
 

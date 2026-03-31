@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -49,6 +50,7 @@ import dev.akinom.isod.news.toIcon
 import dev.akinom.isod.news.toLabel
 import dev.akinom.isod.news.typeToColor
 import dev.akinom.isod.news.typeToIcon
+import dev.akinom.isod.notifications.NewsNotificationChecker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -58,10 +60,14 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
+private const val SHOW_DEBUG_ACTIONS = true // Flag to hide/show debug button
+
 class HomeScreenModel(val semester: String) : ScreenModel, KoinComponent {
     private val timetableRepo: TimetableRepository by inject()
     private val newsRepo: NewsRepository           by inject()
     private val storage: CredentialsStorage        by inject()
+    private val checker: NewsNotificationChecker   by inject()
+    private val db: IsodDatabase                   by inject()
 
     val isBuchmanp = storage.getIsodUsername() == "buchmanp"
 
@@ -80,6 +86,29 @@ class HomeScreenModel(val semester: String) : ScreenModel, KoinComponent {
         val newsJob = screenModelScope.launch { newsRepo.refreshHeaders(semester) }
         newsJob.join()
         delay(300)
+    }
+
+    fun debugForceCheckWorker() {
+        screenModelScope.launch {
+            try {
+                checker.check()
+            } catch (e: Exception) {
+                println("❌ Debug force check failed: ${e.message}")
+            }
+        }
+    }
+
+    fun debugMarkAllUnsent() {
+        screenModelScope.launch {
+            db.newsQueries.markAllNotificationsUnsent()
+            println("✅ Debug: All notifications marked as unsent")
+        }
+    }
+    
+    fun markNewsAsRead(id: String) {
+        screenModelScope.launch {
+            newsRepo.markAsRead(id)
+        }
     }
 }
 
@@ -149,18 +178,50 @@ class HomeScreen(
                         )
                     }
 
-                    IconButton(
-                        onClick = { navigator.push(SettingsScreen()) },
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                    ) {
-                        @Suppress("DEPRECATION")
-                        Icon(
-                            Icons.Default.Settings,
-                            contentDescription = stringResource(Res.string.settings),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (SHOW_DEBUG_ACTIONS) {
+                            IconButton(
+                                onClick = { screenModel.debugMarkAllUnsent() },
+                                modifier = Modifier
+                                    .padding(end = 4.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f))
+                            ) {
+                                Icon(
+                                    Icons.Default.Refresh,
+                                    contentDescription = "Reset Notifs",
+                                    tint = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            }
+
+                            IconButton(
+                                onClick = { screenModel.debugForceCheckWorker() },
+                                modifier = Modifier
+                                    .padding(end = 8.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f))
+                            ) {
+                                Icon(
+                                    Icons.Default.BugReport,
+                                    contentDescription = "Debug Check",
+                                    tint = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
+                        }
+
+                        IconButton(
+                            onClick = { navigator.push(SettingsScreen()) },
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                        ) {
+                            @Suppress("DEPRECATION")
+                            Icon(
+                                Icons.Default.Settings,
+                                contentDescription = stringResource(Res.string.settings),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
 
@@ -196,6 +257,7 @@ class HomeScreen(
                         }
                         sortedNews.take(3).forEach { item ->
                             CompactNewsItem(item) {
+                                screenModel.markNewsAsRead(item.id)
                                 navigator.push(NewsDetailScreen(item.id))
                             }
                         }
@@ -493,6 +555,16 @@ private fun CompactNewsItem(item: NewsHeader, onClick: () -> Unit) {
                     }
                 }
             }
+            
+            if (item.isNew) {
+                Spacer(Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(Color.Red)
+                )
+            }
         }
 
         if (item.type != NewsType.OTHER || item.label.isNotEmpty())
@@ -503,7 +575,7 @@ private fun CompactNewsItem(item: NewsHeader, onClick: () -> Unit) {
             Text(
                 text = item.title,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = if (item.isNew) FontWeight.Bold else FontWeight.SemiBold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 color = MaterialTheme.colorScheme.onSurface
