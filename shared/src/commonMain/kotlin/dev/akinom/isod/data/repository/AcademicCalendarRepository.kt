@@ -42,6 +42,10 @@ class AcademicCalendarRepository(
     fun getSemestersFlow(): Flow<List<SemesterEntity>> = 
         queries.selectAllSemesters().asFlow().mapToList(Dispatchers.IO)
 
+    fun getDeanHours(): Flow<List<DeanEntity>> =
+        queries.selectAllDeans().asFlow().mapToList(Dispatchers.IO)
+
+
     private fun observeAndSync() {
         val semestersFlow = getSemestersFlow()
             .onEach { rows: List<SemesterEntity> ->

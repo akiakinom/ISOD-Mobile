@@ -24,7 +24,6 @@ import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,11 +49,12 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
 import dev.akinom.isod.auth.currentDayOfWeek
 import dev.akinom.isod.auth.currentSemester
+import dev.akinom.isod.data.repository.AcademicCalendarRepository
 import dev.akinom.isod.data.repository.TimetableRepository
 import dev.akinom.isod.domain.AcademicCalendar
+import dev.akinom.isod.domain.AcademicDean
 import dev.akinom.isod.domain.TimetableEntry
 import dev.akinom.isod.news.toLabel
-import dev.akinom.isod.news.toShortLabel
 import dev.akinom.isod.news.typeToColor
 import dev.akinom.isod.news.typeToIcon
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -77,9 +77,12 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
+private val deanPurple = Color(0xFFD000FF)
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScheduleScreenModel(val semester: String) : ScreenModel, KoinComponent {
     private val timetableRepo: TimetableRepository by inject()
+    private val academicRepo: AcademicCalendarRepository by inject()
 
     private val _selectedWeek = MutableStateFlow(AcademicCalendar.getCurrentWeek(semester) ?: 1)
     val selectedWeek: StateFlow<Int> = _selectedWeek
@@ -98,6 +101,10 @@ class ScheduleScreenModel(val semester: String) : ScreenModel, KoinComponent {
         weekMonday.flatMapLatest { monday ->
             timetableRepo.getTimetable(semester, monday.toString())
         }.stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val deanHours = academicRepo.getDeanHours()
+        .map { list -> list.map { AcademicDean(it.id.toInt(), LocalDate.parse(it.date), it.timeFrom, it.timeTo) } }
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun refresh() {
         screenModelScope.launch {
@@ -128,6 +135,7 @@ class ScheduleScreen(
     override fun Content() {
         val screenModel = rememberScreenModel { ScheduleScreenModel(semester) }
         val timetable by screenModel.timetable.collectAsState()
+        val deanHours by screenModel.deanHours.collectAsState()
         val selectedWeek by screenModel.selectedWeek.collectAsState()
         val weekMonday by screenModel.weekMonday.collectAsState()
         val isRefreshing by screenModel.isRefreshing.collectAsState()
@@ -161,7 +169,6 @@ class ScheduleScreen(
             selectedWeek == screenModel.actualCurrentWeek
         }
 
-        // Sync pager state when initialDayOfWeek changes
         LaunchedEffect(initialDayOfWeek) {
             initialDayOfWeek?.let { day ->
                 val targetPage = if (day > 5) 0 else day - 1
@@ -250,36 +257,65 @@ class ScheduleScreen(
                 val substitution = remember(currentDayDate) {
                     AcademicCalendar.getDaySubstitution(currentDayDate)
                 }
+                val deanHoursToday = remember(currentDayDate, deanHours) {
+                    deanHours.filter { it.date == currentDayDate }
+                }
 
-                if (substitution != null) {
-                    val substitutedDayName = when (substitution) {
-                        1 -> stringResource(Res.string.full_day_mon)
-                        2 -> stringResource(Res.string.full_day_tue)
-                        3 -> stringResource(Res.string.full_day_wed)
-                        4 -> stringResource(Res.string.full_day_thu)
-                        5 -> stringResource(Res.string.full_day_fri)
-                        6 -> stringResource(Res.string.full_day_sat)
-                        7 -> stringResource(Res.string.full_day_sun)
-                        else -> ""
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    if (substitution != null) {
+                        val substitutedDayName = when (substitution) {
+                            1 -> stringResource(Res.string.full_day_mon)
+                            2 -> stringResource(Res.string.full_day_tue)
+                            3 -> stringResource(Res.string.full_day_wed)
+                            4 -> stringResource(Res.string.full_day_thu)
+                            5 -> stringResource(Res.string.full_day_fri)
+                            6 -> stringResource(Res.string.full_day_sat)
+                            7 -> stringResource(Res.string.full_day_sun)
+                            else -> ""
+                        }
+
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(Icons.Default.Info, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.secondary)
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = stringResource(Res.string.day_substitution_label, substitutedDayName),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+                        }
                     }
 
-                    val containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = containerColor
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
+                    if (deanHoursToday.isNotEmpty()) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.primaryContainer
                         ) {
-                            Icon(Icons.Default.Info, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.secondary)
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(Res.string.day_substitution_label, substitutedDayName),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.Event,
+                                    null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = stringResource(Res.string.deans_hours, deanHoursToday[0].timeFrom, deanHoursToday[0].timeTo),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                )
+                            }
                         }
                     }
                 }
@@ -293,7 +329,6 @@ class ScheduleScreen(
                 Column(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Modern Date Ribbon
                     SecondaryTabRow(
                         selectedTabIndex = pagerState.currentPage,
                         containerColor = MaterialTheme.colorScheme.surface,
@@ -350,6 +385,9 @@ class ScheduleScreen(
                         }
 
                         val filteredEntries = timetable.filter { it.dayOfWeek == effectiveDayOfWeek }
+                        val deanHoursToday = remember(currentDayDate, deanHours) {
+                            deanHours.filter { it.date == currentDayDate }
+                        }
 
                         if (filteredEntries.isEmpty()) {
                             EmptyDayView()
@@ -360,6 +398,7 @@ class ScheduleScreen(
 
                             ScheduleTimeline(
                                 groups = sortedGroups,
+                                deanHours = deanHoursToday,
                                 isToday = isToday,
                                 currentTime = currentTime,
                                 selectedWeek = selectedWeek,
@@ -370,7 +409,6 @@ class ScheduleScreen(
                 }
             }
 
-            // Week Picker Bottom Sheet
             if (showWeekPicker) {
                 WeekBottomSheet(
                     weeks = screenModel.availableWeeks,
@@ -385,7 +423,6 @@ class ScheduleScreen(
                 )
             }
 
-            // Override Bottom Sheet
             if (selectedEntryForOverride != null) {
                 OverrideBottomSheet(
                     entry = selectedEntryForOverride!!,
@@ -435,6 +472,7 @@ private fun EmptyDayView() {
 @Composable
 private fun ScheduleTimeline(
     groups: List<List<TimetableEntry>>,
+    deanHours: List<AcademicDean>,
     isToday: Boolean,
     currentTime: LocalTime,
     selectedWeek: Int?,
@@ -443,7 +481,6 @@ private fun ScheduleTimeline(
     val listState = rememberLazyListState()
     val currentMinutes = currentTime.hour * 60 + currentTime.minute
 
-    // Auto-scroll to current class on first load if it's today
     LaunchedEffect(isToday) {
         if (isToday) {
             val currentGroupIdx = groups.indexOfFirst { group ->
@@ -452,20 +489,15 @@ private fun ScheduleTimeline(
                 currentMinutes in start..end
             }
             if (currentGroupIdx != -1) {
-                // Adjust scroll index slightly to account for potential separators
-                // Since separators are inserted between items, we just scroll to the group index * 2 roughly
-                // But LazyColumn index is literal.
-                // A better way is to find the index in the LazyColumn, but for now we'll just scroll.
                 listState.animateScrollToItem(currentGroupIdx.coerceAtLeast(0))
             }
         }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Vertical Timeline Line - Centered behind the times column
         Box(
             modifier = Modifier
-                .padding(start = 40.dp) // Adjusted to align with centered times (8dp padding + 64dp/2 center = 40dp)
+                .padding(start = 40.dp)
                 .fillMaxHeight()
                 .width(1.dp)
                 .background(
@@ -483,15 +515,17 @@ private fun ScheduleTimeline(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 8.dp, end = 16.dp, top = 24.dp, bottom = 80.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            contentPadding = PaddingValues(top = 24.dp, bottom = 80.dp),
         ) {
             var indicatorShown = false
 
-            // Initial NOW indicator if before first class
             val firstStart = groups.firstOrNull()?.minOf { it.startTime.toMinutes() } ?: 0
             if (isToday && currentMinutes < firstStart) {
-                item { TimelineNowIndicator() }
+                item {
+                    Box(modifier = Modifier.padding(start = 8.dp, end = 16.dp)) {
+                        TimelineNowIndicator()
+                    }
+                }
                 indicatorShown = true
             }
 
@@ -499,29 +533,37 @@ private fun ScheduleTimeline(
                 val groupStart = group.minOf { it.startTime.toMinutes() }
                 val groupEnd = group.maxOf { it.endTime.toMinutes() }
 
-                // Gap or NOW separator between classes
                 if (index > 0) {
                     val prevEnd = groups[index - 1].maxOf { it.endTime.toMinutes() }
                     val gap = groupStart - prevEnd
                     val isNowInGap = isToday && currentMinutes in prevEnd until groupStart
 
-                    if (gap > 45) {
-                        item {
-                            TimelineGapSeparator(
-                                gapMinutes = gap,
-                                isNow = isNowInGap
-                            )
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth().deanHoursOverlay(prevEnd, groupStart, deanHours, MaterialTheme.colorScheme.primary)) {
+                            if (gap > 45) {
+                                Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp)) {
+                                    TimelineGapSeparator(gapMinutes = gap, isNow = isNowInGap)
+                                }
+                            } else {
+                                Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp)) {
+                                    Spacer(Modifier.height(12.dp))
+                                    if (isNowInGap) {
+                                        TimelineNowIndicator()
+                                    } else {
+                                        Spacer(Modifier.height(0.dp))
+                                    }
+                                    Spacer(Modifier.height(12.dp))
+                                }
+                            }
                         }
-                        if (isNowInGap) indicatorShown = true
-                    } else if (isNowInGap) {
-                        item { TimelineNowIndicator() }
-                        indicatorShown = true
                     }
+                    if (isNowInGap) indicatorShown = true
                 }
 
                 item {
                     TimelineGroup(
                         group = group,
+                        deanHours = deanHours,
                         isToday = isToday,
                         currentMinutes = currentMinutes,
                         selectedWeek = selectedWeek,
@@ -534,10 +576,13 @@ private fun ScheduleTimeline(
                 }
             }
 
-            // Indicator AFTER all
             val lastEnd = groups.lastOrNull()?.maxOf { it.endTime.toMinutes() } ?: 0
             if (isToday && !indicatorShown && groups.isNotEmpty() && currentMinutes > lastEnd) {
-                item { TimelineNowIndicator() }
+                item {
+                    Box(modifier = Modifier.padding(start = 8.dp, end = 16.dp)) {
+                        TimelineNowIndicator()
+                    }
+                }
                 indicatorShown = true
             }
         }
@@ -547,17 +592,23 @@ private fun ScheduleTimeline(
 @Composable
 private fun TimelineGroup(
     group: List<TimetableEntry>,
+    deanHours: List<AcademicDean>,
     isToday: Boolean,
     currentMinutes: Int,
     selectedWeek: Int?,
     onLongClick: (TimetableEntry) -> Unit
 ) {
+    val groupStart = group.minOf { it.startTime.toMinutes() }
+    val groupEnd = group.maxOf { it.endTime.toMinutes() }
+
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .deanHoursOverlay(groupStart, groupEnd, deanHours, MaterialTheme.colorScheme.primary)
+            .padding(start = 8.dp, end = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Time Column - Centered horizontally
         Column(
             modifier = Modifier.width(64.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -587,7 +638,6 @@ private fun TimelineGroup(
             )
         }
 
-        // The Cards
         Box(modifier = Modifier.weight(1f)) {
             if (group.size == 1) {
                 ScheduleItemV2(
@@ -765,7 +815,7 @@ private fun TimelineNowIndicator() {
     ) {
         Box(
             modifier = Modifier
-                .padding(start = 29.dp) // Aligned with the 40dp axis (40 - 8/2 = 36)
+                .padding(start = 29.dp)
                 .size(8.dp)
                 .drawBehind {
                     drawCircle(
@@ -958,7 +1008,6 @@ private fun WeekBottomSheet(
                 modifier = Modifier.padding(vertical = 16.dp)
             )
 
-            // 3x5 Grid
             weeks.chunked(3).forEach { rowWeeks ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -979,7 +1028,6 @@ private fun WeekBottomSheet(
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    // Fill empty spaces if last row is not full
                     if (rowWeeks.size < 3) {
                         repeat(3 - rowWeeks.size) {
                             Spacer(Modifier.weight(1f))
@@ -1056,7 +1104,6 @@ private fun OverrideBottomSheet(
 ) {
     var tempOverrideCode by remember { mutableStateOf(entry.userCycleOverride ?: entry.cycle) }
 
-    // helper to get active weeks for a standard code
     fun getWeeksForCode(code: String): Set<Int> {
         return (1..15).filter { week ->
             when (code.uppercase()) {
@@ -1113,7 +1160,7 @@ private fun OverrideBottomSheet(
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold
             )
-            
+
             Surface(
                 color = typeToColor(entry.courseType).copy(alpha = 0.1f),
                 contentColor = typeToColor(entry.courseType),
@@ -1131,62 +1178,15 @@ private fun OverrideBottomSheet(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = entry.courseType.toLabel(),
+                        text = entry.shortType,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
 
-            if (entry.lecturerNames.isNotEmpty()) {
-                Spacer(Modifier.height(12.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.Person,
-                        null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = entry.lecturerNames.joinToString(", "),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
-                Icon(
-                    Icons.Default.Place,
-                    null,
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = entry.displayLocation,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.width(16.dp))
-                Icon(
-                    Icons.Default.Schedule,
-                    null,
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = "${entry.startTime} - ${entry.endTime}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            
             Spacer(Modifier.height(24.dp))
 
-            // Standard options in a grid
             options.chunked(2).forEach { rowOptions ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1244,7 +1244,6 @@ private fun OverrideBottomSheet(
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
-            // Custom weeks grid (use same 3x5 logic as week picker)
             (1..15).chunked(5).forEach { rowWeeks ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1338,6 +1337,67 @@ fun Modifier.saturation(value: Float): Modifier = if (value != 1f) {
         }
     }
 } else this
+
+private fun Modifier.deanHoursOverlay(
+    itemStart: Int,
+    itemEnd: Int,
+    deanHours: List<AcademicDean>,
+    color: Color
+): Modifier = this.drawBehind {
+    deanHours.forEach { dean ->
+        val deanStart = dean.timeFrom.toMinutes()
+        val deanEnd = dean.timeTo.toMinutes()
+
+        val overlapStart = maxOf(itemStart, deanStart)
+        val overlapEnd = minOf(itemEnd, deanEnd)
+
+        if (overlapStart < overlapEnd) {
+            val duration = (itemEnd - itemStart).toFloat()
+            if (duration > 0) {
+                val topY = ((overlapStart - itemStart) / duration) * size.height + 12.dp.toPx()
+                val bottomY = ((overlapEnd - itemStart) / duration) * size.height + 12.dp.toPx()
+
+                drawRect(
+                    color = color.copy(alpha = 0.05f),
+                    topLeft = Offset(12.dp.toPx(), topY),
+                    size = size.copy(height = bottomY - topY, width = size.width - 24.dp.toPx())
+                )
+
+                drawLine(
+                    color = color,
+                    start = Offset(12.dp.toPx(), topY),
+                    end = Offset(12.dp.toPx(), bottomY),
+                    strokeWidth = 2.dp.toPx()
+                )
+
+                drawLine(
+                    color = color,
+                    start = Offset(size.width - 12.dp.toPx(), topY),
+                    end = Offset(size.width - 12.dp.toPx(), bottomY),
+                    strokeWidth = 2.dp.toPx()
+                )
+
+                if (deanStart in itemStart..itemEnd) {
+                    drawLine(
+                        color = color,
+                        start = Offset(12.dp.toPx(), topY),
+                        end = Offset(size.width, topY),
+                        strokeWidth = 2.dp.toPx()
+                    )
+                }
+
+                if (deanEnd in itemStart..itemEnd) {
+                    drawLine(
+                        color = color,
+                        start = Offset(12.dp.toPx(), bottomY),
+                        end = Offset(size.width, bottomY),
+                        strokeWidth = 2.dp.toPx()
+                    )
+                }
+            }
+        }
+    }
+}
 
 private fun String.toMinutes(): Int {
     val parts = split(":")
