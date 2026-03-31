@@ -84,6 +84,8 @@
     <string name="theme_dark">Ciemny</string>
     <string name="section_notifications">Powiadomienia</string>
     <string name="notifications_desc">Wybierz, które ogłoszenia mają wywoływać powiadomienie push</string>
+    <string name="notif_ongoing_lesson">Status trwającej lekcji</string>
+    <string name="notif_ongoing_lesson_desc">Pokaż pasek postępu aktualnych zajęć w powiadomieniach</string>
     <string name="section_widget">Widget</string>
     <string name="widget_show_all_day">Pokaż plan na cały dzień</string>
     <string name="widget_show_all_day_desc">Wyświetlaj wszystkie dzisiejsze zajęcia zamiast tylko nadchodzących</string>
@@ -160,4 +162,12 @@
     <string name="yesterday">Wczoraj</string>
     <string name="other_date">Starsze</string>
     <string name="work_in_progress">Prace w toku</string>
+
+    <string name="events_title">Nadchodzące wydarzenia</string>
+    <string name="no_events_yet">Brak nadchodzących wydarzeń</string>
+
+    <string name="notif_ongoing_lesson_channel_name">Trwające zajęcia</string>
+    <string name="notif_ongoing_lesson_channel_desc">Pokazuje postęp aktualnych zajęć</string>
+    <string name="notif_no_ongoing_lesson">Brak trwających zajęć</string>
+    <string name="notif_no_ongoing_lesson_desc">Odpoczywaj!</string>
 </resources>

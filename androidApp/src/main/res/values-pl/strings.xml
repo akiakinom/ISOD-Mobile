@@ -24,4 +24,8 @@
     <string name="today_schedule_widget_description">Pokazuje Twój plan zajęć na dziś lub jutro.</string>
     <string name="next_class_widget_name">Następne zajęcia</string>
     <string name="next_class_widget_description">Pokazuje szczegóły Twoich najbliższych zajęć.</string>
+
+    <string name="notif_ongoing_lesson_channel_name">Trwające zajęcia</string>
+    <string name="notif_ongoing_lesson_channel_desc">Pokazuje postęp aktualnych zajęć</string>
+    <string name="notif_starts_in">Zaczyna się za %1$d min</string>
 </resources>

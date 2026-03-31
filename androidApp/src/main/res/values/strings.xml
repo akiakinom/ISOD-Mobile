@@ -25,4 +25,8 @@
     <string name="today_schedule_widget_description">Shows your class schedule for today or tomorrow.</string>
     <string name="next_class_widget_name">Next Class</string>
     <string name="next_class_widget_description">Shows details about your next upcoming class.</string>
+
+    <string name="notif_ongoing_lesson_channel_name">Ongoing Lesson</string>
+    <string name="notif_ongoing_lesson_channel_desc">Shows progress of your current class</string>
+    <string name="notif_starts_in">Starts in %1$d min</string>
 </resources>

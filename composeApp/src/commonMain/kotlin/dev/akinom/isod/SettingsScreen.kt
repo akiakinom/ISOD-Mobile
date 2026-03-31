@@ -50,6 +50,7 @@ class SettingsScreen : Screen {
         val updateTheme = LocalThemeSetting.current
         
         var showAllDayInWidget by remember { mutableStateOf(storage.shouldShowAllDayInWidget()) }
+        var ongoingLessonNotif by remember { mutableStateOf(storage.isOngoingLessonNotifEnabled()) }
 
         var showThemeDialog by remember { mutableStateOf(false) }
         var showNotificationsDialog by remember { mutableStateOf(false) }
@@ -100,6 +101,29 @@ class SettingsScreen : Screen {
                         supportingContent = { Text(stringResource(Res.string.notifications_desc)) },
                         leadingContent = { Icon(Icons.Default.Notifications, null) },
                         modifier = Modifier.clickable { showNotificationsDialog = true }
+                    )
+                }
+
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(Res.string.notif_ongoing_lesson)) },
+                        supportingContent = { Text(stringResource(Res.string.notif_ongoing_lesson_desc)) },
+                        leadingContent = { Icon(Icons.Default.Timer, null) },
+                        trailingContent = {
+                            Switch(
+                                checked = ongoingLessonNotif,
+                                onCheckedChange = {
+                                    ongoingLessonNotif = it
+                                    storage.setOngoingLessonNotifEnabled(it)
+                                    if (it) LessonServiceControl.start() else LessonServiceControl.stop()
+                                }
+                            )
+                        },
+                        modifier = Modifier.clickable {
+                            ongoingLessonNotif = !ongoingLessonNotif
+                            storage.setOngoingLessonNotifEnabled(ongoingLessonNotif)
+                            if (ongoingLessonNotif) LessonServiceControl.start() else LessonServiceControl.stop()
+                        }
                     )
                 }
 
@@ -192,6 +216,7 @@ class SettingsScreen : Screen {
                     Button(
                         onClick = {
                             storage.clearAll()
+                            LessonServiceControl.stop()
                             navigator.replaceAll(ISODLinkScreen())
                         },
                         colors = ButtonDefaults.buttonColors(

@@ -10,6 +10,7 @@ private const val KEY_USOS_TOKEN        = "usos_token"
 private const val KEY_USOS_TOKEN_SECRET = "usos_token_secret"
 private const val KEY_THEME             = "app_theme"
 private const val KEY_WIDGET_SHOW_ALL_DAY = "widget_show_all_day"
+private const val KEY_ONGOING_LESSON_NOTIF = "ongoing_lesson_notif"
 private const val KEY_NOTIF_PREFIX      = "notif_enabled_"
 
 enum class AppThemeSetting {
@@ -68,6 +69,12 @@ class CredentialsStorage(
 
     fun setShowAllDayInWidget(showAllDay: Boolean) {
         settings[KEY_WIDGET_SHOW_ALL_DAY] = showAllDay
+    }
+
+    fun isOngoingLessonNotifEnabled(): Boolean = settings.getBoolean(KEY_ONGOING_LESSON_NOTIF, false)
+
+    fun setOngoingLessonNotifEnabled(enabled: Boolean) {
+        settings[KEY_ONGOING_LESSON_NOTIF] = enabled
     }
 
     fun isNotificationEnabled(type: NewsType): Boolean {

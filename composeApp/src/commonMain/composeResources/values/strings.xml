@@ -85,6 +85,8 @@
     <string name="theme_dark">Dark</string>
     <string name="section_notifications">Notifications</string>
     <string name="notifications_desc">Select which announcements should trigger a push notification</string>
+    <string name="notif_ongoing_lesson">Ongoing Lesson Status</string>
+    <string name="notif_ongoing_lesson_desc">Show current lesson progress in notifications</string>
     <string name="section_widget">Widget</string>
     <string name="widget_show_all_day">Show full day schedule</string>
     <string name="widget_show_all_day_desc">Display all classes for today instead of only upcoming ones</string>
@@ -168,4 +170,8 @@
 
     <string name="events_title">Upcoming Events</string>
     <string name="no_events_yet">No upcoming events found</string>
+
+    <string name="notif_ongoing_lesson_channel_name">Ongoing Lesson</string>
+    <string name="notif_ongoing_lesson_channel_desc">Shows progress of your current class</string>
+    <string name="notif_starts_in">Starts in %1$d min</string>
 </resources>
