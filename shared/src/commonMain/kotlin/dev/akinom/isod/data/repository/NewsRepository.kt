@@ -44,17 +44,21 @@ class NewsRepository(
                 val now = currentTimeMillis()
                 val existingRows = newsQueries.selectAllHeaders(semester).executeAsList()
                 val isFirstSync = existingRows.isEmpty()
-                val existing = existingRows.associate { it.id to it.hasSentNotification }
+                val existing = existingRows.associate { it.id to (it.hasSentNotification to it.isNew) }
                 
                 db.transaction {
                     newsQueries.deleteAllHeaders(semester)
                     result.data.forEach { header ->
-                        val notificationState = existing[header.id] ?: if (isFirstSync) 1L else 0L
+                        val (existingSent, existingIsNew) = existing[header.id] ?: (null to null)
+                        val notificationState = existingSent ?: if (isFirstSync) 1L else 0L
+                        val isNewState = existingIsNew ?: if (isFirstSync) 0L else 1L
+                        
                         newsQueries.upsertHeader(
                             header.toEntity(
                                 semester = semester,
                                 now = now,
                                 existingNotificationState = notificationState,
+                                isNewState = isNewState,
                             )
                         )
                     }
@@ -81,6 +85,14 @@ class NewsRepository(
         }
     }
 
+    suspend fun markAsRead(id: String) {
+        newsQueries.markAsRead(id)
+    }
+
+    suspend fun markAllAsRead() {
+        newsQueries.markAllAsRead()
+    }
+
     private fun refreshHeadersIfStale(semester: String) {
         scope.launch(Dispatchers.IO) {
             val lastUpdated = newsQueries.headersLastUpdated(semester).executeAsOneOrNull()
@@ -105,12 +117,14 @@ private fun NewsHeaderEntity.toDomain() = NewsHeader(
     author = author,
     type = try { NewsType.valueOf(type) } catch (e: Exception) { NewsType.OTHER },
     label = label,
+    isNew = isNew == 1L,
 )
 
 private fun NewsHeader.toEntity(
     semester: String,
     now: Long,
     existingNotificationState: Long = 0L,
+    isNewState: Long = 0L,
 ) = NewsHeaderEntity(
     id = id,
     semester = semester,
@@ -120,6 +134,7 @@ private fun NewsHeader.toEntity(
     type = type.name,
     label = label,
     hasSentNotification = existingNotificationState,
+    isNew = isNewState,
     lastUpdated = now,
 )
 

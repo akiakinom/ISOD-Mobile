@@ -20,10 +20,7 @@ class NewsNotificationChecker(
     suspend fun check() {
         val freshHeaders = when (val result = isodApi.getNewsHeaders()) {
             is IsodResult.Success -> result.data
-            else -> {
-                println("⚠️ NewsNotificationChecker: failed to fetch news")
-                return
-            }
+            else -> return
         }
 
         val now = currentTimeMillis()
@@ -46,6 +43,7 @@ class NewsNotificationChecker(
                             date = header.date.toString(),
                             author = header.author,
                             hasSentNotification = if (isFirstSync) 1L else 0L,
+                            isNew = if (isFirstSync) 0L else 1L,
                             lastUpdated = now,
                         )
                     )
@@ -54,8 +52,6 @@ class NewsNotificationChecker(
 
         val unsent = queries.selectUnsentNotifications().executeAsList()
         if (unsent.isEmpty()) return
-
-        println("🔔 NewsNotificationChecker: ${unsent.size} unsent notifications")
 
         unsent.forEach { entity ->
             val type = try { NewsType.valueOf(entity.type) } catch (e: Exception) { NewsType.OTHER }
@@ -73,8 +69,6 @@ class NewsNotificationChecker(
                         newsHash    = entity.id,
                     )
                 )
-            } else {
-                println("🔕 NewsNotificationChecker: skipping notification for type $type")
             }
             queries.markNotificationSent(entity.id)
         }

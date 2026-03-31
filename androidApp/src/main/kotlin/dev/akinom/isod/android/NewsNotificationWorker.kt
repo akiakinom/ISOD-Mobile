@@ -8,12 +8,8 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import dev.akinom.isod.IsodDatabase
 import dev.akinom.isod.auth.CredentialsStorage
-import dev.akinom.isod.auth.currentSemester
-import dev.akinom.isod.data.remote.IsodApiClient
 import dev.akinom.isod.notifications.NewsNotificationChecker
-import dev.akinom.isod.notifications.NotificationService
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.concurrent.TimeUnit
@@ -25,19 +21,17 @@ class NewsNotificationWorker(
     params: WorkerParameters,
 ) : CoroutineWorker(context, params), KoinComponent {
 
-    private val db: IsodDatabase           by inject()
-    private val isodApi: IsodApiClient     by inject()
     private val storage: CredentialsStorage by inject()
+    private val checker: NewsNotificationChecker by inject()
 
     override suspend fun doWork(): Result {
+        if (!storage.hasIsodCredentials()) {
+            // If user is not logged in, we don't need to check for news.
+            // We return success so WorkManager doesn't retry, but we stop here.
+            return Result.success()
+        }
+
         return try {
-            val checker = NewsNotificationChecker(
-                db                  = db,
-                isodApi             = isodApi,
-                storage             = storage,
-                notificationService = NotificationService(applicationContext),
-                semester            = currentSemester(),
-            )
             checker.check()
             Result.success()
         } catch (e: Exception) {

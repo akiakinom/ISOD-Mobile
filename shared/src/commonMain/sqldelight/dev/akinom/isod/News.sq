@@ -7,6 +7,7 @@ CREATE TABLE NewsHeaderEntity (
     type                 TEXT NOT NULL,
     label                TEXT NOT NULL,
     hasSentNotification  INTEGER NOT NULL DEFAULT 0,
+    isNew                INTEGER NOT NULL DEFAULT 0,
     lastUpdated          INTEGER NOT NULL
 );
 
@@ -48,3 +49,12 @@ UPDATE NewsHeaderEntity SET hasSentNotification = 1 WHERE id = ?;
 
 markAllNotificationsSent:
 UPDATE NewsHeaderEntity SET hasSentNotification = 1;
+
+markAllNotificationsUnsent:
+UPDATE NewsHeaderEntity SET hasSentNotification = 0, isNew = 1;
+
+markAsRead:
+UPDATE NewsHeaderEntity SET isNew = 0 WHERE id = ?;
+
+markAllAsRead:
+UPDATE NewsHeaderEntity SET isNew = 0;
