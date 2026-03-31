@@ -60,7 +60,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-private const val SHOW_DEBUG_ACTIONS = true // Flag to hide/show debug button
+private const val SHOW_DEBUG_ACTIONS = false // Flag to hide/show debug button
 
 class HomeScreenModel(val semester: String) : ScreenModel, KoinComponent {
     private val timetableRepo: TimetableRepository by inject()
