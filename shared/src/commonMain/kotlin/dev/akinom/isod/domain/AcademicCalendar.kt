@@ -91,11 +91,6 @@ object AcademicCalendar {
         val todayMonday = adjustedToday.toEpochDays() - (adjustedToday.dayOfWeek.isoDayNumber - 1)
         
         val week = ((todayMonday - startMonday) / 7) + 1
-        
-        // We allow weeks slightly outside 1-15 range if they are close, 
-        // but typically 15 is the limit for a semester.
-        if (adjustedToday < config.start || week > 16) return null
-        
         return week.toInt()
     }
 
