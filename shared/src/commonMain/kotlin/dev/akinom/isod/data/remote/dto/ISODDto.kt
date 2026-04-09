@@ -1,7 +1,6 @@
 package dev.akinom.isod.data.remote.dto
 
 import dev.akinom.isod.domain.*
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -75,7 +74,7 @@ data class NewsHeadersResponseDto(
     val semester: String = "",
 )
 
-fun String.toNewsType(type: Int = -1): NewsType {
+fun String.toNewsType(): NewsType {
     return when {
         startsWith("Zajęcia -") -> NewsType.GRADE
         startsWith("Ogłoszenie -") -> NewsType.CLASS
@@ -89,7 +88,7 @@ fun String.toNewsType(type: Int = -1): NewsType {
 fun String.toClassType(): ClassType {
     val upper = this.uppercase()
     return when {
-        upper.contains("WYCHOWANIE FIZYCZNE") || upper == "WF" -> ClassType.PHYSICAL_EDUCATION
+        upper.contains("WYCHOWANIE") || upper.contains("PHYSICAL") || upper == "WF" -> ClassType.PHYSICAL_EDUCATION
         upper.contains("WYKŁAD") || upper.contains("LECTURE") || upper == "W" -> ClassType.LECTURE
         upper.contains("LABORATORIUM") || upper.contains("LABORATORY") || upper == "L" -> ClassType.LABORATORY
         upper.contains("ĆWICZENIA") || upper.contains("EXERCISE") || upper == "C" || upper == "Ć" -> ClassType.EXERCISES
@@ -146,7 +145,7 @@ data class NewsHeaderDto(
         title = subject.toNewsTitle(),
         date = modifiedDate.toLocalDateTime(),
         author = modifiedBy.removeTitles(),
-        type = subject.toNewsType(type),
+        type = subject.toNewsType(),
         label = subject.toNewsLabel(),
         isNew = false
     )
@@ -176,7 +175,7 @@ data class NewsItemDto(
         content = content,
         date = modifiedDate.toLocalDateTime(),
         author = modifiedBy.removeTitles(),
-        type = subject.toNewsType(type),
+        type = subject.toNewsType(),
         label = subject.toNewsLabel()
     )
 }

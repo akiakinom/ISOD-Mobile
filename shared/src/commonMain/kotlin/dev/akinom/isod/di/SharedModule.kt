@@ -1,7 +1,7 @@
 package dev.akinom.isod.di
 
 import app.cash.sqldelight.db.SqlDriver
-import dev.akinom.isod.IsodDatabase
+import dev.akinom.isod.ISODMobileDatabase
 import dev.akinom.isod.Secrets
 import dev.akinom.isod.auth.CredentialsStorage
 import dev.akinom.isod.auth.IsodAuthRepository
@@ -68,10 +68,13 @@ val sharedModule = module {
         }
 
         try {
-            val db = IsodDatabase(driver)
+            val db = ISODMobileDatabase(driver)
             db.newsQueries.selectAllHeaders("").executeAsList()
             db.eventQueries.selectAll().executeAsList()
             db.academicCalendarQueries.selectAllExams().executeAsList()
+            db.planItemQueries.selectAll("2026L").executeAsList()
+            db.courseQueries.selectAllCourses("2026L").executeAsList()
+            db.usosClassQueries.selectAll().executeAsList()
             driver
         } catch (e: Exception) {
             println("❌ Database schema validation failed (likely new tables), deleting and recreating: ${e.message}")
@@ -81,7 +84,7 @@ val sharedModule = module {
         }
     }
 
-    single { IsodDatabase(get()) }
+    single { ISODMobileDatabase(get()) }
 
     single<CoroutineScope> { CoroutineScope(Dispatchers.Default + SupervisorJob()) }
 
@@ -112,8 +115,8 @@ val sharedModule = module {
     }
 
     single { UsosRepository(get(), get(), get()) }
-    single { TimetableRepository(get(), get(), get(), get(), get()) }
-    single { GradesRepository(get(), get(), get(), get()) }
+    single { TimetableRepository(get(), get(), get(), get() ) }
+    single { GradesRepository(get(), get(), get()) }
 }
 
 expect fun createHttpClient(): HttpClient

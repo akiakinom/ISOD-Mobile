@@ -2,7 +2,7 @@ package dev.akinom.isod.data.repository
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import dev.akinom.isod.IsodDatabase
+import dev.akinom.isod.ISODMobileDatabase
 import dev.akinom.isod.data.cache.CacheConfig
 import dev.akinom.isod.data.cache.currentTimeMillis
 import dev.akinom.isod.data.cache.decodeStringList
@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 class PlanRepository(
-    private val db: IsodDatabase,
+    private val db: ISODMobileDatabase,
     private val api: IsodApiClient,
     private val scope: CoroutineScope,
 ) {

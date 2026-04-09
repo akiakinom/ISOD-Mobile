@@ -1,6 +1,6 @@
 package dev.akinom.isod.notifications
 
-import dev.akinom.isod.IsodDatabase
+import dev.akinom.isod.ISODMobileDatabase
 import dev.akinom.isod.NewsHeaderEntity
 import dev.akinom.isod.auth.CredentialsStorage
 import dev.akinom.isod.data.cache.currentTimeMillis
@@ -9,7 +9,7 @@ import dev.akinom.isod.data.remote.IsodResult
 import dev.akinom.isod.domain.NewsType
 
 class NewsNotificationChecker(
-    private val db: IsodDatabase,
+    private val db: ISODMobileDatabase,
     private val isodApi: IsodApiClient,
     private val storage: CredentialsStorage,
     private val notificationService: NotificationService,

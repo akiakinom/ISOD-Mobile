@@ -96,14 +96,14 @@ class ScheduleScreenModel(val semester: String) : ScreenModel, KoinComponent {
 
     val timetable: StateFlow<List<TimetableEntry>> =
         weekMonday.flatMapLatest { monday ->
-            timetableRepo.getTimetable(semester, monday.toString())
+            timetableRepo.getTimetable(semester)
         }.stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun refresh() {
         screenModelScope.launch {
             _isRefreshing.value = true
             try {
-                timetableRepo.refresh(semester, weekMonday.value.toString())
+                timetableRepo.refresh(semester)
             } finally {
                 _isRefreshing.value = false
             }

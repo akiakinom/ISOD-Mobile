@@ -5,7 +5,7 @@ import app.cash.sqldelight.coroutines.mapToList
 import dev.akinom.isod.BreakEntity
 import dev.akinom.isod.DeanEntity
 import dev.akinom.isod.ExamEntity
-import dev.akinom.isod.IsodDatabase
+import dev.akinom.isod.ISODMobileDatabase
 import dev.akinom.isod.SemesterEntity
 import dev.akinom.isod.SubstitutionEntity
 import dev.akinom.isod.data.cache.CacheConfig
@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
 class AcademicCalendarRepository(
-    private val db: IsodDatabase,
+    private val db: ISODMobileDatabase,
     private val api: AkinomApiClient,
     private val scope: CoroutineScope,
 ) {

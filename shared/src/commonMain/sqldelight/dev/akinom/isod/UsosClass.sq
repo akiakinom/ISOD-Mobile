@@ -1,0 +1,26 @@
+CREATE TABLE IF NOT EXISTS UsosClassEntity (
+    id          TEXT    NOT NULL PRIMARY KEY,
+    type        TEXT    NOT NULL,
+    dayOfWeek   INTEGER NOT NULL,
+    startTime   TEXT    NOT NULL,
+    endTime     TEXT    NOT NULL,
+    name        TEXT    NOT NULL,
+    lecturers   TEXT,
+    building    TEXT,
+    roomNumber  TEXT,
+    lastUpdated INTEGER NOT NULL
+);
+
+selectAll:
+SELECT * FROM UsosClassEntity
+ORDER BY startTime ASC;
+
+upsert:
+INSERT OR REPLACE INTO UsosClassEntity VALUES ?;
+
+deleteAll:
+DELETE FROM UsosClassEntity;
+
+lastUpdated:
+SELECT lastUpdated FROM UsosClassEntity
+LIMIT 1;

@@ -103,9 +103,8 @@ compose.resources {
 
 sqldelight {
     databases {
-        create("IsodDatabase") {
+        create("ISODMobileDatabase") {
             packageName.set("dev.akinom.isod")
-            deriveSchemaFromMigrations.set(false)
         }
     }
 }

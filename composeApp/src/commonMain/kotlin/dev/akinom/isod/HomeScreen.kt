@@ -64,10 +64,10 @@ private const val SHOW_DEBUG_ACTIONS = false // Flag to hide/show debug button
 
 class HomeScreenModel(val semester: String) : ScreenModel, KoinComponent {
     private val timetableRepo: TimetableRepository by inject()
-    private val newsRepo: NewsRepository           by inject()
-    private val storage: CredentialsStorage        by inject()
-    private val checker: NewsNotificationChecker   by inject()
-    private val db: IsodDatabase                   by inject()
+    private val newsRepo: NewsRepository by inject()
+    private val storage: CredentialsStorage by inject()
+    private val checker: NewsNotificationChecker by inject()
+    private val db: ISODMobileDatabase by inject()
 
     val isBuchmanp = storage.getIsodUsername() == "buchmanp"
 
@@ -75,7 +75,7 @@ class HomeScreenModel(val semester: String) : ScreenModel, KoinComponent {
     val currentWeek = AcademicCalendar.getCurrentWeek(semester)
 
     val timetable: StateFlow<List<TimetableEntry>> =
-        timetableRepo.getTimetable(semester, weekMonday)
+        timetableRepo.getTimetable(semester)
             .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val news: StateFlow<List<NewsHeader>> =

@@ -3,7 +3,7 @@ package dev.akinom.isod.data.repository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
-import dev.akinom.isod.IsodDatabase
+import dev.akinom.isod.ISODMobileDatabase
 import dev.akinom.isod.NewsHeaderEntity
 import dev.akinom.isod.NewsItemEntity
 import dev.akinom.isod.data.cache.CacheConfig
@@ -25,7 +25,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 
 class NewsRepository(
-    private val db: IsodDatabase,
+    private val db: ISODMobileDatabase,
     private val api: IsodApiClient,
     private val scope: CoroutineScope,
 ) {

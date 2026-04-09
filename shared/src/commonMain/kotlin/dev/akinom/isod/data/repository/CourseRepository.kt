@@ -5,7 +5,7 @@ import app.cash.sqldelight.coroutines.mapToList
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import dev.akinom.isod.ClassDetailEntity
 import dev.akinom.isod.CourseEntity
-import dev.akinom.isod.IsodDatabase
+import dev.akinom.isod.ISODMobileDatabase
 import dev.akinom.isod.data.cache.CacheConfig
 import dev.akinom.isod.data.cache.currentTimeMillis
 import dev.akinom.isod.data.cache.isStale
@@ -30,12 +30,11 @@ import kotlinx.serialization.json.Json
 private val json = Json { ignoreUnknownKeys = true }
 
 class CourseRepository(
-    private val db: IsodDatabase,
+    private val db: ISODMobileDatabase,
     private val api: IsodApiClient,
     private val scope: CoroutineScope,
 ) {
     private val courseQueries      = db.courseQueries
-    private val classDetailQueries = db.courseQueries
 
     // ── Courses ───────────────────────────────────────────────────────────────
 
@@ -64,7 +63,7 @@ class CourseRepository(
     // ── Class Detail ──────────────────────────────────────────────────────────
 
     fun getClassDetail(classId: String): Flow<ClassDetail?> =
-        classDetailQueries.selectClassDetail(classId)
+        courseQueries.selectClassDetail(classId)
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
             .map { it?.toDomain() }
@@ -74,7 +73,7 @@ class CourseRepository(
         when (val result = api.getClassDetail(classId)) {
             is IsodResult.Success -> {
                 val now = currentTimeMillis()
-                classDetailQueries.upsertClassDetail(result.data.toEntity(now))
+                courseQueries.upsertClassDetail(result.data.toEntity(now))
             }
             is IsodResult.Error -> println("⚠️ CourseRepository class detail refresh failed: ${result.message}")
         }
@@ -93,7 +92,7 @@ class CourseRepository(
 
     private fun refreshClassDetailIfStale(classId: String) {
         scope.launch(Dispatchers.IO) {
-            val lastUpdated = classDetailQueries.classDetailLastUpdated(classId).executeAsOneOrNull()
+            val lastUpdated = courseQueries.classDetailLastUpdated(classId).executeAsOneOrNull()
             if (lastUpdated == null || isStale(lastUpdated, CacheConfig.CLASS_TTL_MS)) {
                 refreshClassDetail(classId)
             }

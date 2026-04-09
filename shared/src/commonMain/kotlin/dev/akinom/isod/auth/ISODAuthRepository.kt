@@ -14,7 +14,6 @@ data class IsodUserInfo(
     val semester: String,
     val firstname: String,
     val lastname: String,
-    val studentNo: String,
 )
 
 sealed class IsodAuthResult {

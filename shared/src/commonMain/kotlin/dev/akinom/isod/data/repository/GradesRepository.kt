@@ -3,15 +3,12 @@ package dev.akinom.isod.data.repository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import dev.akinom.isod.CourseGradeEntity
-import dev.akinom.isod.IsodDatabase
+import dev.akinom.isod.ISODMobileDatabase
 import dev.akinom.isod.data.cache.currentTimeMillis
 import dev.akinom.isod.data.cache.isStale
 import dev.akinom.isod.data.remote.IsodApiClient
 import dev.akinom.isod.data.remote.IsodResult
-import dev.akinom.isod.data.remote.UsosApiClient
-import dev.akinom.isod.data.remote.UsosResult
 import dev.akinom.isod.data.remote.dto.removeTitles
-import dev.akinom.isod.data.remote.dto.toClassType
 import dev.akinom.isod.domain.ClassGrade
 import dev.akinom.isod.domain.CourseGrade
 import kotlinx.coroutines.CoroutineScope
@@ -21,7 +18,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
@@ -29,9 +25,8 @@ private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
 private const val GRADES_TTL_MS = 15 * 60 * 1000L  // 15 minutes
 
 class GradesRepository(
-    private val db: IsodDatabase,
+    private val db: ISODMobileDatabase,
     private val isodApi: IsodApiClient,
-    private val usosApi: UsosApiClient,
     private val scope: CoroutineScope,
 ) {
     private val queries get() = db.courseGradeQueries
@@ -102,11 +97,6 @@ class GradesRepository(
             else -> return emptyList()
         }
 
-        val usosGrades = when (val r = usosApi.getGrades(usosTermId)) {
-            is UsosResult.Success -> r.data
-            else -> emptyMap()
-        }
-
         return courses.map { course ->
             val classGrades = course.classes.map { cls ->
                 ClassGrade(
@@ -121,22 +111,15 @@ class GradesRepository(
                 )
             }
 
-            val usosGradeList = usosGrades[course.courseNumber] ?: emptyList()
-            val usosFinal = usosGradeList.maxByOrNull { it.examSessionNumber ?: 0 }
-
             CourseGrade(
                 courseId          = course.id,
                 courseNumber      = course.courseNumber,
                 courseName        = course.courseName,
                 ects              = course.ects,
                 passType          = course.passType,
-                finalGrade        = course.finalGradeNumeric?.toString() ?: usosFinal?.valueSymbol,
-                finalGradeComment = course.finalGradeComment ?: usosFinal?.valueDescription?.get(),
-                passes            = usosFinal?.passes,
-                countsIntoAverage = usosFinal?.countsIntoAverage,
+                finalGrade        = course.finalGradeNumeric?.toString(),
+                finalGradeComment = course.finalGradeComment,
                 classGrades       = classGrades,
-                hasIsod           = true,
-                hasUsos           = usosGradeList.isNotEmpty(),
             )
         }
     }
@@ -166,11 +149,7 @@ class GradesRepository(
                         passType          = gradeToPersist.passType,
                         finalGrade        = gradeToPersist.finalGrade,
                         finalGradeComment = gradeToPersist.finalGradeComment,
-                        passes            = gradeToPersist.passes?.let { if (it) 1L else 0L },
-                        countsIntoAverage = gradeToPersist.countsIntoAverage?.let { if (it) 1L else 0L },
                         classGradesJson   = json.encodeToString(gradeToPersist.classGrades),
-                        hasIsod           = if (gradeToPersist.hasIsod) 1L else 0L,
-                        hasUsos           = if (gradeToPersist.hasUsos) 1L else 0L,
                         lastUpdated       = now,
                     )
                 )
@@ -187,11 +166,7 @@ private fun CourseGradeEntity.toDomain() = CourseGrade(
     passType          = passType,
     finalGrade        = finalGrade,
     finalGradeComment = finalGradeComment,
-    passes            = passes?.let { it == 1L },
-    countsIntoAverage = countsIntoAverage?.let { it == 1L },
     classGrades       = runCatching {
         json.decodeFromString<List<ClassGrade>>(classGradesJson)
     }.getOrDefault(emptyList()),
-    hasIsod           = hasIsod == 1L,
-    hasUsos           = hasUsos == 1L,
 )
