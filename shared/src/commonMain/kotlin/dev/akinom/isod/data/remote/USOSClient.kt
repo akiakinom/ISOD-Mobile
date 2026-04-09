@@ -3,7 +3,6 @@ package dev.akinom.isod.data.remote
 import dev.akinom.isod.auth.CredentialsStorage
 import dev.akinom.isod.auth.OAuth1Signer
 import dev.akinom.isod.data.remote.dto.UsosActivityDto
-import dev.akinom.isod.data.remote.dto.UsosGradeDto
 import dev.akinom.isod.data.remote.dto.UsosUserInfoDto
 import dev.akinom.isod.domain.UsosActivity
 import dev.akinom.isod.domain.UsosUserInfo
@@ -22,7 +21,6 @@ private const val BASE_URL         = "https://apps.usos.pw.edu.pl"
 private const val TT_USER_URL      = "$BASE_URL/services/tt/user"
 private const val USER_INFO_URL    = "$BASE_URL/services/users/user"
 private const val USERS_URL        = "$BASE_URL/services/users/users"
-private const val GRADES_TERMS_URL = "$BASE_URL/services/grades/terms2"
 private const val STUDIES_URL      = "$BASE_URL/services/studies/user"
 
 private val json = Json {
@@ -45,42 +43,20 @@ class UsosApiClient(
 
     suspend fun getTimetable(
         start: String,
-        days: Int = 7,
     ): UsosResult<List<UsosActivity>> = fetch(
         url    = TT_USER_URL,
         params = mapOf(
             "start"  to start,
-            "days"   to days.toString(),
             "fields" to listOf(
-                "type", "start_time", "end_time", "name", "url",
-                "course_id", "course_name", "classtype_name",
-                "lecturer_ids", "group_number",
-                "building_name", "building_id",
-                "room_number", "room_id",
-                "unit_id", "classtype_id", "frequency",
+                "start_time", "end_time",
+                "course_id", "course_name",
+                "lecturer_ids",
+                "building_id", "room_number"
             ).joinToString("|"),
         ),
     ) { body ->
         json.decodeFromString<List<UsosActivityDto>>(body).map { it.toDomain() }
     }
-
-    suspend fun getGrades(termId: String): UsosResult<Map<String, List<UsosGradeDto>>> =
-        fetch(
-            url    = GRADES_TERMS_URL,
-            params = mapOf(
-                "term_ids" to termId,
-                "fields"   to "value_symbol|passes|value_description|counts_into_average|comment|exam_session_number",
-            ),
-        ) { body ->
-            // Response: { "2026L": { "COURSE_ID": [ { grade }, ... ], ... } }
-            val root    = json.parseToJsonElement(body).jsonObject
-            val termObj = root[termId]?.jsonObject ?: return@fetch emptyMap()
-            termObj.entries.mapNotNull { (courseId, value) ->
-                runCatching {
-                    courseId to json.decodeFromJsonElement<List<UsosGradeDto>>(value)
-                }.getOrNull()
-            }.toMap()
-        }
 
     suspend fun getLecturerNames(ids: List<Long>): UsosResult<Map<Long, String>> {
         if (ids.isEmpty()) return UsosResult.Success(emptyMap())

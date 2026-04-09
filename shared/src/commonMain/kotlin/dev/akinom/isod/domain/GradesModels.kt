@@ -13,15 +13,9 @@ data class CourseGrade(
     // Final grade — from ISOD finalGradeNumeric or USOS value_symbol
     val finalGrade: String?,
     val finalGradeComment: String?,
-    val passes: Boolean?,
-    val countsIntoAverage: Boolean?,
 
     // ISOD partial grades per class session
     val classGrades: List<ClassGrade>,
-
-    // Sources
-    val hasIsod: Boolean,
-    val hasUsos: Boolean,
 ) {
     val displayFinalGrade: String? get() = if (finalGrade == "0.0") "NZAL" else finalGrade
 }

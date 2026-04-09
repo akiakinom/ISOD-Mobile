@@ -17,7 +17,6 @@ data class TimetableEntry(
     val room: String,
     val lecturerNames: List<String>,
     val source: TimetableSource = TimetableSource.ISOD,
-    val lecturerIds: List<Long> = emptyList(),
     val cycle: String = "SEM",
     val userCycleOverride: String? = null
 ) {
@@ -121,39 +120,21 @@ fun PlanItem.toTimetableEntry() = TimetableEntry(
 )
 
 fun UsosActivity.toTimetableEntry(): TimetableEntry {
-    val name = courseName?.get("pl") ?: name.get("pl")
     val dow = getDayOfWeekFromDate(startTime)
     return TimetableEntry(
         id = "${name}_${dow}_${startTime}",
         courseName = name,
         courseNameShort = generateShortName(name),
-        courseType = when(type.lowercase()) {
-            "classgroup", "classgroup2" -> {
-                val pl = classtypeName?.get("pl")?.lowercase() ?: ""
-                when {
-                    pl.contains("wykład") -> ClassType.LECTURE
-                    pl.contains("laboratorium") -> ClassType.LABORATORY
-                    pl.contains("ćwiczenia") -> ClassType.EXERCISES
-                    pl.contains("projekt") -> ClassType.PROJECT
-                    pl.contains("seminarium") -> ClassType.SEMINAR
-                    pl.contains("wychowanie fizyczne") || pl.contains("wf") -> ClassType.PHYSICAL_EDUCATION
-                    else -> ClassType.LECTURE
-                }
-            }
-            "meeting" -> ClassType.SEMINAR
-            "exam" -> ClassType.OTHER
-            else -> ClassType.LECTURE
-        },
+        courseType = type,
         dayOfWeek = dow,
         startTime = startTime.substring(11, 16),
         endTime = endTime.substring(11, 16),
-        building = buildingName?.get("pl") ?: "",
-        buildingShort = buildingId ?: "",
-        room = roomNumber ?: "",
+        building = building?: "-",
+        buildingShort = building?: "-",
+        room = roomNumber ?: "-",
         lecturerNames = lecturers,
         source = TimetableSource.USOS,
-        lecturerIds = lecturerIds,
-        cycle = frequency ?: "SEM"
+        cycle = "SEM"
     )
 }
 

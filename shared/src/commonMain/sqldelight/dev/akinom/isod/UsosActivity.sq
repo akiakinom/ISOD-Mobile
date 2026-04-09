@@ -1,24 +1,19 @@
 CREATE TABLE IF NOT EXISTS UsosActivityEntity (
-    id          TEXT    NOT NULL PRIMARY KEY,  -- composite: courseId_startTime
+    id          TEXT    NOT NULL PRIMARY KEY,
     type        TEXT    NOT NULL,
+    dayOfWeek   INTEGER NOT NULL,
     startTime   TEXT    NOT NULL,
     endTime     TEXT    NOT NULL,
-    nameJson    TEXT    NOT NULL,              -- LangDict JSON
-    courseId    TEXT,
-    courseNameJson  TEXT,                      -- LangDict JSON
-    classtypeNameJson TEXT,                    -- LangDict JSON
-    groupNumber INTEGER,
-    lecturersJson TEXT,                        -- List<String> JSON
-    buildingNameJson TEXT,                     -- LangDict JSON
+    name        TEXT    NOT NULL,
+    lecturers   TEXT,
+    building    TEXT,
     roomNumber  TEXT,
-    frequency   TEXT,
-    weekStart   TEXT    NOT NULL,              -- "yyyy-mm-dd" of the Monday of this week
     lastUpdated INTEGER NOT NULL
 );
 
 selectByWeek:
 SELECT * FROM UsosActivityEntity
-WHERE weekStart = :weekStart
+WHERE dayOfWeek = :dayOfWeek
 ORDER BY startTime ASC;
 
 upsert:
@@ -26,9 +21,9 @@ INSERT OR REPLACE INTO UsosActivityEntity VALUES ?;
 
 deleteByWeek:
 DELETE FROM UsosActivityEntity
-WHERE weekStart = :weekStart;
+WHERE dayOfWeek = :dayOfWeek;
 
 lastUpdated:
 SELECT lastUpdated FROM UsosActivityEntity
-WHERE weekStart = :weekStart
+WHERE dayOfWeek = :dayOfWeek
 LIMIT 1;

@@ -102,11 +102,6 @@ class GradesRepository(
             else -> return emptyList()
         }
 
-        val usosGrades = when (val r = usosApi.getGrades(usosTermId)) {
-            is UsosResult.Success -> r.data
-            else -> emptyMap()
-        }
-
         return courses.map { course ->
             val classGrades = course.classes.map { cls ->
                 ClassGrade(
@@ -121,22 +116,15 @@ class GradesRepository(
                 )
             }
 
-            val usosGradeList = usosGrades[course.courseNumber] ?: emptyList()
-            val usosFinal = usosGradeList.maxByOrNull { it.examSessionNumber ?: 0 }
-
             CourseGrade(
                 courseId          = course.id,
                 courseNumber      = course.courseNumber,
                 courseName        = course.courseName,
                 ects              = course.ects,
                 passType          = course.passType,
-                finalGrade        = course.finalGradeNumeric?.toString() ?: usosFinal?.valueSymbol,
-                finalGradeComment = course.finalGradeComment ?: usosFinal?.valueDescription?.get(),
-                passes            = usosFinal?.passes,
-                countsIntoAverage = usosFinal?.countsIntoAverage,
+                finalGrade        = course.finalGradeNumeric?.toString(),
+                finalGradeComment = course.finalGradeComment,
                 classGrades       = classGrades,
-                hasIsod           = true,
-                hasUsos           = usosGradeList.isNotEmpty(),
             )
         }
     }
@@ -166,11 +154,7 @@ class GradesRepository(
                         passType          = gradeToPersist.passType,
                         finalGrade        = gradeToPersist.finalGrade,
                         finalGradeComment = gradeToPersist.finalGradeComment,
-                        passes            = gradeToPersist.passes?.let { if (it) 1L else 0L },
-                        countsIntoAverage = gradeToPersist.countsIntoAverage?.let { if (it) 1L else 0L },
                         classGradesJson   = json.encodeToString(gradeToPersist.classGrades),
-                        hasIsod           = if (gradeToPersist.hasIsod) 1L else 0L,
-                        hasUsos           = if (gradeToPersist.hasUsos) 1L else 0L,
                         lastUpdated       = now,
                     )
                 )
@@ -187,11 +171,7 @@ private fun CourseGradeEntity.toDomain() = CourseGrade(
     passType          = passType,
     finalGrade        = finalGrade,
     finalGradeComment = finalGradeComment,
-    passes            = passes?.let { it == 1L },
-    countsIntoAverage = countsIntoAverage?.let { it == 1L },
     classGrades       = runCatching {
         json.decodeFromString<List<ClassGrade>>(classGradesJson)
     }.getOrDefault(emptyList()),
-    hasIsod           = hasIsod == 1L,
-    hasUsos           = hasUsos == 1L,
 )

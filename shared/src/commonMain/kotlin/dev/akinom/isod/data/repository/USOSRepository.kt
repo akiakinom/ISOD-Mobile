@@ -8,7 +8,7 @@ import dev.akinom.isod.data.cache.currentTimeMillis
 import dev.akinom.isod.data.cache.isStale
 import dev.akinom.isod.data.remote.UsosApiClient
 import dev.akinom.isod.data.remote.UsosResult
-import dev.akinom.isod.domain.LangDict
+import dev.akinom.isod.data.remote.dto.toClassType
 import dev.akinom.isod.domain.UsosActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 
 private val json = Json { ignoreUnknownKeys = true }
@@ -63,7 +62,7 @@ class UsosRepository(
                 db.transaction {
                     queries.deleteByWeek(weekStart)
                     activitiesWithLecturers.forEach { activity ->
-                        queries.upsert(activity.toEntity(weekStart, now))
+                        queries.upsert(activity.toEntity(now))
                     }
                 }
             }
@@ -74,7 +73,7 @@ class UsosRepository(
 
     private fun refreshIfStale(weekStart: String) {
         scope.launch(Dispatchers.IO) {
-            val lastUpdated = queries.lastUpdated(weekStart).executeAsOneOrNull()
+            val lastUpdated = queries.lastUpdated(dayOfWeek = weekStart).executeAsOneOrNull()
             if (lastUpdated == null || isStale(lastUpdated, TIMETABLE_TTL_MS)) {
                 refresh(weekStart)
             }
@@ -83,57 +82,32 @@ class UsosRepository(
 }
 
 private fun UsosActivityEntity.toDomain(): UsosActivity {
-    val bNameDict = buildingNameJson?.let { json.decodeFromString<LangDict>(it) }
-    val bId = buildingNameJson?.let {
-        runCatching { json.parseToJsonElement(it).jsonObject["building_id"]?.jsonPrimitive?.content }.getOrNull()
-    }
 
     return UsosActivity(
-        type          = type,
+        id            = id,
+        type          = type.toClassType(),
         startTime     = startTime,
         endTime       = endTime,
-        name          = json.decodeFromString<LangDict>(nameJson),
-        courseId      = courseId,
-        courseName    = courseNameJson?.let { json.decodeFromString<LangDict>(it) },
-        classtypeName = classtypeNameJson?.let { json.decodeFromString<LangDict>(it) },
-        lecturers     = lecturersJson?.let { json.decodeFromString<List<String>>(it) } ?: emptyList(),
-        buildingName  = bNameDict,
-        buildingId    = bId,
-        groupNumber   = groupNumber?.toInt(),
+        dayOfWeek     = dayOfWeek,
+        name          = name,
+        lecturers     = lecturers.let { json.decodeFromString<List<String>>(it.toString()) },
+        building      = building,
         roomNumber    = roomNumber,
-        frequency     = frequency,
     )
 }
 
-private fun UsosActivity.toEntity(weekStart: String, now: Long): UsosActivityEntity {
-    // Composite ID so the same activity doesn't get duplicated across refreshes
-    val id = "${courseId ?: type}_${startTime}"
-
-    val bNameJson = if (buildingName != null || buildingId != null) {
-        buildJsonObject {
-            buildingName?.let {
-                put("pl", it.pl)
-                put("en", it.en)
-            }
-            buildingId?.let { put("building_id", it) }
-        }.toString()
-    } else null
+private fun UsosActivity.toEntity(now: Long): UsosActivityEntity {
 
     return UsosActivityEntity(
-        id                = id,
-        type              = type,
-        startTime         = startTime,
-        endTime           = endTime,
-        nameJson          = json.encodeToString(name),
-        courseId          = courseId,
-        courseNameJson    = courseName?.let { json.encodeToString(it) },
-        classtypeNameJson = classtypeName?.let { json.encodeToString(it) },
-        groupNumber       = groupNumber?.toLong(),
-        lecturersJson     = json.encodeToString(lecturers),
-        buildingNameJson  = bNameJson,
-        roomNumber        = roomNumber,
-        frequency         = frequency,
-        weekStart         = weekStart,
-        lastUpdated       = now,
+        id = id,
+        type = type.toString(),
+        startTime = startTime,
+        endTime = endTime,
+        dayOfWeek = dayOfWeek,
+        name = name,
+        lecturers = lecturers.let { json.decodeFromString<List<String>>(it.toString()) },
+        building = building,
+        roomNumber = roomNumber,
+        lastUpdated = now,
     )
 }
