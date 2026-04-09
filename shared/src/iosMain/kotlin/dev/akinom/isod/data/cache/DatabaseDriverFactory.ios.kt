@@ -2,7 +2,7 @@ package dev.akinom.isod.data.cache
 
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.native.NativeSqliteDriver
-import dev.akinom.isod.IsodDatabase
+import dev.akinom.isod.ISODMobileDatabase
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSFileManager
 
@@ -13,7 +13,7 @@ actual class DatabaseDriverFactory {
         val containerUrl = manager.containerURLForSecurityApplicationGroupIdentifier(appGroup)
         
         return NativeSqliteDriver(
-            schema = IsodDatabase.Schema,
+            schema = ISODMobileDatabase.Schema,
             name = "isod.db",
             onConfiguration = { config ->
                 config.copy(

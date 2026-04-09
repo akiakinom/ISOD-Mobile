@@ -61,7 +61,7 @@ class TodayScheduleWidget : GlanceAppWidget(), KoinComponent {
             GlanceTheme {
                 val monday = currentWeekMonday()
                 val semester = currentSemester()
-                val timetable by timetableRepo.getTimetable(semester, monday).collectAsState(emptyList())
+                val timetable by timetableRepo.getTimetable(semester).collectAsState(emptyList())
                 val currentWeek = AcademicCalendar.getCurrentWeek(semester)
                 val showAllDay = remember { storage.shouldShowAllDayInWidget() }
                 val (isAfterLessons, dashboardEntries) = TimetableWidgetUtils.getDashboardSchedule(timetable, currentWeek, showAllDay)

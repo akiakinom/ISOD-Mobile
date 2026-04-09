@@ -3,7 +3,7 @@ package dev.akinom.isod.domain
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class UsosActivity(
+data class UsosClass(
     val id: String,
     val type: ClassType,
     val dayOfWeek: Int,
@@ -14,10 +14,4 @@ data class UsosActivity(
     val lecturersId: List<Int> = emptyList(),
     val building: String?,
     val roomNumber: String?
-)
-
-@Serializable
-data class UsosUserInfo(
-    val id: String,
-    val name: String,
 )

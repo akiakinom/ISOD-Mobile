@@ -2,10 +2,8 @@ package dev.akinom.isod.data.remote
 
 import dev.akinom.isod.auth.CredentialsStorage
 import dev.akinom.isod.auth.OAuth1Signer
-import dev.akinom.isod.data.remote.dto.UsosActivityDto
-import dev.akinom.isod.data.remote.dto.UsosUserInfoDto
-import dev.akinom.isod.domain.UsosActivity
-import dev.akinom.isod.domain.UsosUserInfo
+import dev.akinom.isod.data.remote.dto.UsosClassDto
+import dev.akinom.isod.domain.UsosClass
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -13,15 +11,12 @@ import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 private const val BASE_URL         = "https://apps.usos.pw.edu.pl"
 private const val TT_USER_URL      = "$BASE_URL/services/tt/user"
-private const val USER_INFO_URL    = "$BASE_URL/services/users/user"
 private const val USERS_URL        = "$BASE_URL/services/users/users"
-private const val STUDIES_URL      = "$BASE_URL/services/studies/user"
 
 private val json = Json {
     ignoreUnknownKeys = true
@@ -41,24 +36,21 @@ class UsosApiClient(
     private val consumerSecret: String,
 ) {
 
-    suspend fun getTimetable(
-        start: String,
-    ): UsosResult<List<UsosActivity>> = fetch(
+    suspend fun getTimetable(): UsosResult<List<UsosClass>> = fetch(
         url    = TT_USER_URL,
         params = mapOf(
-            "start"  to start,
             "fields" to listOf(
                 "start_time", "end_time",
                 "course_id", "course_name",
-                "lecturer_ids",
+                "lecturer_ids", "classtype_name",
                 "building_id", "room_number"
             ).joinToString("|"),
         ),
     ) { body ->
-        json.decodeFromString<List<UsosActivityDto>>(body).map { it.toDomain() }
+        json.decodeFromString<List<UsosClassDto>>(body).map { it.toDomain() }
     }
 
-    suspend fun getLecturerNames(ids: List<Long>): UsosResult<Map<Long, String>> {
+    suspend fun getLecturerNames(ids: List<Int>): UsosResult<Map<Int, String>> {
         if (ids.isEmpty()) return UsosResult.Success(emptyMap())
         return fetch(
             url    = USERS_URL,
@@ -68,27 +60,15 @@ class UsosApiClient(
             ),
         ) { body ->
             val obj = json.parseToJsonElement(body).jsonObject
-            obj.entries.mapNotNull { (key, value) ->
-                val userId    = key.toLongOrNull() ?: return@mapNotNull null
-                val person    = value.jsonObject
+            obj.entries.associate { (key, value) ->
+                val userId = key.toInt()
+                val person = value.jsonObject
                 val firstName = person["first_name"]?.jsonPrimitive?.content ?: ""
-                val lastName  = person["last_name"]?.jsonPrimitive?.content ?: ""
+                val lastName = person["last_name"]?.jsonPrimitive?.content ?: ""
                 userId to "$firstName $lastName".trim()
-            }.toMap()
+            }
         }
     }
-
-    suspend fun getUserInfo(): UsosResult<UsosUserInfo> = fetch(
-        url    = USER_INFO_URL,
-        params = mapOf("fields" to "id|first_name|last_name|student_number|photo_urls"),
-    ) { body ->
-        json.decodeFromString<UsosUserInfoDto>(body).toDomain()
-    }
-
-    suspend fun getStudies(): UsosResult<String> = fetch(
-        url = STUDIES_URL,
-        params = mapOf("fields" to "id|program|status")
-    ) { it }
 
     private suspend fun <T> fetch(
         url: String,

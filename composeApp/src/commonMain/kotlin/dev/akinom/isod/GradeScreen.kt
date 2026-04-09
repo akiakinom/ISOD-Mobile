@@ -364,9 +364,7 @@ private fun CourseGradeCard(
 private fun GradeSummary(course: CourseGrade) {
     val grade = course.displayFinalGrade
     if (grade != null) {
-        val color = when (course.passes) {
-            false -> MaterialTheme.colorScheme.error
-            true  -> MaterialTheme.colorScheme.primary
+        val color = when (course) {
             else  -> MaterialTheme.colorScheme.outline
         }
 

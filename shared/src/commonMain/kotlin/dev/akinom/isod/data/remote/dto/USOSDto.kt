@@ -1,7 +1,6 @@
 package dev.akinom.isod.data.remote.dto
 
-import dev.akinom.isod.domain.UsosActivity
-import dev.akinom.isod.domain.UsosUserInfo
+import dev.akinom.isod.domain.UsosClass
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.isoDayNumber
 import kotlinx.serialization.SerialName
@@ -15,36 +14,26 @@ fun String.toDayOfWeek(): Int {
 }
 
 @Serializable
-data class UsosActivityDto(
+data class UsosClassDto(
     @SerialName("start_time")             val startTime: String = "",
     @SerialName("end_time")               val endTime: String = "",
     @SerialName("course_id")              val courseId: String = "",
     @SerialName("course_name")            val courseName: JsonObject = JsonObject(emptyMap()),
-    @SerialName("lecturer_ids")           val lecturerIds: List<Long> = emptyList(),
+    @SerialName("lecturer_ids")           val lecturerIds: List<Int> = emptyList(),
     @SerialName("building_id")            val buildingId: String? = null,
     @SerialName("room_number")            val roomNumber: String? = null,
+    @SerialName("classtype_name")         val classtypeName: JsonObject = JsonObject(emptyMap())
 ) {
-    fun toDomain() = UsosActivity(
-        type          = courseName["pl"].toString().split(" - ").last().toClassType(),
-        startTime     = startTime.drop(11), // Drop "yyyy-MM-dd "
-        endTime       = endTime,
-        name          = courseName["pl"].toString(),
+    fun toDomain() = UsosClass(
+        type          = classtypeName["pl"].toString().toClassType(),
+        startTime     = startTime.drop(11).dropLast(3), // Drop "yyyy-MM-dd "
+        endTime       = endTime.drop(11).dropLast(3),
+        name          = courseName["pl"].toString().trim('"'),
         lecturers     = emptyList(),
+        lecturersId   = lecturerIds,
         building      = buildingId?.drop(5),
         roomNumber    = roomNumber,
         id            = courseId,
         dayOfWeek     = startTime.toDayOfWeek()
-    )
-}
-
-@Serializable
-data class UsosUserInfoDto(
-    val id: String = "",
-    @SerialName("first_name")     val firstName: String = "",
-    @SerialName("last_name")      val lastName: String = "",
-) {
-    fun toDomain() = UsosUserInfo(
-        id            = id,
-        name          = "$firstName $lastName",
     )
 }

@@ -36,7 +36,7 @@ data class TimetableEntry(
         return when {
             b.isEmpty() -> r
             r.isEmpty() -> b
-            b.uppercase() == r.uppercase() -> b
+            b.equals(r, ignoreCase = true) -> b
             else -> "$b $r"
         }
     }
@@ -119,16 +119,15 @@ fun PlanItem.toTimetableEntry() = TimetableEntry(
     cycle = cycleShort.ifBlank { "SEM" }
 )
 
-fun UsosActivity.toTimetableEntry(): TimetableEntry {
-    val dow = getDayOfWeekFromDate(startTime)
+fun UsosClass.toTimetableEntry(): TimetableEntry {
     return TimetableEntry(
-        id = "${name}_${dow}_${startTime}",
+        id = "${name}_${dayOfWeek}_${startTime}",
         courseName = name,
         courseNameShort = generateShortName(name),
         courseType = type,
-        dayOfWeek = dow,
-        startTime = startTime.substring(11, 16),
-        endTime = endTime.substring(11, 16),
+        dayOfWeek = dayOfWeek,
+        startTime = startTime,
+        endTime = endTime,
         building = building?: "-",
         buildingShort = building?: "-",
         room = roomNumber ?: "-",

@@ -3,7 +3,7 @@ package dev.akinom.isod.data.repository
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import dev.akinom.isod.EventEntity
-import dev.akinom.isod.IsodDatabase
+import dev.akinom.isod.ISODMobileDatabase
 import dev.akinom.isod.data.cache.CacheConfig
 import dev.akinom.isod.data.cache.currentTimeMillis
 import dev.akinom.isod.data.cache.isStale
@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 
 class EventRepository(
-    private val db: IsodDatabase,
+    private val db: ISODMobileDatabase,
     private val api: AkinomApiClient,
     private val scope: CoroutineScope,
 ) {

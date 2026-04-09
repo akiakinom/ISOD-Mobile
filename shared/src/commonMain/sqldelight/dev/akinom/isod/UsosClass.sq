@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS UsosActivityEntity (
+CREATE TABLE IF NOT EXISTS UsosClassEntity (
     id          TEXT    NOT NULL PRIMARY KEY,
     type        TEXT    NOT NULL,
     dayOfWeek   INTEGER NOT NULL,
@@ -11,19 +11,16 @@ CREATE TABLE IF NOT EXISTS UsosActivityEntity (
     lastUpdated INTEGER NOT NULL
 );
 
-selectByWeek:
-SELECT * FROM UsosActivityEntity
-WHERE dayOfWeek = :dayOfWeek
+selectAll:
+SELECT * FROM UsosClassEntity
 ORDER BY startTime ASC;
 
 upsert:
-INSERT OR REPLACE INTO UsosActivityEntity VALUES ?;
+INSERT OR REPLACE INTO UsosClassEntity VALUES ?;
 
-deleteByWeek:
-DELETE FROM UsosActivityEntity
-WHERE dayOfWeek = :dayOfWeek;
+deleteAll:
+DELETE FROM UsosClassEntity;
 
 lastUpdated:
-SELECT lastUpdated FROM UsosActivityEntity
-WHERE dayOfWeek = :dayOfWeek
+SELECT lastUpdated FROM UsosClassEntity
 LIMIT 1;

@@ -3,7 +3,6 @@ package dev.akinom.isod.data.repository
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.set
 import dev.akinom.isod.data.remote.UsosApiClient
-import dev.akinom.isod.data.remote.UsosResult
 import dev.akinom.isod.domain.TimetableEntry
 import dev.akinom.isod.domain.TimetableSource
 import dev.akinom.isod.domain.isExcluded
@@ -18,27 +17,23 @@ class TimetableRepository(
     private val planRepo: PlanRepository,
     private val usosRepo: UsosRepository,
     private val academicCalendarRepo: AcademicCalendarRepository,
-    private val usosApi: UsosApiClient,
     private val settings: Settings
 ) {
-    private val _overrides = MutableStateFlow<Map<String, String>>(loadOverrides())
+    private val _overrides = MutableStateFlow(loadOverrides())
     val overrides = _overrides.asStateFlow()
 
-    fun getTimetable(semester: String, weekStart: String): Flow<List<TimetableEntry>> =
+    fun getTimetable(semester: String): Flow<List<TimetableEntry>> =
         combine(
             planRepo.getPlan(semester),
-            usosRepo.getTimetable(weekStart),
+            usosRepo.getTimetable(),
             overrides
         ) { planItems, usosActivities, currentOverrides ->
-
-            val weekDates = weekDates(weekStart)
 
             val isodEntries = planItems
                 .filter { !it.isExcluded() }
                 .map { it.toTimetableEntry() }
 
             val usosEntries = usosActivities
-                .filter { it.startTime.take(10) in weekDates }
                 .map { it.toTimetableEntry() }
 
             val isodShortNames: Map<String, String> = isodEntries
@@ -58,19 +53,9 @@ class TimetableRepository(
             val entries = merged.values
                 .sortedWith(compareBy({ it.dayOfWeek }, { it.startTime }))
 
-            val allLecturerIds = entries
-                .filter { it.source == TimetableSource.USOS }
-                .flatMap { it.lecturerIds }
-                .distinct()
-
-            val lecturerNames = when (val result = usosApi.getLecturerNames(allLecturerIds)) {
-                is UsosResult.Success -> result.data
-                else                  -> emptyMap()
-            }
-
             entries.map { entry ->
-                val updatedEntry = if (entry.source == TimetableSource.USOS && entry.lecturerIds.isNotEmpty()) {
-                    entry.copy(lecturerNames = entry.lecturerIds.mapNotNull { lecturerNames[it] })
+                val updatedEntry = if (entry.source == TimetableSource.USOS && entry.lecturerNames.isNotEmpty()) {
+                    entry.copy(lecturerNames = entry.lecturerNames )
                 } else {
                     entry
                 }
@@ -78,9 +63,9 @@ class TimetableRepository(
             }
         }
 
-    suspend fun refresh(semester: String, weekStart: String) {
+    suspend fun refresh(semester: String) {
         planRepo.refresh(semester)
-        usosRepo.refresh(weekStart)
+        usosRepo.refresh()
         academicCalendarRepo.refresh()
     }
 

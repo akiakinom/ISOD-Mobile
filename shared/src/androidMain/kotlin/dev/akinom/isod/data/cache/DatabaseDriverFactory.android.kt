@@ -4,15 +4,15 @@ import android.content.Context
 import androidx.sqlite.db.SupportSQLiteDatabase
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
-import dev.akinom.isod.IsodDatabase
+import dev.akinom.isod.ISODMobileDatabase
 
 actual class DatabaseDriverFactory(private val context: Context) {
     actual fun createDriver(): SqlDriver =
         AndroidSqliteDriver(
-            schema = IsodDatabase.Schema,
+            schema = ISODMobileDatabase.Schema,
             context = context,
             name = "isod.db",
-            callback = object : AndroidSqliteDriver.Callback(IsodDatabase.Schema) {
+            callback = object : AndroidSqliteDriver.Callback(ISODMobileDatabase.Schema) {
                 override fun onUpgrade(
                     db: SupportSQLiteDatabase,
                     oldVersion: Int,
