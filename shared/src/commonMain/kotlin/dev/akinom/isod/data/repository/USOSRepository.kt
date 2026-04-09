@@ -100,7 +100,7 @@ private fun UsosClass.toEntity(now: Long): UsosClassEntity {
         endTime = endTime,
         dayOfWeek = dayOfWeek.toLong(),
         name = name,
-        lecturers = lecturers.joinToString { ", " },
+        lecturers = lecturers.joinToString(", "),
         building = building,
         roomNumber = roomNumber,
         lastUpdated = now,

@@ -25,7 +25,7 @@ data class UsosClassDto(
     @SerialName("classtype_name")         val classtypeName: JsonObject = JsonObject(emptyMap())
 ) {
     fun toDomain() = UsosClass(
-        type          = classtypeName["pl"].toString().toClassType(),
+        type          = classtypeName["pl"].toString().trim('"').toClassType(),
         startTime     = startTime.drop(11).dropLast(3), // Drop "yyyy-MM-dd "
         endTime       = endTime.drop(11).dropLast(3),
         name          = courseName["pl"].toString().trim('"'),
