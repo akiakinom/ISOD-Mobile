@@ -1,3 +1,7 @@
+>[!CAUTION]
+>### Package has moved
+>ISOD Mobile is now hosted at Codeberg (https://codeberg.org/akinom/isod-mobile), see you there 👋
+
 <div align="center">
     <img src="public/banner.svg" width="250" style="margin-bottom: 10px;" />
 
@@ -12,5 +16,3 @@
 ## About
 
 ISOD Mobile is a mobile app written using Kotlin Multiplatform that merges data from ISOD and USOS.
-
-[..TODO]
